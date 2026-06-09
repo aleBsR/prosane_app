@@ -1,0 +1,44 @@
+# Seguimiento — deuda de la fundación Flutter
+
+Issues de seguimiento surgidos de la review final de la rama
+`feat/fundacion-flutter-offline-first` (no bloqueantes para el PR de la fundación).
+
+## Prioritarios
+
+### 1. `sesionCacheada()` devuelve `null` → arranque de sesión NO es offline-first todavía
+- **Qué:** `AuthRepositoryImpl.sesionCacheada()` retorna siempre `null` y `SessionController`
+  arranca siempre en `SesionNoAutenticada`. El spec pide hidratar la sesión desde el `/me`
+  cacheado en el arranque para funcionar offline.
+- **Dependencia:** atado al endpoint **`GET /me`** del backend (`prosane_api`), que está por
+  construirse. **Cuando `/me` exista**, hay que: (a) cachear usuario+permisos en Drift al
+  loguear, y (b) hidratar la sesión desde ese cache al arrancar. Hasta entonces el
+  offline-first de la *sesión* queda a medias.
+- **Archivos:** `lib/features/auth/data/repositories/auth_repository_impl.dart`,
+  `lib/core/session/session_controller.dart`.
+
+### 2. `apiBaseUrl` default HTTP → forzar HTTPS antes de cualquier deploy
+- **Qué:** `AppConfig.apiBaseUrl` tiene default `http://10.0.2.2:8000/...` (HTTP, emulador
+  Android). Correcto para dev, inyectable por `--dart-define`.
+- **Acción obligatoria pre-deploy:** producción debe usar **HTTPS** y un base URL inyectado.
+  Son datos de salud de menores (Ley 25.326): **HTTP no puede ir a prod.**
+- **Archivo:** `lib/core/config/app_config.dart`.
+
+## Menores
+
+- **`recordarme` no se persiste:** en `LoginScreen` el toggle "Recordarme" es estado local que
+  no llega al controller ni persiste nada. Campo muerto hoy; definir su semántica (o quitarlo).
+  `lib/features/auth/presentation/screens/login_screen.dart`.
+- **`MeResponse` parsea a mano:** sin `json_serializable` (se quitó la dep). Es trivial y seguro;
+  si crecen los DTOs, evaluar reintroducir code-gen de JSON.
+- **Dropdowns del wizard con `initialValue`:** funcionan por el `IndexedStack` que mantiene los
+  widgets vivos; si se cambia a `PageView`, migrar a `value:` (controlled). Y considerar extraer
+  un `AppDropdownField` al design system (hoy el `InputDecoration` se repite en 3 steps).
+- **`acepta_politica` en el payload de registro:** decisión de contrato backend (consentimiento,
+  Ley 25.326). Definir si el registro debe enviarlo.
+
+## Diferidos de diseño (ya documentados en el spec, no son deuda)
+
+- Feature real `apto_fisico` (primera integración real del `sync_engine`).
+- ActionRegistry / acciones server-driven por metadata.
+- Sync en background real (WorkManager/BGTask).
+- Web/desktop; reanudar un signup a medias.

@@ -37,9 +37,9 @@ Auth en sí sea remoto.
 | Decisión | Elección | Motivo |
 |----------|----------|--------|
 | Patrón | Clean Architecture **feature-first**, 3 capas, dependencia hacia adentro (presentation → domain → data) | Aísla dominio, testeable, escala a sistema grande |
-| Estado | **Riverpod** (con code-gen) | Type-safe, testeable, poco boilerplate, DI integrada |
+| Estado | **Riverpod** (providers manuales + `StateNotifier`, sin `@riverpod` code-gen) | Type-safe, testeable, DI integrada; sin code-gen para bajar la barrera al equipo junior |
 | Routing | **go_router** + guard de auth (`redirect`) | Declarativo, deep links, guard por sesión |
-| Code-gen | **freezed + json_serializable + build_runner** | Estándar profesional, menos errores de boilerplate |
+| Code-gen | **freezed + drift_dev + build_runner** (NO riverpod/json code-gen) | freezed para estado/DTOs y drift para la DB; los DTOs parsean a mano (sin json_serializable) y los providers son manuales |
 | Base de datos local | **Drift** | Relacional, type-safe, code-gen, `watch()` reactivo que se integra con Riverpod |
 | Conectividad | **connectivity_plus** | Stream online/offline |
 | Storage de secretos | **flutter_secure_storage** | Solo JWT/secretos, NO datos de dominio |
@@ -280,7 +280,7 @@ Es **un solo formulario lógico** partido en 4 páginas; todo el estado vive en 
 
 ## Sesión y permisos (desde el día uno)
 
-- `SessionController` (Riverpod `Notifier`) mantiene `Sesion` (usuario, presencia de token, permisos).
+- `SessionController` (Riverpod `StateNotifier`) mantiene `Sesion` (usuario, presencia de token, permisos).
   - **login** → JWT a secure storage, trae `/me`, cachea usuario+permisos en DB local, marca activa.
   - **arranque** → lee secure storage; si hay token, hidrata desde el `/me` cacheado (funciona offline) y
     refresca `/me` cuando hay conexión.
@@ -326,10 +326,10 @@ Es **un solo formulario lógico** partido en 4 páginas; todo el estado vive en 
 
 ## Dependencias a sumar
 
-`flutter_riverpod` (+ `riverpod_annotation`, dev `riverpod_generator`), `go_router`, `dio`,
-`flutter_secure_storage`, `drift` (+ dev `drift_dev`), `connectivity_plus`,
-`freezed` + `json_serializable` (+ dev `build_runner`, `freezed_annotation`, `json_annotation`),
-fuentes Nunito/Rubik (assets), dev: `mocktail`, `widgetbook`.
+`flutter_riverpod` (providers manuales, sin code-gen), `go_router`, `dio`,
+`flutter_secure_storage`, `drift` (+ dev `drift_dev`), `connectivity_plus`, `uuid`,
+`freezed` + `freezed_annotation` (+ dev `build_runner`) para estado/DTOs,
+fuentes Nunito/Rubik (assets), dev: `mocktail`, `widgetbook`, `http_mock_adapter`.
 
 ## Contrato con el backend (`prosane_api`) — a coordinar
 
