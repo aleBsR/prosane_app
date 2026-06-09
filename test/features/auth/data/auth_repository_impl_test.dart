@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:prosane_app/core/error/failure.dart';
 import 'package:prosane_app/core/storage/token_storage.dart';
 import 'package:prosane_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:prosane_app/features/auth/data/dtos/me_response.dart';
@@ -54,8 +56,25 @@ void main() {
     when(() => remote.me()).thenThrow(Exception('me falló'));
     final repo = AuthRepositoryImpl(remote: remote, tokens: tokens);
 
-    await expectLater(repo.login('a@b.com', 'x'), throwsException);
+    // Exception genérica (no DioException) → UnknownFailure tras el rollback.
+    await expectLater(repo.login('a@b.com', 'x'), throwsA(isA<UnknownFailure>()));
     expect(await tokens.access(), isNull); // rollback: sin tokens huérfanos
+  });
+
+  test('remote.login lanza DioException 401 → repo.login lanza InvalidCredentialsFailure', () async {
+    final remote = _MockRemote();
+    final tokens = TokenStorage(backend: InMemoryKeyValueStore());
+    final reqOpts = RequestOptions(path: '/token');
+    when(() => remote.login('a@b.com', 'x')).thenThrow(
+      DioException(
+        requestOptions: reqOpts,
+        response: Response(requestOptions: reqOpts, statusCode: 401),
+        type: DioExceptionType.badResponse,
+      ),
+    );
+    final repo = AuthRepositoryImpl(remote: remote, tokens: tokens);
+
+    await expectLater(repo.login('a@b.com', 'x'), throwsA(isA<InvalidCredentialsFailure>()));
   });
 
   test('MeResponse.fromJson parsea permisos', () {
