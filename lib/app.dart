@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:prosane_app/core/theme/app_theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 
-class ProsaneApp extends StatelessWidget {
+class ProsaneApp extends ConsumerWidget {
   const ProsaneApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'PROSANE',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const Scaffold(body: Center(child: Text('PROSANE'))),
+      routerConfig: ref.watch(goRouterProvider),
     );
   }
 }

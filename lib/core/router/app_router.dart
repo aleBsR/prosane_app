@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../session/entities.dart';
 import '../session/session_controller.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/signup_wizard_screen.dart';
+import '../../features/home/presentation/home_screen.dart';
 
 typedef Redirect = String? Function(String location);
 
@@ -15,26 +18,25 @@ Redirect construirRedirect(bool autenticado) => (location) {
       return null;
     };
 
-/// Arma el GoRouter cableando el guard con el estado de sesión.
-/// Las rutas son PLACEHOLDERS hasta la Fase 5 (login/signup/home reales).
-GoRouter buildRouter(Ref ref) {
-  final autenticado = ref.read(sessionControllerProvider) is SesionAutenticada;
-  final redirect = construirRedirect(autenticado);
+/// Provider reactivo a la sesión: cuando cambia el estado, go_router re-evalúa
+/// el redirect via [refreshListenable].
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final refresh = ValueNotifier<int>(0);
+  ref.listen(sessionControllerProvider, (prev, next) => refresh.value++);
+  ref.onDispose(refresh.dispose);
+
   return GoRouter(
     initialLocation: '/login',
-    redirect: (context, state) => redirect(state.matchedLocation),
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final autenticado =
+          ref.read(sessionControllerProvider) is SesionAutenticada;
+      return construirRedirect(autenticado)(state.matchedLocation);
+    },
     routes: [
-      GoRoute(path: '/login', builder: (c, s) => const _Placeholder('login')),
-      GoRoute(path: '/signup', builder: (c, s) => const _Placeholder('signup')),
-      GoRoute(path: '/home', builder: (c, s) => const _Placeholder('home')),
+      GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
+      GoRoute(path: '/signup', builder: (c, s) => const SignupWizardScreen()),
+      GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
     ],
   );
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder(this.nombre);
-  final String nombre;
-  @override
-  Widget build(BuildContext context) =>
-      Scaffold(body: Center(child: Text('placeholder: $nombre')));
-}
+});
