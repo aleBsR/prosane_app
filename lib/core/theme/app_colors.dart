@@ -14,4 +14,10 @@ class AppColors {
     begin: Alignment.topCenter, end: Alignment.bottomCenter,
     colors: [gradienteFondoInicio, gradienteFondoFin],
   );
+
+  static const errorOscuro = Color(0xFF8E2D22);
+  static const gradienteError = LinearGradient(
+    begin: Alignment.topCenter, end: Alignment.bottomCenter,
+    colors: [errorOscuro, error],
+  );
 }
