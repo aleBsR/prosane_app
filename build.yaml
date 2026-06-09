@@ -1,0 +1,9 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Almacena DateTimeColumn como texto ISO8601 UTC (no unix ms).
+          # Requerido para interop con el backend (ISO8601) y preservar la zona
+          # horaria en el sync offline-first. Afecta a TODAS las tablas.
+          store_date_time_values_as_text: true
