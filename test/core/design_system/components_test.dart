@@ -24,6 +24,25 @@ void main() {
     expect(tapped, true);
   });
 
+  testWidgets('AppLink expand ocupa todo el ancho y es tappable fuera del texto', (tester) async {
+    var tapped = false;
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: SizedBox(
+        width: 300,
+        child: AppLink(
+          text: '¿Olvidaste tu contraseña?',
+          onTap: () => tapped = true,
+          expand: true,
+          textAlign: TextAlign.center,
+        ),
+      ))));
+    // Ocupa los 300 de ancho
+    expect(tester.getSize(find.byType(AppLink)).width, 300);
+    // Tap cerca del borde derecho (fuera del texto centrado) → igual dispara
+    await tester.tapAt(tester.getTopLeft(find.byType(AppLink)) + const Offset(295, 8));
+    expect(tapped, true);
+  });
+
   testWidgets('AppGradientScaffold y AppCard renderizan su child', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: AppGradientScaffold(
       child: AppCard(child: Text('contenido')))));

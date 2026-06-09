@@ -77,16 +77,30 @@ void main() {
     await expectLater(repo.login('a@b.com', 'x'), throwsA(isA<InvalidCredentialsFailure>()));
   });
 
-  test('MeResponse.fromJson parsea permisos', () {
+  test('MeResponse.fromJson parsea el contrato real (user/roles/actions)', () {
     final me = MeResponse.fromJson({
-      'id': '1', 'nombre': 'Ana', 'rol': 'profesional',
-      'permisos': ['firmar_apto', 'ver_ficha'],
+      'user': {'id': '1', 'email': 'ana@b.com', 'nombre': 'Ana', 'apellido': 'Gómez'},
+      'roles': [
+        {'name': 'profesional', 'label': 'Profesional'},
+      ],
+      'actions': [
+        {'name': 'firmar_apto'},
+        {'name': 'ver_ficha'},
+      ],
     });
     expect(me.permisos, {'firmar_apto', 'ver_ficha'});
+    expect(me.nombre, 'Ana Gómez');
+    expect(me.rol, 'profesional');
   });
 
-  test('MeResponse.fromJson sin permisos -> set vacío', () {
-    final me = MeResponse.fromJson({'id': '1', 'nombre': 'Ana', 'rol': 'profesional'});
+  test('MeResponse.fromJson: superusuario sin nombre/persona cae al email', () {
+    final me = MeResponse.fromJson({
+      'user': {'id': '1', 'email': 'admin@b.com', 'nombre': '', 'apellido': ''},
+      'roles': const [],
+      'actions': const [],
+    });
+    expect(me.nombre, 'admin@b.com'); // sin nombre/apellido → email
+    expect(me.rol, '');
     expect(me.permisos, isEmpty);
   });
 }

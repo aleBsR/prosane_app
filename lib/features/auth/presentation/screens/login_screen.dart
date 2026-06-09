@@ -75,20 +75,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
 
-                // Fila: Recordarme + Olvidaste contraseña
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppSwitch(
-                      value: _recordarme,
-                      onChanged: (v) => setState(() => _recordarme = v),
-                      label: 'Recordarme',
-                    ),
-                    AppLink(
-                      text: '¿Olvidaste tu contraseña?',
-                      onTap: () {}, // sin navegación por ahora
-                    ),
-                  ],
+                // Recordarme en su propia línea
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppSwitch(
+                    value: _recordarme,
+                    onChanged: (v) => setState(() => _recordarme = v),
+                    label: 'Recordarme',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                // ¿Olvidaste tu contraseña? — debajo, a todo el ancho
+                AppLink(
+                  text: '¿Olvidaste tu contraseña?',
+                  onTap: () {}, // sin navegación por ahora
+                  expand: true,
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.lg),
 

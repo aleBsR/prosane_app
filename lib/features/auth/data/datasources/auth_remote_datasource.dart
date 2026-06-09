@@ -15,14 +15,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<Tokens> login(String email, String password) async {
-    final r = await _dio.post('/token', data: {'email': email, 'password': password});
+    final r = await _dio.post('/token/', data: {'email': email, 'password': password});
     return (access: r.data['access'] as String, refresh: r.data['refresh'] as String);
   }
 
   @override
-  Future<void> register(Map<String, dynamic> datos) => _dio.post('/register', data: datos);
+  Future<void> register(Map<String, dynamic> datos) => _dio.post('/register/', data: datos);
 
   @override
   Future<MeResponse> me() async =>
-      MeResponse.fromJson((await _dio.get('/me')).data as Map<String, dynamic>);
+      MeResponse.fromJson((await _dio.get('/me/')).data as Map<String, dynamic>);
 }

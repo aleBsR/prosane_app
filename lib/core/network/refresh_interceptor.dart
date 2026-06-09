@@ -68,7 +68,7 @@ class RefreshInterceptor extends Interceptor {
     if (refresh == null) return null;
     try {
       final r = await _refreshDio.post(
-        '/token/refresh',
+        '/token/refresh/',
         data: {'refresh': refresh},
       );
       final access = r.data['access'] as String;

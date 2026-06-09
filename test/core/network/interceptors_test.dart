@@ -112,7 +112,7 @@ void main() {
     final refreshDio = Dio(BaseOptions(baseUrl: 'http://test'));
     final refreshAdapter = DioAdapter(dio: refreshDio);
     refreshAdapter.onPost(
-      '/token/refresh',
+      '/token/refresh/',
       (server) => server.reply(200, {'access': 'NEW_ACCESS'}),
       data: {'refresh': 'OLD_REFRESH'},
     );
@@ -165,7 +165,7 @@ void main() {
     final refreshDio = Dio(BaseOptions(baseUrl: 'http://test'));
     final refreshAdapter = DioAdapter(dio: refreshDio);
     refreshAdapter.onPost(
-      '/token/refresh',
+      '/token/refresh/',
       (server) => server.reply(401, {'detail': 'token expired'}),
       data: {'refresh': 'OLD_REFRESH'},
     );
@@ -217,7 +217,7 @@ void main() {
     final refreshAdapter = DioAdapter(dio: refreshDio);
     // Primera respuesta registrada
     refreshAdapter.onPost(
-      '/token/refresh',
+      '/token/refresh/',
       (server) => server.replyCallback(200, (_) {
         refreshCount++;
         return {'access': 'NEW_ACCESS'};
@@ -226,7 +226,7 @@ void main() {
     );
     // Segunda respuesta (si single-flight falla y hay un segundo POST)
     refreshAdapter.onPost(
-      '/token/refresh',
+      '/token/refresh/',
       (server) => server.replyCallback(200, (_) {
         refreshCount++;
         return {'access': 'NEW_ACCESS_2'};
