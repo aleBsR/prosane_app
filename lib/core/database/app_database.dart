@@ -1,9 +1,10 @@
 import 'package:drift/drift.dart';
+import 'tables/cached_session_table.dart';
 import 'tables/sync_state_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [SyncStateRows])
+@DriftDatabase(tables: [SyncStateRows, CachedSessionRows])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -12,7 +13,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -21,7 +22,9 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (m, from, to) async {
-          // v2+: agregar steps versionados explícitos.
+          if (from < 2) {
+            await m.createTable(cachedSessionRows); // v1 -> v2: tabla nueva, no destruye nada
+          }
         },
       );
 
