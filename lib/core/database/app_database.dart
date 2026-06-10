@@ -3,11 +3,12 @@ import 'package:drift/drift.dart';
 import 'tables/cached_session_table.dart';
 import 'tables/sync_state_table.dart';
 import '../session/entities.dart';
+import '../session/session_cache.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(tables: [SyncStateRows, CachedSessionRows])
-class AppDatabase extends _$AppDatabase {
+class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase(super.e);
 
   /// Constructor para tests; acepta cualquier [QueryExecutor], típicamente
@@ -43,6 +44,7 @@ class AppDatabase extends _$AppDatabase {
 
   static const _meKey = 'me';
 
+  @override
   Future<void> guardarSesion(Sesion s, {required String email, required String version, required String syncedAtIso}) {
     return into(cachedSessionRows).insertOnConflictUpdate(CachedSessionRowsCompanion.insert(
       id: _meKey,
@@ -60,6 +62,7 @@ class AppDatabase extends _$AppDatabase {
   Future<CachedSessionRow?> _meRow() =>
       (select(cachedSessionRows)..where((t) => t.id.equals(_meKey))).getSingleOrNull();
 
+  @override
   Future<Sesion?> leerSesion() async {
     final row = await _meRow();
     if (row == null) return null;
@@ -74,5 +77,6 @@ class AppDatabase extends _$AppDatabase {
 
   Future<String?> versionCacheada() async => (await _meRow())?.metaVersion;
 
+  @override
   Future<void> limpiarSesion() => (delete(cachedSessionRows)..where((t) => t.id.equals(_meKey))).go();
 }

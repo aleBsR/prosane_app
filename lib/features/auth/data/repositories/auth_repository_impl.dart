@@ -3,12 +3,14 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/session/entities.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../../../core/session/session_cache.dart';
 import '../datasources/auth_remote_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl({required this.remote, required this.tokens});
+  AuthRepositoryImpl({required this.remote, required this.tokens, required this.cache});
   final AuthRemoteDataSource remote;
   final TokenStorage tokens;
+  final SessionCache cache;
 
   @override
   Future<Sesion> login(String email, String password) async {
@@ -17,13 +19,15 @@ class AuthRepositoryImpl implements AuthRepository {
       await tokens.guardar(access: t.access, refresh: t.refresh); // PRIMERO los tokens
       try {
         final me = await remote.me(); // /me usa el access recién guardado
-        return Sesion(
+        final sesion = Sesion(
           usuario: Usuario(id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel),
           acciones: me.acciones,
         );
+        await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+        return sesion;
       } catch (_) {
-        // Login atómico: si /me falla, no dejamos tokens huérfanos (tokens sin
-        // sesión). El usuario reintenta el login limpio.
+        // Login atómico: si /me O el guardado en cache fallan, no dejamos tokens
+        // huérfanos (tokens sin sesión persistida). El usuario reintenta el login limpio.
         await tokens.limpiar();
         rethrow;
       }
@@ -45,11 +49,12 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Sin cache todavía: devuelve null. El cacheo real en Drift se cablea en la
-  /// Task 7 de este plan (cachear /me en login + hidratar al arrancar).
   @override
-  Future<Sesion?> sesionCacheada() async => null;
+  Future<Sesion?> sesionCacheada() => cache.leerSesion();
 
   @override
-  Future<void> logout() => tokens.limpiar();
+  Future<void> logout() async {
+    await tokens.limpiar();
+    await cache.limpiarSesion();
+  }
 }
