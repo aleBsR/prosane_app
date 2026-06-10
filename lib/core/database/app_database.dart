@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'tables/cached_session_table.dart';
 import 'tables/sync_state_table.dart';
+import '../session/entities.dart';
 
 part 'app_database.g.dart';
 
@@ -38,4 +40,39 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
     return row?.lastSyncedAt;
   }
+
+  static const _meKey = 'me';
+
+  Future<void> guardarSesion(Sesion s, {required String email, required String version, required String syncedAtIso}) {
+    return into(cachedSessionRows).insertOnConflictUpdate(CachedSessionRowsCompanion.insert(
+      id: _meKey,
+      userId: s.usuario.id,
+      email: email,
+      nombre: Value(s.usuario.nombre),
+      rolName: s.usuario.rolName,
+      rolLabel: s.usuario.rolLabel,
+      accionesJson: jsonEncode(s.acciones.map((a) => a.toJson()).toList()),
+      metaVersion: version,
+      permissionsSyncedAt: Value(DateTime.tryParse(syncedAtIso)?.toUtc()),
+    ));
+  }
+
+  Future<CachedSessionRow?> _meRow() =>
+      (select(cachedSessionRows)..where((t) => t.id.equals(_meKey))).getSingleOrNull();
+
+  Future<Sesion?> leerSesion() async {
+    final row = await _meRow();
+    if (row == null) return null;
+    final acciones = (jsonDecode(row.accionesJson) as List)
+        .map((j) => Accion.fromJson((j as Map).cast<String, dynamic>()))
+        .toList();
+    return Sesion(
+      usuario: Usuario(id: row.userId, nombre: row.nombre ?? row.email, rolName: row.rolName, rolLabel: row.rolLabel),
+      acciones: acciones,
+    );
+  }
+
+  Future<String?> versionCacheada() async => (await _meRow())?.metaVersion;
+
+  Future<void> limpiarSesion() => (delete(cachedSessionRows)..where((t) => t.id.equals(_meKey))).go();
 }
