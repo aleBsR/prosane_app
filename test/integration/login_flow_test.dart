@@ -16,6 +16,7 @@ void main() {
           usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
           acciones: const [],
         ));
+    when(() => repo.sesionCacheada()).thenAnswer((_) async => null);
 
     await tester.pumpWidget(ProviderScope(
       overrides: [authRepositoryProvider.overrideWithValue(repo)],
@@ -42,6 +43,7 @@ void main() {
           usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
           acciones: const [],
         ));
+    when(() => repo.sesionCacheada()).thenAnswer((_) async => null);
 
     await tester.pumpWidget(ProviderScope(
       overrides: [authRepositoryProvider.overrideWithValue(repo)],
