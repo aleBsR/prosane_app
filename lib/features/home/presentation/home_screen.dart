@@ -38,7 +38,9 @@ class HomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             PermissionGate(
-              permiso: 'firmar_apto',
+              // Clave de permiso en camelCase, idéntica a la que emite el backend
+              // en /me (listarPacientes, verFichaClinica, crearApto, firmarApto).
+              permiso: 'firmarApto',
               fallback: const Text('Sin permisos para firmar aptos.'),
               child: ElevatedButton.icon(
                 onPressed: () {},

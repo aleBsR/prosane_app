@@ -36,6 +36,15 @@ Issues de seguimiento surgidos de la review final de la rama
 - **`acepta_politica` en el payload de registro:** decisión de contrato backend (consentimiento,
   Ley 25.326). Definir si el registro debe enviarlo.
 
+## Resueltos
+
+- **Invariante de naming de permisos camelCase** (2026-06-10): el front pedía permisos en
+  `snake_case` (`firmar_apto` en `home_screen.dart`) pero el backend los emite en `camelCase`
+  (`firmarApto`), así que `can()` nunca matcheaba y todo caía al fallback "Sin permisos".
+  Alineado a camelCase, documentado como invariante en el spec (§"Sesión y permisos") y blindado
+  con `test/core/session/permisos_naming_test.dart` (escanea `lib/` y falla ante cualquier clave
+  no-camelCase pasada a `can(...)`/`PermissionGate(permiso: ...)`).
+
 ## Diferidos de diseño (ya documentados en el spec, no son deuda)
 
 - Feature real `apto_fisico` (primera integración real del `sync_engine`).

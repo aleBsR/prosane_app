@@ -285,9 +285,19 @@ Es **un solo formulario lógico** partido en 4 páginas; todo el estado vive en 
   - **arranque** → lee secure storage; si hay token, hidrata desde el `/me` cacheado (funciona offline) y
     refresca `/me` cuando hay conexión.
   - **logout** → limpia storage + estado.
-- `permissions`: `can('firmar_apto')` + `PermissionGate(permiso, child)`. Permisos del backend,
+- `permissions`: `can('firmarApto')` + `PermissionGate(permiso, child)`. Permisos del backend,
   **cacheados local** para que `can()` ande sin conexión.
 - Guard de go_router (`redirect`) lee el estado de sesión → sin sesión va a `/login`.
+
+### Invariante de naming de permisos (no negociable)
+
+- **Todas las claves de permiso/acción en el front son `camelCase`, idénticas a las que emite
+  el backend en `/me`** (`listarPacientes`, `verFichaClinica`, `crearApto`, `firmarApto`, …).
+  `can()` hace match exacto de strings: una clave en `snake_case` (`firmar_apto`) nunca matchea
+  y cae siempre al fallback "Sin permisos" — bug silencioso, no rompe en compilación.
+- Cubierto por un test de invariante (`test/core/session/permisos_naming_test.dart`) que escanea
+  `lib/` y falla si cualquier clave pasada a `can(...)` o `PermissionGate(permiso: ...)` no es
+  `camelCase` (rechaza `_` y `PascalCase`).
 
 ## Red (`core/network/`)
 
