@@ -19,8 +19,9 @@ void main() {
     expect(find.text('VISIBLE'), findsNothing); // sin sesión: oculto
 
     container.read(sessionControllerProvider.notifier).setSesion(Sesion(
-      usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-      permisos: const {'firmarApto'},
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+      acciones: const [Accion(name: 'firmarApto', label: 'Firmar', icon: 'draw', color: '#2E7D32',
+          type: 'form', category: 'salud', isSensitive: true, sortOrder: 40)],
     ));
     await tester.pump();
     expect(find.text('VISIBLE'), findsOneWidget); // tras login con permiso: visible

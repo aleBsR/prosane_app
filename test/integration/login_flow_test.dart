@@ -13,8 +13,8 @@ void main() {
   testWidgets('login exitoso navega de /login a /home', (tester) async {
     final repo = _FakeAuthRepo();
     when(() => repo.login(any(), any())).thenAnswer((_) async => Sesion(
-          usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-          permisos: const {'firmar_apto'},
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
+          acciones: const [],
         ));
 
     await tester.pumpWidget(ProviderScope(
@@ -39,8 +39,8 @@ void main() {
   testWidgets('logout navega de /home a /login', (tester) async {
     final repo = _FakeAuthRepo();
     when(() => repo.login(any(), any())).thenAnswer((_) async => Sesion(
-          usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-          permisos: const {'firmar_apto'},
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
+          acciones: const [],
         ));
 
     await tester.pumpWidget(ProviderScope(

@@ -12,8 +12,9 @@ void main() {
   test('tras setSesion, can() refleja los permisos del backend', () {
     final c = SessionController();
     c.setSesion(Sesion(
-      usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-      permisos: const {'firmarApto'},
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+      acciones: const [Accion(name: 'firmarApto', label: 'Firmar', icon: 'draw', color: '#2E7D32',
+          type: 'form', category: 'salud', isSensitive: true, sortOrder: 40)],
     ));
     expect(c.can('firmarApto'), true);
     expect(c.can('borrarTodo'), false);
@@ -22,8 +23,9 @@ void main() {
   test('cerrar vuelve a noAutenticado', () {
     final c = SessionController();
     c.setSesion(Sesion(
-      usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-      permisos: const {'x'},
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+      acciones: const [Accion(name: 'x', label: 'X', icon: 'x', color: '#000000',
+          type: 'form', category: 'salud', isSensitive: false, sortOrder: 1)],
     ));
     c.cerrar();
     expect(c.state, isA<SesionNoAutenticada>());

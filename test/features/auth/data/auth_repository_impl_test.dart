@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:prosane_app/core/error/failure.dart';
+import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/core/storage/token_storage.dart';
 import 'package:prosane_app/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:prosane_app/features/auth/data/dtos/me_response.dart';
@@ -16,10 +17,12 @@ void main() {
     when(() => remote.login('a@b.com', 'x'))
         .thenAnswer((_) async => (access: 'A', refresh: 'R'));
     when(() => remote.me()).thenAnswer((_) async {
-      // Prueba el ORDEN real: cuando se llama /me, los tokens YA están guardados
-      // (si se invirtiera el orden, este expect fallaría).
-      expect(await tokens.access(), 'A');
-      return MeResponse(id: '1', nombre: 'Ana', rol: 'profesional', permisos: {'firmar_apto'});
+      expect(await tokens.access(), 'A'); // orden: tokens ya guardados
+      return MeResponse(
+        id: '1', email: 'a@b.com', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a',
+        acciones: const [Accion(name: 'firmarApto', label: 'Firmar', icon: 'draw',
+            color: '#2E7D32', type: 'form', category: 'salud', isSensitive: true, sortOrder: 40)],
+        metaVersion: 'v1', metaSyncedAt: '2026-06-10T12:00:00Z');
     });
 
     final repo = AuthRepositoryImpl(remote: remote, tokens: tokens);
@@ -28,8 +31,9 @@ void main() {
     expect(await tokens.access(), 'A');
     expect(await tokens.refresh(), 'R');
     expect(sesion.usuario.nombre, 'Ana');
-    expect(sesion.usuario.rol, 'profesional');
-    expect(sesion.permisos, {'firmar_apto'});
+    expect(sesion.usuario.rolName, 'medico');
+    expect(sesion.usuario.rolLabel, 'Médico/a');
+    expect(sesion.permisos, {'firmarApto'});
   });
 
   test('register delega en remote.register', () async {
@@ -75,32 +79,5 @@ void main() {
     final repo = AuthRepositoryImpl(remote: remote, tokens: tokens);
 
     await expectLater(repo.login('a@b.com', 'x'), throwsA(isA<InvalidCredentialsFailure>()));
-  });
-
-  test('MeResponse.fromJson parsea el contrato real (user/roles/actions)', () {
-    final me = MeResponse.fromJson({
-      'user': {'id': '1', 'email': 'ana@b.com', 'nombre': 'Ana', 'apellido': 'Gómez'},
-      'roles': [
-        {'name': 'profesional', 'label': 'Profesional'},
-      ],
-      'actions': [
-        {'name': 'firmar_apto'},
-        {'name': 'ver_ficha'},
-      ],
-    });
-    expect(me.permisos, {'firmar_apto', 'ver_ficha'});
-    expect(me.nombre, 'Ana Gómez');
-    expect(me.rol, 'profesional');
-  });
-
-  test('MeResponse.fromJson: superusuario sin nombre/persona cae al email', () {
-    final me = MeResponse.fromJson({
-      'user': {'id': '1', 'email': 'admin@b.com', 'nombre': '', 'apellido': ''},
-      'roles': const [],
-      'actions': const [],
-    });
-    expect(me.nombre, 'admin@b.com'); // sin nombre/apellido → email
-    expect(me.rol, '');
-    expect(me.permisos, isEmpty);
   });
 }

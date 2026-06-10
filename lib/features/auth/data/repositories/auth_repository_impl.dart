@@ -18,8 +18,8 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final me = await remote.me(); // /me usa el access recién guardado
         return Sesion(
-          usuario: Usuario(id: me.id, nombre: me.nombre, rol: me.rol),
-          permisos: me.permisos,
+          usuario: Usuario(id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel),
+          acciones: me.acciones,
         );
       } catch (_) {
         // Login atómico: si /me falla, no dejamos tokens huérfanos (tokens sin
@@ -45,8 +45,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  /// Sin cache aún: Auth requiere red la 1ra vez. El cache real en Drift se
-  /// cabléa cuando exista una pantalla post-login que lo use (fuera de esta iteración).
+  /// Sin cache todavía: devuelve null. El cacheo real en Drift se cablea en la
+  /// Task 7 de este plan (cachear /me en login + hidratar al arrancar).
   @override
   Future<Sesion?> sesionCacheada() async => null;
 
