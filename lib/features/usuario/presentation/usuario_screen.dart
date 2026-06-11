@@ -10,6 +10,26 @@ import '../../../core/theme/app_typography.dart';
 class UsuarioScreen extends ConsumerWidget {
   const UsuarioScreen({super.key});
 
+  void _confirmarLogout(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Cerrar sesión'),
+        content: const Text('¿Estás seguro que querés cerrar sesión?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              ref.read(logoutProvider)();
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(sessionControllerProvider);
@@ -52,7 +72,7 @@ class UsuarioScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           TextButton.icon(
-            onPressed: () => ref.read(logoutProvider)(),
+            onPressed: () => _confirmarLogout(context, ref),
             icon: const Icon(Icons.logout, color: Colors.white),
             label: const Text('Cerrar sesión', style: TextStyle(fontFamily: 'Rubik', color: Colors.white, fontWeight: FontWeight.w600)),
           ),

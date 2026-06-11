@@ -78,8 +78,13 @@ void main() {
     await tester.tap(find.text('Usuario'));
     await tester.pumpAndSettle();
 
-    // Cerrar sesión desde UsuarioScreen → el guard vuelve a /login
+    // Cerrar sesión desde UsuarioScreen → aparece el diálogo de confirmación
     await tester.tap(find.text('Cerrar sesión'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsOneWidget);
+
+    // Confirmar → el guard vuelve a /login
+    await tester.tap(find.text('Confirmar'));
     await tester.pumpAndSettle();
     expect(find.text('No tenés acciones disponibles todavía'), findsNothing);
     expect(find.text('Bienvenido'), findsOneWidget);

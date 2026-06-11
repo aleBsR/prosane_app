@@ -40,10 +40,24 @@ void main() {
     expect(find.textContaining('próximamente'), findsOneWidget);
   });
 
-  testWidgets('logout cierra la sesión', (t) async {
+  testWidgets('logout pide confirmación; al Confirmar cierra la sesión', (t) async {
     final c = await pump(t, nombre: 'Ana');
     await t.tap(find.text('Cerrar sesión'));
-    await t.pump();
-    expect(c.state, isA<SesionNoAutenticada>());
+    await t.pumpAndSettle();
+    expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsOneWidget); // diálogo visible
+    expect(c.state, isA<SesionAutenticada>()); // todavía no se cerró
+    await t.tap(find.text('Confirmar'));
+    await t.pumpAndSettle();
+    expect(c.state, isA<SesionNoAutenticada>()); // recién acá se cierra
+  });
+
+  testWidgets('logout: al Cancelar NO cierra la sesión', (t) async {
+    final c = await pump(t, nombre: 'Ana');
+    await t.tap(find.text('Cerrar sesión'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Cancelar'));
+    await t.pumpAndSettle();
+    expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsNothing); // diálogo cerrado
+    expect(c.state, isA<SesionAutenticada>()); // sigue logueada
   });
 }
