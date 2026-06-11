@@ -25,3 +25,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepositoryI
 
 final loginUseCaseProvider =
     Provider((ref) => Login(ref.watch(authRepositoryProvider)));
+
+/// Logout completo: limpia tokens + cache de Drift (authRepository.logout)
+/// y el estado en memoria (sessionController.cerrar). El borrado del cache es
+/// imprescindible: si no, hidratar() al arrancar re-autenticaría al usuario.
+final logoutProvider = Provider<Future<void> Function()>((ref) {
+  final repo = ref.read(authRepositoryProvider);
+  final session = ref.read(sessionControllerProvider.notifier);
+  return () async {
+    await repo.logout();
+    session.cerrar();
+  };
+});
