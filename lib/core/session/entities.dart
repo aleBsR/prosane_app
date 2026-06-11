@@ -1,14 +1,41 @@
+class Accion {
+  const Accion({
+    required this.name, required this.label, required this.icon,
+    required this.color, required this.type, required this.category,
+    required this.isSensitive, required this.sortOrder,
+  });
+  final String name, label, icon, color, type, category;
+  final bool isSensitive;
+  final int sortOrder;
+
+  factory Accion.fromJson(Map<String, dynamic> j) => Accion(
+        name: j['name'] as String? ?? '',
+        label: j['label'] as String? ?? '',
+        icon: j['icon'] as String? ?? '',
+        color: j['color'] as String? ?? '',
+        type: j['type'] as String? ?? '',
+        category: j['category'] as String? ?? '',
+        isSensitive: j['is_sensitive'] as bool? ?? false,
+        sortOrder: j['sort_order'] as int? ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'name': name, 'label': label, 'icon': icon, 'color': color,
+        'type': type, 'category': category,
+        'is_sensitive': isSensitive, 'sort_order': sortOrder,
+      };
+}
+
 class Usuario {
-  const Usuario({required this.id, required this.nombre, required this.rol});
-  final String id;
-  final String nombre;
-  final String rol;
+  const Usuario({required this.id, required this.nombre, required this.rolName, required this.rolLabel});
+  final String id, nombre, rolName, rolLabel;
 }
 
 class Sesion {
-  const Sesion({required this.usuario, required this.permisos});
+  const Sesion({required this.usuario, required this.acciones});
   final Usuario usuario;
-  final Set<String> permisos;
+  final List<Accion> acciones;                       // orden del server, intacto
+  Set<String> get permisos => acciones.map((a) => a.name).toSet();
 }
 
 sealed class SesionState {}

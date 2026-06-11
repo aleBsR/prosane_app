@@ -13,14 +13,15 @@ void main() {
     await tester.pumpWidget(UncontrolledProviderScope(
       container: container,
       child: const MaterialApp(
-        home: PermissionGate(permiso: 'firmar_apto', child: Text('VISIBLE')),
+        home: PermissionGate(permiso: 'firmarApto', child: Text('VISIBLE')),
       ),
     ));
     expect(find.text('VISIBLE'), findsNothing); // sin sesión: oculto
 
     container.read(sessionControllerProvider.notifier).setSesion(Sesion(
-      usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-      permisos: const {'firmar_apto'},
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+      acciones: const [Accion(name: 'firmarApto', label: 'Firmar', icon: 'draw', color: '#2E7D32',
+          type: 'form', category: 'salud', isSensitive: true, sortOrder: 40)],
     ));
     await tester.pump();
     expect(find.text('VISIBLE'), findsOneWidget); // tras login con permiso: visible
@@ -30,7 +31,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(
       child: MaterialApp(
         home: PermissionGate(
-          permiso: 'firmar_apto',
+          permiso: 'firmarApto',
           fallback: Text('SIN PERMISO'),
           child: Text('VISIBLE'),
         ),

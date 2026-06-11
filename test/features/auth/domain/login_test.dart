@@ -11,12 +11,14 @@ void main() {
   test('Login delega en el repo y devuelve la sesión', () async {
     final repo = _MockRepo();
     final sesion = Sesion(
-      usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'profesional'),
-      permisos: const {'firmar_apto'},
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
+      acciones: const [],
     );
     when(() => repo.login('a@b.com', 'x')).thenAnswer((_) async => sesion);
     final r = await Login(repo)('a@b.com', 'x');
-    expect(r, sesion);
+    expect(r.usuario.nombre, sesion.usuario.nombre);
+    expect(r.usuario.rolName, sesion.usuario.rolName);
+    expect(r.permisos, sesion.permisos);
     verify(() => repo.login('a@b.com', 'x')).called(1);
   });
 

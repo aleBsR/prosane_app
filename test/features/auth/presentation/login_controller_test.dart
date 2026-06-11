@@ -10,7 +10,7 @@ class _MockLogin extends Mock implements Login {}
 void main() {
   test('éxito: llama onAutenticado con la sesión y limpia el estado', () async {
     final login = _MockLogin();
-    final sesion = Sesion(usuario: const Usuario(id: '1', nombre: 'Ana', rol: 'p'), permisos: const {});
+    final sesion = Sesion(usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'p', rolLabel: ''), acciones: const []);
     when(() => login.call(any(), any())).thenAnswer((_) async => sesion);
     Sesion? capturada;
     final c = LoginController(login: login, onAutenticado: (s) => capturada = s);

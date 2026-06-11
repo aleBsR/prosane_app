@@ -5,7 +5,11 @@ import '../session/entities.dart';
 import '../session/session_controller.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_wizard_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
+import '../../features/acciones/presentation/acciones_screen.dart';
+import '../../features/pendientes/presentation/pendientes_screen.dart';
+import '../../features/usuario/presentation/usuario_screen.dart';
+import '../../features/pendientes/pendientes_count_provider.dart';
+import 'app_shell.dart';
 
 typedef Redirect = String? Function(String location);
 
@@ -14,7 +18,7 @@ typedef Redirect = String? Function(String location);
 Redirect construirRedirect(bool autenticado) => (location) {
       final enAuth = location == '/login' || location == '/signup';
       if (!autenticado && !enAuth) return '/login';
-      if (autenticado && enAuth) return '/home';
+      if (autenticado && enAuth) return '/inicio';
       return null;
     };
 
@@ -36,7 +40,21 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (c, s) => const SignupWizardScreen()),
-      GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => Consumer(
+          builder: (c, ref, _) => AppShell(
+            selectedIndex: navigationShell.currentIndex,
+            onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
+            badgePendientes: ref.watch(pendientesCountProvider),
+            child: navigationShell,
+          ),
+        ),
+        branches: [
+          StatefulShellBranch(routes: [GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/pendientes', builder: (c, s) => const PendientesScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/usuario', builder: (c, s) => const UsuarioScreen())]),
+        ],
+      ),
     ],
   );
 });

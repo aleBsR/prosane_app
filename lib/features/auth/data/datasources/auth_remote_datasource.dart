@@ -7,6 +7,7 @@ abstract class AuthRemoteDataSource {
   Future<Tokens> login(String email, String password);
   Future<void> register(Map<String, dynamic> datos);
   Future<MeResponse> me();
+  Future<void> logout(String refresh);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -25,4 +26,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<MeResponse> me() async =>
       MeResponse.fromJson((await _dio.get('/me/')).data as Map<String, dynamic>);
+
+  @override
+  Future<void> logout(String refresh) => _dio.post('/logout/', data: {'refresh': refresh});
 }

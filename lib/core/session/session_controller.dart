@@ -8,6 +8,11 @@ class SessionController extends StateNotifier<SesionState> {
   void cerrar() => state = SesionNoAutenticada();
 
   bool can(String permiso) => state.can(permiso);
+
+  Future<void> hidratar(Future<Sesion?> Function() leer) async {
+    final s = await leer();
+    if (s != null) state = SesionAutenticada(s);
+  }
 }
 
 final sessionControllerProvider =
