@@ -25,6 +25,13 @@ Issues de seguimiento surgidos de la review final de la rama
 
 ## Menores
 
+- **Logout best-effort contra el backend (espera backend):** hoy el logout es 100%
+  local (borra tokens + cache de Drift + estado) — correcto para offline-first (uno
+  siempre debe poder cerrar sesión sin red). Cuando el backend exponga un endpoint de
+  logout/blacklist de refresh token (simplejwt), agregar una llamada **best-effort**:
+  se intenta si hay red pero NO bloquea ni revierte el logout local; offline se saltea
+  (los tokens ya se borraron), idealmente con cola de reintento. Vive en
+  `logoutProvider` (`lib/core/providers.dart`).
 - **`recordarme` no se persiste:** en `LoginScreen` el toggle "Recordarme" es estado local que
   no llega al controller ni persiste nada. Campo muerto hoy; definir su semántica (o quitarlo).
   `lib/features/auth/presentation/screens/login_screen.dart`.

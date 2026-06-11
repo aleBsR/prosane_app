@@ -23,10 +23,15 @@ void main() {
 
   testWidgets('agrupa por categoría y lista las acciones del rol', (t) async {
     await pump(t, [_a('listarPacientes', 'Listar pacientes', 'salud'), _a('verConstancias', 'Ver constancias', 'consentimiento')]);
+    // Los headers de grupo son visibles aunque los grupos arranquen colapsados
     expect(find.text('SALUD'), findsOneWidget);
     expect(find.text('CONSENTIMIENTO'), findsOneWidget);
+    // Las acciones están ocultas hasta que se expande el grupo
+    expect(find.text('Listar pacientes'), findsNothing);
+    // Al tocar el header SALUD se expande y aparece la acción
+    await t.tap(find.text('SALUD'));
+    await t.pumpAndSettle();
     expect(find.text('Listar pacientes'), findsOneWidget);
-    expect(find.text('Ver constancias'), findsOneWidget);
   });
 
   testWidgets('sin acciones muestra el estado vacío', (t) async {
@@ -36,6 +41,9 @@ void main() {
 
   testWidgets('tocar una acción abre el placeholder "próximamente"', (t) async {
     await pump(t, [_a('firmarApto', 'Firmar apto físico', 'salud')]);
+    // El grupo arranca colapsado: expandir primero
+    await t.tap(find.text('SALUD'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Firmar apto físico'));
     await t.pumpAndSettle();
     expect(find.textContaining('próximamente'), findsOneWidget);

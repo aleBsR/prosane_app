@@ -37,6 +37,7 @@ class AccionesScreen extends ConsumerWidget {
                 for (final g in agruparPorCategoria(acciones))
                   ActionGroup(
                     titulo: g.categoria.toUpperCase(),
+                    initiallyExpanded: false,
                     children: [
                       for (final a in g.acciones)
                         ActionTile(
