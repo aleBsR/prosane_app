@@ -32,15 +32,19 @@
 //   container con las mismas dependencias que usa `dioProvider`, garantizando que
 //   el contrato se cumple cuando se invocan.
 
+import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http_mock_adapter/http_mock_adapter.dart';
 import 'package:prosane_app/core/database/app_database.dart';
 import 'package:prosane_app/core/database/database_provider.dart';
 import 'package:prosane_app/core/providers.dart';
 import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/core/session/session_controller.dart';
 import 'package:prosane_app/core/storage/token_storage.dart';
+import 'package:prosane_app/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:prosane_app/features/auth/data/repositories/auth_repository_impl.dart';
 
 /// Sesión de prueba reutilizable.
 const _sesion = Sesion(
@@ -72,9 +76,24 @@ void main() {
   setUp(() {
     tokens = TokenStorage(backend: InMemoryKeyValueStore());
     db = AppDatabase.forTesting(NativeDatabase.memory());
+
+    // Dio aislado con http_mock_adapter: evita llamadas de red reales en el
+    // logout best-effort (POST /logout/).
+    final mockDio = Dio(BaseOptions(baseUrl: 'http://mock'));
+    final adapter = DioAdapter(dio: mockDio);
+    adapter.onPost('/logout/', (server) => server.reply(205, null));
+
     container = ProviderContainer(overrides: [
       databaseProvider.overrideWithValue(db),
       tokenStorageProvider.overrideWithValue(tokens),
+      // Repo con el mockDio: mismo tokens/cache que el test controla, sin red real.
+      authRepositoryProvider.overrideWith(
+        (ref) => AuthRepositoryImpl(
+          remote: AuthRemoteDataSourceImpl(mockDio),
+          tokens: tokens,
+          cache: db,
+        ),
+      ),
     ]);
     addTearDown(container.dispose);
     addTearDown(db.close);

@@ -36,13 +36,6 @@ Issues de seguimiento surgidos de la review final de la rama
 - **Token sweep del design system (ampliar):** además del separador/sombra ya anotados,
   quedan sin token el rojo del badge (`0xFFE5484D`), el violeta inactivo de la barra
   (`0xFF9286C4`) y el tint activo. Incluirlos cuando se haga el pase de tokens.
-- **Logout best-effort contra el backend (espera backend):** hoy el logout es 100%
-  local (borra tokens + cache de Drift + estado) — correcto para offline-first (uno
-  siempre debe poder cerrar sesión sin red). Cuando el backend exponga un endpoint de
-  logout/blacklist de refresh token (simplejwt), agregar una llamada **best-effort**:
-  se intenta si hay red pero NO bloquea ni revierte el logout local; offline se saltea
-  (los tokens ya se borraron), idealmente con cola de reintento. Vive en
-  `logoutProvider` (`lib/core/providers.dart`).
 - **`recordarme` no se persiste:** en `LoginScreen` el toggle "Recordarme" es estado local que
   no llega al controller ni persiste nada. Campo muerto hoy; definir su semántica (o quitarlo).
   `lib/features/auth/presentation/screens/login_screen.dart`.
@@ -55,6 +48,20 @@ Issues de seguimiento surgidos de la review final de la rama
   Ley 25.326). Definir si el registro debe enviarlo.
 
 ## Resueltos
+
+- **Logout best-effort contra el backend** (2026-06-11): el logout manual
+  (`AuthRepositoryImpl.logout()`, vía `logoutProvider` / botón "Cerrar sesión") llama
+  `POST /api/v1/auth/logout/` con el refresh token **antes** de limpiar el storage, de
+  modo que el interceptor Bearer puede añadir el header. La llamada es best-effort:
+  envuelta en `try/catch`, un fallo de red o error HTTP no bloquea ni revierte el
+  logout local; los tokens y el cache de Drift se limpian igual. Si no hay refresh
+  token guardado, la llamada al backend se omite directamente. El logout **involuntario**
+  (`dioProvider.onLogout`, disparado cuando el servidor ya rechazó el refresh) NO llama
+  al endpoint de blacklist — el token ya está muerto — y permanece inalterado
+  (solo limpieza local: tokens + cache + `cerrar()`).
+  Archivos: `lib/features/auth/data/datasources/auth_remote_datasource.dart`,
+  `lib/features/auth/data/repositories/auth_repository_impl.dart`,
+  `test/features/auth/data/auth_repository_impl_test.dart`.
 
 - **Invariante de naming de permisos camelCase** (2026-06-10): el front pedía permisos en
   `snake_case` (`firmar_apto` en `home_screen.dart`) pero el backend los emite en `camelCase`

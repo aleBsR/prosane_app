@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/error/error_mapper.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/session/entities.dart';
@@ -54,6 +57,20 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    // Best-effort: blacklistear el refresh server-side ANTES de limpiar (los tokens
+    // deben estar presentes para que el interceptor agregue el Bearer). Si está
+    // offline o falla, NO bloquea ni revierte el logout local (offline-first).
+    final refresh = await tokens.refresh();
+    if (refresh != null && refresh.isNotEmpty) {
+      try {
+        await remote.logout(refresh);
+      } on DioException catch (_) {
+        // offline / error HTTP: el logout local procede igual.
+      } catch (e, st) {
+        // error inesperado (bug en el datasource): no bloquea el logout local.
+        if (kDebugMode) debugPrint('logout best-effort: error inesperado: $e\n$st');
+      }
+    }
     await tokens.limpiar();
     await cache.limpiarSesion();
   }

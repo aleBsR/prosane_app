@@ -64,14 +64,45 @@ void main() {
     verify(() => remote.register({'email': 'a@b.com'})).called(1);
   });
 
-  test('logout limpia los tokens', () async {
+  test('logout llama al backend (blacklist) con el refresh y luego limpia tokens + cache', () async {
     final remote = _MockRemote();
     final tokens = TokenStorage(backend: InMemoryKeyValueStore());
-    final cache = _FakeCache();
     await tokens.guardar(access: 'A', refresh: 'R');
+    final cache = _FakeCache()..guardada = const Sesion(
+        usuario: Usuario(id: '1', nombre: 'A', rolName: 'r', rolLabel: 'R'), acciones: []);
+    when(() => remote.logout('R')).thenAnswer((_) async {});
+
     await AuthRepositoryImpl(remote: remote, tokens: tokens, cache: cache).logout();
-    expect(await tokens.access(), isNull);
+
+    verify(() => remote.logout('R')).called(1);   // best-effort blacklist con el refresh
+    expect(await tokens.access(), isNull);          // local limpiado
     expect(cache.limpiado, true);
+  });
+
+  test('logout es best-effort: si el backend falla (offline), igual limpia local', () async {
+    final remote = _MockRemote();
+    final tokens = TokenStorage(backend: InMemoryKeyValueStore());
+    await tokens.guardar(access: 'A', refresh: 'R');
+    final cache = _FakeCache();
+    when(() => remote.logout(any())).thenThrow(Exception('offline'));
+
+    // NO debe propagar la excepción
+    await AuthRepositoryImpl(remote: remote, tokens: tokens, cache: cache).logout();
+
+    expect(await tokens.access(), isNull);   // limpió igual
+    expect(cache.limpiado, true);
+  });
+
+  test('logout sin refresh token no llama al backend pero limpia local', () async {
+    final remote = _MockRemote();
+    final tokens = TokenStorage(backend: InMemoryKeyValueStore()); // sin tokens guardados
+    final cache = _FakeCache();
+
+    await AuthRepositoryImpl(remote: remote, tokens: tokens, cache: cache).logout();
+
+    verifyNever(() => remote.logout(any()));
+    expect(cache.limpiado, true);
+    expect(await tokens.access(), isNull);
   });
 
   test('si /me falla, limpia los tokens (login atómico) y propaga', () async {
