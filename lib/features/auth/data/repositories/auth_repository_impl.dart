@@ -42,9 +42,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> register(Map<String, dynamic> datos) async {
+  Future<Sesion> register(Map<String, dynamic> datos) async {
     try {
-      await remote.register(datos);
+      final t = await remote.registerTutor(datos);
+      await tokens.guardar(access: t.access, refresh: t.refresh);
+      try {
+        final me = await remote.me();
+        final sesion = Sesion(
+          usuario: Usuario(id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel),
+          acciones: me.acciones,
+        );
+        await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+        return sesion;
+      } catch (_) {
+        await tokens.limpiar();
+        rethrow;
+      }
     } on Failure {
       rethrow;
     } catch (e) {
