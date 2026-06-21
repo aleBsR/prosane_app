@@ -84,4 +84,34 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
 
   @override
   Future<void> limpiarSesion() => (delete(cachedSessionRows)..where((t) => t.id.equals(_meKey))).go();
+
+  Future<void> insertHijoDraft({
+    required String id,
+    required String tutorId,
+    required String nombreNna,
+    required String apellidoNna,
+    required String payloadJson,
+  }) =>
+      into(hijosRows).insert(HijosRowsCompanion.insert(
+        id: id,
+        tutorId: tutorId,
+        nombreNna: Value(nombreNna),
+        apellidoNna: Value(apellidoNna),
+        payloadJson: payloadJson,
+      ));
+
+  Future<int> contarHijosPendientes() async {
+    final q = selectOnly(hijosRows)
+      ..addColumns([hijosRows.id.count()])
+      ..where(hijosRows.syncStatus.equalsValue(SyncStatus.pendiente));
+    final row = await q.getSingle();
+    return row.read(hijosRows.id.count()) ?? 0;
+  }
+
+  Future<List<HijosRow>> hijosPendientes() =>
+      (select(hijosRows)..where((t) => t.syncStatus.equalsValue(SyncStatus.pendiente))).get();
+
+  Future<void> marcarHijoSincronizado(String id) =>
+      (update(hijosRows)..where((t) => t.id.equals(id)))
+          .write(const HijosRowsCompanion(syncStatus: Value(SyncStatus.sincronizado)));
 }

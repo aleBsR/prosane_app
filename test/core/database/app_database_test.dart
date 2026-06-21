@@ -10,4 +10,18 @@ void main() {
     expect(await db.getWatermark('inexistente'), isNull);
     await db.close();
   });
+
+  test('insertHijoDraft crea fila pendiente y contarHijosPendientes la cuenta', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    await db.insertHijoDraft(
+      id: 'h1', tutorId: 't1', nombreNna: 'Juana', apellidoNna: 'Pérez',
+      payloadJson: '{}',
+    );
+    expect(await db.contarHijosPendientes(), 1);
+    final pend = await db.hijosPendientes();
+    expect(pend.single.id, 'h1');
+    await db.marcarHijoSincronizado('h1');
+    expect(await db.contarHijosPendientes(), 0);
+    await db.close();
+  });
 }
