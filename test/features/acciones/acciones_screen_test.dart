@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/core/session/session_controller.dart';
 import 'package:prosane_app/features/acciones/presentation/acciones_screen.dart';
@@ -47,5 +48,64 @@ void main() {
     await t.tap(find.text('Firmar apto físico'));
     await t.pumpAndSettle();
     expect(find.textContaining('próximamente'), findsOneWidget);
+  });
+
+  testWidgets('registrarHijo navega a /hijos/nuevo', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/hijos/nuevo', builder: (c, s) => const Scaffold(body: Text('Planilla familiar'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+          acciones: [_a('registrarHijo', 'Registrar hijo', 'familia')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    // El grupo arranca colapsado: expandir primero
+    await t.tap(find.text('FAMILIA'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Registrar hijo'));
+    await t.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/hijos/nuevo');
+  });
+
+  testWidgets('verHijos navega a /hijos', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/hijos', builder: (c, s) => const Scaffold(body: Text('Mis hijos'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+          acciones: [_a('verHijos', 'Ver hijos', 'familia')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('FAMILIA'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Ver hijos'));
+    await t.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/hijos');
   });
 }

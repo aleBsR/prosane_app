@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/accion_presentacion.dart';
 import '../../../core/design_system/action_group.dart';
 import '../../../core/design_system/action_tile.dart';
@@ -44,7 +45,16 @@ class AccionesScreen extends ConsumerWidget {
                           color: colorDesdeHex(a.color),
                           icon: accionIcon(a.icon),
                           label: a.label,
-                          onTap: () => _placeholder(context, a.label),
+                          onTap: () {
+                            switch (a.name) {
+                              case 'registrarHijo':
+                                context.go('/hijos/nuevo');
+                              case 'verHijos':
+                                context.go('/hijos');
+                              default:
+                                _placeholder(context, a.label);
+                            }
+                          },
                         ),
                     ],
                   ),
