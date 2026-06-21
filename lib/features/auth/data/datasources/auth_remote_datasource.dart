@@ -6,6 +6,7 @@ typedef Tokens = ({String access, String refresh});
 abstract class AuthRemoteDataSource {
   Future<Tokens> login(String email, String password);
   Future<void> register(Map<String, dynamic> datos);
+  Future<Tokens> registerTutor(Map<String, dynamic> datos);
   Future<MeResponse> me();
   Future<void> logout(String refresh);
 }
@@ -22,6 +23,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> register(Map<String, dynamic> datos) => _dio.post('/register/', data: datos);
+
+  @override
+  Future<Tokens> registerTutor(Map<String, dynamic> datos) async {
+    final r = await _dio.post('/register/tutor/', data: datos);
+    return (access: r.data['access'] as String, refresh: r.data['refresh'] as String);
+  }
 
   @override
   Future<MeResponse> me() async =>
