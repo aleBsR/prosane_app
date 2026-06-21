@@ -24,7 +24,11 @@ void main() {
 
   test('Register delega en el repo con el payload', () async {
     final repo = _MockRepo();
-    when(() => repo.register(any())).thenAnswer((_) async {});
+    final sesion = Sesion(
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor'),
+      acciones: const [],
+    );
+    when(() => repo.register(any())).thenAnswer((_) async => sesion);
     await Register(repo)({'email': 'a@b.com'});
     verify(() => repo.register({'email': 'a@b.com'})).called(1);
   });
