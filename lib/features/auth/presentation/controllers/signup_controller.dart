@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/providers.dart';
+import '../../../../core/session/entities.dart';
+import '../../../../core/session/session_controller.dart';
 import '../../domain/usecases/register.dart';
 
 part 'signup_controller.freezed.dart';
@@ -37,11 +39,15 @@ class SignupState with _$SignupState {
 }
 
 class SignupController extends StateNotifier<SignupState> {
-  SignupController({required Register register})
-      : _register = register,
+  SignupController({
+    required Register register,
+    required void Function(Sesion) onAutenticado,
+  })  : _register = register,
+        _onAutenticado = onAutenticado,
         super(const SignupState());
 
   final Register _register;
+  final void Function(Sesion) _onAutenticado;
 
   // --- Setters etapa 0 ---
   void setTipoDocumento(String v) =>
@@ -139,19 +145,20 @@ class SignupController extends StateNotifier<SignupState> {
     state = state.copyWith(isSubmitting: true, error: null);
     final f = state.formData;
     final payload = <String, dynamic>{
-      'tipo_documento': f.tipoDocumento,
-      'numero_documento': f.numeroDocumento,
-      'nombre': f.nombre,
-      'apellido': f.apellido,
-      'sexo': f.sexo,
-      'fecha_nacimiento': f.fechaNacimiento?.toIso8601String(),
-      'lugar_nacimiento': f.lugarNacimiento,
-      'pais_residencia': f.paisResidencia,
       'email': f.email,
       'password': f.password,
+      'persona': {
+        'nombre': f.nombre,
+        'apellido': f.apellido,
+        'dni': f.numeroDocumento,
+        'tipo_dni': f.tipoDocumento,
+        'sexo': f.sexo,
+        'fecha_nacimiento': f.fechaNacimiento?.toIso8601String(),
+      },
     };
     try {
-      await _register(payload);
+      final sesion = await _register(payload);
+      _onAutenticado(sesion);
       state = state.copyWith(isSubmitting: false, registrado: true);
     } on Failure catch (f) {
       state = state.copyWith(isSubmitting: false, error: f.mensaje);
@@ -170,5 +177,8 @@ final registerUseCaseProvider =
 
 final signupControllerProvider = StateNotifierProvider.autoDispose<
     SignupController, SignupState>(
-  (ref) => SignupController(register: ref.watch(registerUseCaseProvider)),
+  (ref) => SignupController(
+    register: ref.watch(registerUseCaseProvider),
+    onAutenticado: (s) => ref.read(sessionControllerProvider.notifier).setSesion(s),
+  ),
 );

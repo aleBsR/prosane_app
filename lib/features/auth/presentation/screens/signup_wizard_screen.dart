@@ -31,7 +31,8 @@ class SignupWizardScreen extends ConsumerWidget {
             backgroundColor: AppColors.primario,
           ),
         );
-        context.go('/login');
+        // El router redirige /signup → /inicio automáticamente al detectar
+        // la sesión autenticada; no es necesario navegar explícitamente.
       }
     });
 

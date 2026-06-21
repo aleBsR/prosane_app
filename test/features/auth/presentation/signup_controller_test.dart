@@ -1,13 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:prosane_app/core/error/failure.dart';
+import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/features/auth/domain/usecases/register.dart';
 import 'package:prosane_app/features/auth/presentation/controllers/signup_controller.dart';
 
 class _MockRegister extends Mock implements Register {}
 
-SignupController _ctrl([Register? reg]) =>
-    SignupController(register: reg ?? _MockRegister());
+// Sesion dummy reutilizable en todos los tests
+final _sesionDummy = Sesion(
+  usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'user', rolLabel: 'Usuario'),
+  acciones: const [],
+);
+
+SignupController _ctrl([Register? reg, void Function(Sesion)? onAutenticado]) =>
+    SignupController(
+      register: reg ?? _MockRegister(),
+      onAutenticado: onAutenticado ?? (_) {},
+    );
 
 void main() {
   test('etapa 0: inválida sin aceptar política; válida con doc + política', () {
@@ -56,7 +66,7 @@ void main() {
 
   test('enviar(): con datos válidos llama Register y marca registrado', () async {
     final reg = _MockRegister();
-    when(() => reg.call(any())).thenAnswer((_) async {});
+    when(() => reg.call(any())).thenAnswer((_) async => _sesionDummy);
     final c = _llenarTodo(_ctrl(reg));
     await c.enviar();
     verify(() => reg.call(any())).called(1);
@@ -75,7 +85,7 @@ void main() {
 
   test('enviar(): NO llama Register si faltan etapas anteriores (valida todo el form)', () async {
     final reg = _MockRegister();
-    when(() => reg.call(any())).thenAnswer((_) async {});
+    when(() => reg.call(any())).thenAnswer((_) async => _sesionDummy);
     final c = _ctrl(reg);
     // Solo se completa la etapa 3; las 0–2 quedan incompletas.
     c.setPassword('Secreto123');
@@ -96,11 +106,47 @@ void main() {
 
   test('enviar(): no registra dos veces (guard de doble-submit)', () async {
     final reg = _MockRegister();
-    when(() => reg.call(any())).thenAnswer((_) async {});
+    when(() => reg.call(any())).thenAnswer((_) async => _sesionDummy);
     final c = _llenarTodo(_ctrl(reg));
     await c.enviar();
     await c.enviar(); // segunda llamada: ya registrado → no hace nada
     verify(() => reg.call(any())).called(1);
+  });
+
+  test('enviar(): arma payload anidado con persona y llama onAutenticado con la sesion', () async {
+    final reg = _MockRegister();
+    when(() => reg.call(any())).thenAnswer((_) async => _sesionDummy);
+
+    Map<String, dynamic>? capturado;
+    Sesion? sesionCapturada;
+
+    final c = _llenarTodo(_ctrl(reg, (s) => sesionCapturada = s));
+
+    // Capturamos el payload que se pasa a Register
+    when(() => reg.call(any())).thenAnswer((inv) async {
+      capturado = inv.positionalArguments.first as Map<String, dynamic>;
+      return _sesionDummy;
+    });
+
+    await c.enviar();
+
+    // Payload anidado: debe tener email y persona como mapa
+    expect(capturado, isNotNull);
+    expect(capturado!['email'], isNotNull);
+    expect(capturado!['persona'], isA<Map>());
+    expect((capturado!['persona'] as Map)['dni'], isNotNull);
+    expect((capturado!['persona'] as Map)['tipo_dni'], isNotNull);
+
+    // NO debe tener campos planos del viejo formato
+    expect(capturado!.containsKey('lugar_nacimiento'), isFalse);
+    expect(capturado!.containsKey('numero_documento'), isFalse);
+    expect(capturado!.containsKey('tipo_documento'), isFalse);
+
+    // onAutenticado fue invocado con la Sesion devuelta
+    expect(sesionCapturada, same(_sesionDummy));
+
+    // Y el state queda registrado
+    expect(c.state.registrado, true);
   });
 }
 
