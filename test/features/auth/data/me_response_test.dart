@@ -66,4 +66,14 @@ void main() {
     expect(me.metaVersion, '');
     expect(me.metaSyncedAt, '');
   });
+
+  test('tutor_id se expone como tutorId (nullable)', () {
+    final conTutor = base()..['user'] = {
+      'id': '1', 'email': 'ana@b.com', 'nombre': 'Ana', 'apellido': 'Gómez',
+      'tutor_id': 'tut-123',
+    };
+    expect(MeResponse.fromJson(conTutor).tutorId, 'tut-123');
+    // Sin tutor_id → null (no rompe)
+    expect(MeResponse.fromJson(base()).tutorId, isNull);
+  });
 }

@@ -27,8 +27,9 @@ class Accion {
 }
 
 class Usuario {
-  const Usuario({required this.id, required this.nombre, required this.rolName, required this.rolLabel});
+  const Usuario({required this.id, required this.nombre, required this.rolName, required this.rolLabel, this.tutorId});
   final String id, nombre, rolName, rolLabel;
+  final String? tutorId;
 }
 
 class Sesion {
