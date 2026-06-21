@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'sync_columns.dart';
 import 'tables/cached_session_table.dart';
+import 'tables/hijos_table.dart';
 import 'tables/sync_state_table.dart';
 import '../session/entities.dart';
 import '../session/session_cache.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [SyncStateRows, CachedSessionRows])
+@DriftDatabase(tables: [SyncStateRows, CachedSessionRows, HijosRows])
 class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase(super.e);
 
@@ -16,7 +18,7 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -27,6 +29,9 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.createTable(cachedSessionRows); // v1 -> v2: tabla nueva, no destruye nada
+          }
+          if (from < 3) {
+            await m.createTable(hijosRows); // v2 -> v3: tabla offline-first para hijos
           }
         },
       );

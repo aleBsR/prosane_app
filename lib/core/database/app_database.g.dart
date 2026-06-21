@@ -808,12 +808,537 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
   }
 }
 
+class $HijosRowsTable extends HijosRows
+    with TableInfo<$HijosRowsTable, HijosRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HijosRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now().toUtc(),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<SyncStatus, int> syncStatus =
+      GeneratedColumn<int>(
+        'sync_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: Constant(SyncStatus.pendiente.index),
+      ).withConverter<SyncStatus>($HijosRowsTable.$convertersyncStatus);
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tutorIdMeta = const VerificationMeta(
+    'tutorId',
+  );
+  @override
+  late final GeneratedColumn<String> tutorId = GeneratedColumn<String>(
+    'tutor_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nombreNnaMeta = const VerificationMeta(
+    'nombreNna',
+  );
+  @override
+  late final GeneratedColumn<String> nombreNna = GeneratedColumn<String>(
+    'nombre_nna',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _apellidoNnaMeta = const VerificationMeta(
+    'apellidoNna',
+  );
+  @override
+  late final GeneratedColumn<String> apellidoNna = GeneratedColumn<String>(
+    'apellido_nna',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    tutorId,
+    nombreNna,
+    apellidoNna,
+    payloadJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hijos_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HijosRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('tutor_id')) {
+      context.handle(
+        _tutorIdMeta,
+        tutorId.isAcceptableOrUnknown(data['tutor_id']!, _tutorIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tutorIdMeta);
+    }
+    if (data.containsKey('nombre_nna')) {
+      context.handle(
+        _nombreNnaMeta,
+        nombreNna.isAcceptableOrUnknown(data['nombre_nna']!, _nombreNnaMeta),
+      );
+    }
+    if (data.containsKey('apellido_nna')) {
+      context.handle(
+        _apellidoNnaMeta,
+        apellidoNna.isAcceptableOrUnknown(
+          data['apellido_nna']!,
+          _apellidoNnaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HijosRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HijosRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: $HijosRowsTable.$convertersyncStatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}sync_status'],
+        )!,
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      tutorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tutor_id'],
+      )!,
+      nombreNna: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre_nna'],
+      )!,
+      apellidoNna: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}apellido_nna'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+    );
+  }
+
+  @override
+  $HijosRowsTable createAlias(String alias) {
+    return $HijosRowsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<SyncStatus, int, int> $convertersyncStatus =
+      const EnumIndexConverter<SyncStatus>(SyncStatus.values);
+}
+
+class HijosRow extends DataClass implements Insertable<HijosRow> {
+  final String id;
+  final DateTime updatedAt;
+  final SyncStatus syncStatus;
+  final DateTime? deletedAt;
+  final String tutorId;
+  final String nombreNna;
+  final String apellidoNna;
+  final String payloadJson;
+  const HijosRow({
+    required this.id,
+    required this.updatedAt,
+    required this.syncStatus,
+    this.deletedAt,
+    required this.tutorId,
+    required this.nombreNna,
+    required this.apellidoNna,
+    required this.payloadJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['sync_status'] = Variable<int>(
+        $HijosRowsTable.$convertersyncStatus.toSql(syncStatus),
+      );
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['tutor_id'] = Variable<String>(tutorId);
+    map['nombre_nna'] = Variable<String>(nombreNna);
+    map['apellido_nna'] = Variable<String>(apellidoNna);
+    map['payload_json'] = Variable<String>(payloadJson);
+    return map;
+  }
+
+  HijosRowsCompanion toCompanion(bool nullToAbsent) {
+    return HijosRowsCompanion(
+      id: Value(id),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      tutorId: Value(tutorId),
+      nombreNna: Value(nombreNna),
+      apellidoNna: Value(apellidoNna),
+      payloadJson: Value(payloadJson),
+    );
+  }
+
+  factory HijosRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HijosRow(
+      id: serializer.fromJson<String>(json['id']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: $HijosRowsTable.$convertersyncStatus.fromJson(
+        serializer.fromJson<int>(json['syncStatus']),
+      ),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      tutorId: serializer.fromJson<String>(json['tutorId']),
+      nombreNna: serializer.fromJson<String>(json['nombreNna']),
+      apellidoNna: serializer.fromJson<String>(json['apellidoNna']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<int>(
+        $HijosRowsTable.$convertersyncStatus.toJson(syncStatus),
+      ),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'tutorId': serializer.toJson<String>(tutorId),
+      'nombreNna': serializer.toJson<String>(nombreNna),
+      'apellidoNna': serializer.toJson<String>(apellidoNna),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+    };
+  }
+
+  HijosRow copyWith({
+    String? id,
+    DateTime? updatedAt,
+    SyncStatus? syncStatus,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? tutorId,
+    String? nombreNna,
+    String? apellidoNna,
+    String? payloadJson,
+  }) => HijosRow(
+    id: id ?? this.id,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    tutorId: tutorId ?? this.tutorId,
+    nombreNna: nombreNna ?? this.nombreNna,
+    apellidoNna: apellidoNna ?? this.apellidoNna,
+    payloadJson: payloadJson ?? this.payloadJson,
+  );
+  HijosRow copyWithCompanion(HijosRowsCompanion data) {
+    return HijosRow(
+      id: data.id.present ? data.id.value : this.id,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      tutorId: data.tutorId.present ? data.tutorId.value : this.tutorId,
+      nombreNna: data.nombreNna.present ? data.nombreNna.value : this.nombreNna,
+      apellidoNna: data.apellidoNna.present
+          ? data.apellidoNna.value
+          : this.apellidoNna,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HijosRow(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombreNna: $nombreNna, ')
+          ..write('apellidoNna: $apellidoNna, ')
+          ..write('payloadJson: $payloadJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    tutorId,
+    nombreNna,
+    apellidoNna,
+    payloadJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HijosRow &&
+          other.id == this.id &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.deletedAt == this.deletedAt &&
+          other.tutorId == this.tutorId &&
+          other.nombreNna == this.nombreNna &&
+          other.apellidoNna == this.apellidoNna &&
+          other.payloadJson == this.payloadJson);
+}
+
+class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
+  final Value<String> id;
+  final Value<DateTime> updatedAt;
+  final Value<SyncStatus> syncStatus;
+  final Value<DateTime?> deletedAt;
+  final Value<String> tutorId;
+  final Value<String> nombreNna;
+  final Value<String> apellidoNna;
+  final Value<String> payloadJson;
+  final Value<int> rowid;
+  const HijosRowsCompanion({
+    this.id = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.tutorId = const Value.absent(),
+    this.nombreNna = const Value.absent(),
+    this.apellidoNna = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HijosRowsCompanion.insert({
+    required String id,
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String tutorId,
+    this.nombreNna = const Value.absent(),
+    this.apellidoNna = const Value.absent(),
+    required String payloadJson,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tutorId = Value(tutorId),
+       payloadJson = Value(payloadJson);
+  static Insertable<HijosRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? syncStatus,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? tutorId,
+    Expression<String>? nombreNna,
+    Expression<String>? apellidoNna,
+    Expression<String>? payloadJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (tutorId != null) 'tutor_id': tutorId,
+      if (nombreNna != null) 'nombre_nna': nombreNna,
+      if (apellidoNna != null) 'apellido_nna': apellidoNna,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HijosRowsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? updatedAt,
+    Value<SyncStatus>? syncStatus,
+    Value<DateTime?>? deletedAt,
+    Value<String>? tutorId,
+    Value<String>? nombreNna,
+    Value<String>? apellidoNna,
+    Value<String>? payloadJson,
+    Value<int>? rowid,
+  }) {
+    return HijosRowsCompanion(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      deletedAt: deletedAt ?? this.deletedAt,
+      tutorId: tutorId ?? this.tutorId,
+      nombreNna: nombreNna ?? this.nombreNna,
+      apellidoNna: apellidoNna ?? this.apellidoNna,
+      payloadJson: payloadJson ?? this.payloadJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(
+        $HijosRowsTable.$convertersyncStatus.toSql(syncStatus.value),
+      );
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (tutorId.present) {
+      map['tutor_id'] = Variable<String>(tutorId.value);
+    }
+    if (nombreNna.present) {
+      map['nombre_nna'] = Variable<String>(nombreNna.value);
+    }
+    if (apellidoNna.present) {
+      map['apellido_nna'] = Variable<String>(apellidoNna.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HijosRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombreNna: $nombreNna, ')
+          ..write('apellidoNna: $apellidoNna, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SyncStateRowsTable syncStateRows = $SyncStateRowsTable(this);
   late final $CachedSessionRowsTable cachedSessionRows =
       $CachedSessionRowsTable(this);
+  late final $HijosRowsTable hijosRows = $HijosRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -821,6 +1346,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     syncStateRows,
     cachedSessionRows,
+    hijosRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -1267,6 +1793,265 @@ typedef $$CachedSessionRowsTableProcessedTableManager =
       CachedSessionRow,
       PrefetchHooks Function()
     >;
+typedef $$HijosRowsTableCreateCompanionBuilder =
+    HijosRowsCompanion Function({
+      required String id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      required String tutorId,
+      Value<String> nombreNna,
+      Value<String> apellidoNna,
+      required String payloadJson,
+      Value<int> rowid,
+    });
+typedef $$HijosRowsTableUpdateCompanionBuilder =
+    HijosRowsCompanion Function({
+      Value<String> id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      Value<String> tutorId,
+      Value<String> nombreNna,
+      Value<String> apellidoNna,
+      Value<String> payloadJson,
+      Value<int> rowid,
+    });
+
+class $$HijosRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SyncStatus, SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombreNna => $composableBuilder(
+    column: $table.nombreNna,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HijosRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombreNna => $composableBuilder(
+    column: $table.nombreNna,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HijosRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get tutorId =>
+      $composableBuilder(column: $table.tutorId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombreNna =>
+      $composableBuilder(column: $table.nombreNna, builder: (column) => column);
+
+  GeneratedColumn<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+}
+
+class $$HijosRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HijosRowsTable,
+          HijosRow,
+          $$HijosRowsTableFilterComposer,
+          $$HijosRowsTableOrderingComposer,
+          $$HijosRowsTableAnnotationComposer,
+          $$HijosRowsTableCreateCompanionBuilder,
+          $$HijosRowsTableUpdateCompanionBuilder,
+          (HijosRow, BaseReferences<_$AppDatabase, $HijosRowsTable, HijosRow>),
+          HijosRow,
+          PrefetchHooks Function()
+        > {
+  $$HijosRowsTableTableManager(_$AppDatabase db, $HijosRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HijosRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HijosRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HijosRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> tutorId = const Value.absent(),
+                Value<String> nombreNna = const Value.absent(),
+                Value<String> apellidoNna = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HijosRowsCompanion(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                tutorId: tutorId,
+                nombreNna: nombreNna,
+                apellidoNna: apellidoNna,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String tutorId,
+                Value<String> nombreNna = const Value.absent(),
+                Value<String> apellidoNna = const Value.absent(),
+                required String payloadJson,
+                Value<int> rowid = const Value.absent(),
+              }) => HijosRowsCompanion.insert(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                tutorId: tutorId,
+                nombreNna: nombreNna,
+                apellidoNna: apellidoNna,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HijosRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HijosRowsTable,
+      HijosRow,
+      $$HijosRowsTableFilterComposer,
+      $$HijosRowsTableOrderingComposer,
+      $$HijosRowsTableAnnotationComposer,
+      $$HijosRowsTableCreateCompanionBuilder,
+      $$HijosRowsTableUpdateCompanionBuilder,
+      (HijosRow, BaseReferences<_$AppDatabase, $HijosRowsTable, HijosRow>),
+      HijosRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1275,4 +2060,6 @@ class $AppDatabaseManager {
       $$SyncStateRowsTableTableManager(_db, _db.syncStateRows);
   $$CachedSessionRowsTableTableManager get cachedSessionRows =>
       $$CachedSessionRowsTableTableManager(_db, _db.cachedSessionRows);
+  $$HijosRowsTableTableManager get hijosRows =>
+      $$HijosRowsTableTableManager(_db, _db.hijosRows);
 }
