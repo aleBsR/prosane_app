@@ -25,47 +25,63 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   // schemaVersion sin migración + test.
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) => m.createAll(),
-        onUpgrade: (m, from, to) async {
-          if (from < 2) {
-            await m.createTable(cachedSessionRows); // v1 -> v2: tabla nueva, no destruye nada
-          }
-          if (from < 3) {
-            await m.createTable(hijosRows); // v2 -> v3: tabla offline-first para hijos
-          }
-        },
-      );
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(
+          cachedSessionRows,
+        ); // v1 -> v2: tabla nueva, no destruye nada
+      }
+      if (from < 3) {
+        await m.createTable(
+          hijosRows,
+        ); // v2 -> v3: tabla offline-first para hijos
+      }
+    },
+  );
 
   Future<void> setWatermark(String feature, DateTime ts) =>
       into(syncStateRows).insertOnConflictUpdate(
-        SyncStateRowsCompanion.insert(feature: feature, lastSyncedAt: Value(ts)),
+        SyncStateRowsCompanion.insert(
+          feature: feature,
+          lastSyncedAt: Value(ts),
+        ),
       );
 
   Future<DateTime?> getWatermark(String feature) async {
-    final row = await (select(syncStateRows)..where((t) => t.feature.equals(feature)))
-        .getSingleOrNull();
+    final row = await (select(
+      syncStateRows,
+    )..where((t) => t.feature.equals(feature))).getSingleOrNull();
     return row?.lastSyncedAt;
   }
 
   static const _meKey = 'me';
 
   @override
-  Future<void> guardarSesion(Sesion s, {required String email, required String version, required String syncedAtIso}) {
-    return into(cachedSessionRows).insertOnConflictUpdate(CachedSessionRowsCompanion.insert(
-      id: _meKey,
-      userId: s.usuario.id,
-      email: email,
-      nombre: Value(s.usuario.nombre),
-      rolName: s.usuario.rolName,
-      rolLabel: s.usuario.rolLabel,
-      accionesJson: jsonEncode(s.acciones.map((a) => a.toJson()).toList()),
-      metaVersion: version,
-      permissionsSyncedAt: Value(DateTime.tryParse(syncedAtIso)?.toUtc()),
-    ));
+  Future<void> guardarSesion(
+    Sesion s, {
+    required String email,
+    required String version,
+    required String syncedAtIso,
+  }) {
+    return into(cachedSessionRows).insertOnConflictUpdate(
+      CachedSessionRowsCompanion.insert(
+        id: _meKey,
+        userId: s.usuario.id,
+        email: email,
+        nombre: Value(s.usuario.nombre),
+        rolName: s.usuario.rolName,
+        rolLabel: s.usuario.rolLabel,
+        accionesJson: jsonEncode(s.acciones.map((a) => a.toJson()).toList()),
+        metaVersion: version,
+        permissionsSyncedAt: Value(DateTime.tryParse(syncedAtIso)?.toUtc()),
+      ),
+    );
   }
 
-  Future<CachedSessionRow?> _meRow() =>
-      (select(cachedSessionRows)..where((t) => t.id.equals(_meKey))).getSingleOrNull();
+  Future<CachedSessionRow?> _meRow() => (select(
+    cachedSessionRows,
+  )..where((t) => t.id.equals(_meKey))).getSingleOrNull();
 
   @override
   Future<Sesion?> leerSesion() async {
@@ -75,7 +91,12 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         .map((j) => Accion.fromJson((j as Map).cast<String, dynamic>()))
         .toList();
     return Sesion(
-      usuario: Usuario(id: row.userId, nombre: row.nombre ?? row.email, rolName: row.rolName, rolLabel: row.rolLabel),
+      usuario: Usuario(
+        id: row.userId,
+        nombre: row.nombre ?? row.email,
+        rolName: row.rolName,
+        rolLabel: row.rolLabel,
+      ),
       acciones: acciones,
     );
   }
@@ -83,7 +104,8 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   Future<String?> versionCacheada() async => (await _meRow())?.metaVersion;
 
   @override
-  Future<void> limpiarSesion() => (delete(cachedSessionRows)..where((t) => t.id.equals(_meKey))).go();
+  Future<void> limpiarSesion() =>
+      (delete(cachedSessionRows)..where((t) => t.id.equals(_meKey))).go();
 
   Future<void> insertHijoDraft({
     required String id,
@@ -91,14 +113,15 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
     required String nombreNna,
     required String apellidoNna,
     required String payloadJson,
-  }) =>
-      into(hijosRows).insert(HijosRowsCompanion.insert(
-        id: id,
-        tutorId: tutorId,
-        nombreNna: Value(nombreNna),
-        apellidoNna: Value(apellidoNna),
-        payloadJson: payloadJson,
-      ));
+  }) => into(hijosRows).insert(
+    HijosRowsCompanion.insert(
+      id: id,
+      tutorId: tutorId,
+      nombreNna: Value(nombreNna),
+      apellidoNna: Value(apellidoNna),
+      payloadJson: payloadJson,
+    ),
+  );
 
   Future<int> contarHijosPendientes() async {
     final q = selectOnly(hijosRows)
@@ -116,10 +139,17 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
     return row.read(hijosRows.id.count()) ?? 0;
   }
 
-  Future<List<HijosRow>> hijosPendientes() =>
-      (select(hijosRows)..where((t) => t.syncStatus.equalsValue(SyncStatus.pendiente))).get();
+  Future<List<HijosRow>> hijosPendientes() => (select(
+    hijosRows,
+  )..where((t) => t.syncStatus.equalsValue(SyncStatus.pendiente))).get();
+
+  /// Stream reactivo de los hijos vivos (no borrados). Emite en cada cambio de
+  /// la tabla → el badge de Pendientes se actualiza solo (alta, sync, baja).
+  Stream<List<HijosRow>> watchHijosVivos() =>
+      (select(hijosRows)..where((t) => t.deletedAt.isNull())).watch();
 
   Future<void> marcarHijoSincronizado(String id) =>
-      (update(hijosRows)..where((t) => t.id.equals(id)))
-          .write(const HijosRowsCompanion(syncStatus: Value(SyncStatus.sincronizado)));
+      (update(hijosRows)..where((t) => t.id.equals(id))).write(
+        const HijosRowsCompanion(syncStatus: Value(SyncStatus.sincronizado)),
+      );
 }
