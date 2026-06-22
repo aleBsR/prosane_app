@@ -140,6 +140,7 @@ class PlanillaScreen extends ConsumerWidget {
                       Text('Antecedentes del niño/a', style: AppTypography.subtitulo),
                       const SizedBox(height: AppSpacing.sm),
                       AppSwitch(label: 'Asma / espasmos bronquiales', value: state.asmaEspasmos, onChanged: ctrl.setAsmaEspasmos),
+                      const SizedBox(height: AppSpacing.sm),
                       AppSwitch(label: 'Diabetes', value: state.diabetes, onChanged: ctrl.setDiabetes),
                     ]),
                   ),

@@ -137,6 +137,7 @@ class PlanillaController extends StateNotifier<PlanillaState> {
       state = state.copyWith(error: 'No hay tutor autenticado');
       return;
     }
+    final tutorId = _tutorId; // promovido a String tras el guard
     state = state.copyWith(guardando: true, error: null);
     try {
       final s = state;
@@ -166,7 +167,7 @@ class PlanillaController extends StateNotifier<PlanillaState> {
       };
       await _db.insertHijoDraft(
         id: _generarId(),
-        tutorId: _tutorId,
+        tutorId: tutorId,
         nombreNna: s.nombre,
         apellidoNna: s.apellido,
         payloadJson: jsonEncode(payload),

@@ -14,8 +14,9 @@ void main() {
     ctrl.setSexo('F');
     ctrl.setFechaNacimiento(DateTime(2015, 6, 1));
     await ctrl.guardar();
-    final body =
-        jsonDecode((await db.hijosPendientes()).single.payloadJson) as Map<String, dynamic>;
+    final row = (await db.hijosPendientes()).single;
+    expect(row.tutorId, 'tut-1');
+    final body = jsonDecode(row.payloadJson) as Map<String, dynamic>;
     expect((body['persona'] as Map)['dni'], '70000000');
     expect(body['edad'], greaterThanOrEqualTo(9));
     expect(body.containsKey('consentimiento'), isFalse);
