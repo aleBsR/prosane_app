@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/notificaciones/notificacion_host.dart';
 import 'core/providers.dart';
 import 'core/router/app_router.dart';
+import 'core/session/entities.dart';
 import 'core/session/session_controller.dart';
 import 'core/theme/app_theme.dart';
 
@@ -17,10 +18,7 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
   @override
   void initState() {
     super.initState();
-    // Hidrata la sesión desde el cache de Drift (arranque offline-first).
-    ref
-        .read(sessionControllerProvider.notifier)
-        .hidratar(ref.read(authRepositoryProvider).sesionCacheada);
+    _hidratarYRefrescar();
 
     // Arranca el scheduler: reacciona a cambios de conectividad y hace un
     // flush inicial para empujar cualquier draft pendiente de sesiones previas.
@@ -29,6 +27,24 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
     final scheduler = ref.read(syncSchedulerProvider);
     scheduler.iniciar();
     scheduler.dispararPorEscritura();
+  }
+
+  /// Hidrata la sesión desde el cache de Drift (arranque offline-first) y, si
+  /// quedó autenticada, intenta refrescar /me en segundo plano (best-effort):
+  /// repuebla tutorId/flags de caches viejos sin forzar re-login. Offline o
+  /// token vencido → se ignora y seguimos con el cache.
+  Future<void> _hidratarYRefrescar() async {
+    final repo = ref.read(authRepositoryProvider);
+    await ref.read(sessionControllerProvider.notifier).hidratar(repo.sesionCacheada);
+    if (!mounted) return;
+    if (ref.read(sessionControllerProvider) is! SesionAutenticada) return;
+    try {
+      final sesion = await repo.refrescarSesion();
+      if (!mounted) return;
+      ref.read(sessionControllerProvider.notifier).refrescar(sesion);
+    } catch (_) {
+      // offline-first: si no hay red o el token venció, seguimos con el cache.
+    }
   }
 
   @override

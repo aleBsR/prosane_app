@@ -65,6 +65,7 @@ class AntecedentesFamiliaresController
     state = state.copyWith(cargando: true);
     try {
       final d = await ds.getAntecedentes(tutorId!);
+      if (!mounted) return;
       state = state.copyWith(
         problemaSalud: (d['problema_salud_importante'] as String?) ?? '',
         problemaCual: (d['problema_salud_cual'] as String?) ?? '',
@@ -72,6 +73,7 @@ class AntecedentesFamiliaresController
         cargando: false,
       );
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(
           cargando: false); // precarga best-effort; se puede guardar igual
     }
@@ -90,8 +92,10 @@ class AntecedentesFamiliaresController
         'muerte_subita_familiar': state.muerteSubita,
       });
       await refrescarSesion();
+      if (!mounted) return;
       state = state.copyWith(enviando: false, exito: true);
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(
           enviando: false,
           error:
@@ -103,8 +107,11 @@ class AntecedentesFamiliaresController
 final antecedentesFamiliaresControllerProvider = StateNotifierProvider.autoDispose<
     AntecedentesFamiliaresController,
     AntecedentesFamiliaresState>((ref) {
-  final s = ref.watch(sessionControllerProvider);
-  final tutorId = s is SesionAutenticada ? s.sesion.usuario.tutorId : null;
+  // select sobre tutorId: ver nota en consentimiento_controller.dart — evita
+  // que el refresh de sesión recree/disponga el controller en pleno guardar().
+  final tutorId = ref.watch(sessionControllerProvider.select(
+    (s) => s is SesionAutenticada ? s.sesion.usuario.tutorId : null,
+  ));
   return AntecedentesFamiliaresController(
     ds: ref.watch(familiaRemoteDataSourceProvider),
     refrescarSesion: () async {

@@ -53,8 +53,10 @@ class ConsentimientoController extends StateNotifier<ConsentimientoState> {
     try {
       await ds.aceptarConsentimiento(tutorId!);
       await refrescarSesion();
+      if (!mounted) return;
       state = state.copyWith(enviando: false, exito: true);
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(
         enviando: false,
         error: 'No se pudo registrar el consentimiento. Probá de nuevo.',
@@ -65,8 +67,12 @@ class ConsentimientoController extends StateNotifier<ConsentimientoState> {
 
 final consentimientoControllerProvider =
     StateNotifierProvider.autoDispose<ConsentimientoController, ConsentimientoState>((ref) {
-  final s = ref.watch(sessionControllerProvider);
-  final tutorId = s is SesionAutenticada ? s.sesion.usuario.tutorId : null;
+  // select sobre tutorId: el refresh de sesión cambia los flags pero NO el
+  // tutorId, así el provider no se recrea (ni dispone el controller) en pleno
+  // confirmar(). Solo se recrea si inicia sesión otro tutor.
+  final tutorId = ref.watch(sessionControllerProvider.select(
+    (s) => s is SesionAutenticada ? s.sesion.usuario.tutorId : null,
+  ));
   return ConsentimientoController(
     ds: ref.watch(familiaRemoteDataSourceProvider),
     refrescarSesion: () async {

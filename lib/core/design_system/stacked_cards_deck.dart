@@ -10,7 +10,7 @@ class StackedCardsDeck extends StatefulWidget {
   const StackedCardsDeck({
     super.key,
     required this.items,
-    this.cardHeight = 120,
+    this.cardHeight = 132,
     this.offset = 18,
     this.maxVisible = 4,
   });
