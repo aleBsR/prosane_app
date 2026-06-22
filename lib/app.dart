@@ -19,6 +19,14 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
     // Hidrata la sesión desde el cache de Drift (arranque offline-first).
     ref.read(sessionControllerProvider.notifier)
         .hidratar(ref.read(authRepositoryProvider).sesionCacheada);
+
+    // Arranca el scheduler: reacciona a cambios de conectividad y hace un
+    // flush inicial para empujar cualquier draft pendiente de sesiones previas.
+    // dispararPorEscritura() es necesario porque onlineStream solo emite en
+    // CAMBIOS; si ya estamos online al abrir no dispararía por sí solo.
+    final scheduler = ref.read(syncSchedulerProvider);
+    scheduler.iniciar();
+    scheduler.dispararPorEscritura();
   }
 
   @override

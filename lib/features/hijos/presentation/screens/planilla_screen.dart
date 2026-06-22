@@ -8,6 +8,7 @@ import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/providers.dart';
 import '../controllers/planilla_controller.dart';
 
 class PlanillaScreen extends ConsumerWidget {
@@ -236,6 +237,7 @@ class PlanillaScreen extends ConsumerWidget {
                         : () async {
                             await ctrl.guardar();
                             if (context.mounted && ref.read(planillaControllerProvider).error == null) {
+                              ref.read(syncSchedulerProvider).dispararPorEscritura();
                               context.go('/inicio');
                             }
                           },

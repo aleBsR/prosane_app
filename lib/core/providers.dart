@@ -11,6 +11,8 @@ import '../features/auth/domain/usecases/login.dart';
 import 'session/session_controller.dart';
 import '../features/hijos/data/hijos_syncer.dart';
 import 'sync/sync_engine.dart';
+import 'sync/connectivity_service.dart';
+import 'sync/sync_scheduler.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -64,6 +66,20 @@ final hijosSyncerProvider = Provider<HijosSyncer>(
 final syncEngineProvider = Provider<SyncEngine>(
   (ref) => SyncEngine([ref.watch(hijosSyncerProvider)]),
 );
+
+final connectivityServiceProvider =
+    Provider<ConnectivityService>((ref) => ConnectivityService());
+
+final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
+  final engine = ref.watch(syncEngineProvider);
+  final conn = ref.watch(connectivityServiceProvider);
+  final scheduler = SyncScheduler(
+    onlineStream: conn.onlineStream,
+    ejecutarCiclo: () => engine.ciclo(ahora: DateTime.now()),
+  );
+  ref.onDispose(scheduler.dispose);
+  return scheduler;
+});
 
 /// Logout completo: limpia tokens + cache de Drift (authRepository.logout)
 /// y el estado en memoria (sessionController.cerrar). El borrado del cache es
