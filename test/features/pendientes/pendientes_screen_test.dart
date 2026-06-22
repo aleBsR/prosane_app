@@ -90,8 +90,8 @@ void main() {
     final c = _container(db: db, controllerFactory: _tutorCompleto);
     addTearDown(c.dispose);
 
-    await t.pumpWidget(ProviderScope(
-      parent: c,
+    await t.pumpWidget(UncontrolledProviderScope(
+      container: c,
       child: const MaterialApp(home: PendientesScreen()),
     ));
     await t.pumpAndSettle();
@@ -105,8 +105,8 @@ void main() {
     final c = _container(db: db, controllerFactory: _medicoController);
     addTearDown(c.dispose);
 
-    await t.pumpWidget(ProviderScope(
-      parent: c,
+    await t.pumpWidget(UncontrolledProviderScope(
+      container: c,
       child: const MaterialApp(home: PendientesScreen()),
     ));
     await t.pumpAndSettle();
@@ -124,8 +124,8 @@ void main() {
     final c = _container(db: db, controllerFactory: _tutorSinConsentimiento);
     addTearDown(c.dispose);
 
-    await t.pumpWidget(ProviderScope(
-      parent: c,
+    await t.pumpWidget(UncontrolledProviderScope(
+      container: c,
       child: const MaterialApp(home: PendientesScreen()),
     ));
     await t.pumpAndSettle();
@@ -173,8 +173,8 @@ void main() {
     final c = _container(db: db, controllerFactory: _tutorCompleto);
     addTearDown(c.dispose);
 
-    await t.pumpWidget(ProviderScope(
-      parent: c,
+    await t.pumpWidget(UncontrolledProviderScope(
+      container: c,
       child: const MaterialApp(home: PendientesScreen()),
     ));
     await t.pumpAndSettle();

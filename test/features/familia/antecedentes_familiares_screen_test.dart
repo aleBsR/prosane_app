@@ -15,7 +15,7 @@ class _MockDs extends Mock implements FamiliaRemoteDataSource {}
 void main() {
   setUpAll(() => registerFallbackValue(<String, dynamic>{}));
 
-  _MockDs _buildDs() {
+  _MockDs buildDs() {
     final ds = _MockDs();
     when(() => ds.getAntecedentes(any()))
         .thenAnswer((_) async => <String, dynamic>{});
@@ -23,7 +23,7 @@ void main() {
     return ds;
   }
 
-  Widget _buildApp(_MockDs ds) {
+  Widget buildApp(_MockDs ds) {
     final router = GoRouter(
       initialLocation: '/antecedentes-familiares',
       routes: [
@@ -55,8 +55,8 @@ void main() {
   }
 
   testWidgets('renderiza los dos AppDropdownField con sus labels', (t) async {
-    final ds = _buildDs();
-    await t.pumpWidget(_buildApp(ds));
+    final ds = buildDs();
+    await t.pumpWidget(buildApp(ds));
     await t.pumpAndSettle();
 
     expect(find.byType(AppDropdownField), findsNWidgets(2));
@@ -73,8 +73,8 @@ void main() {
 
   testWidgets('seleccionar un dropdown y tocar Guardar llama guardarAntecedentes',
       (t) async {
-    final ds = _buildDs();
-    await t.pumpWidget(_buildApp(ds));
+    final ds = buildDs();
+    await t.pumpWidget(buildApp(ds));
     await t.pumpAndSettle();
 
     // Seleccionar "No" en el primer dropdown
@@ -93,8 +93,8 @@ void main() {
   });
 
   testWidgets('el botón Guardar está presente y habilitado', (t) async {
-    final ds = _buildDs();
-    await t.pumpWidget(_buildApp(ds));
+    final ds = buildDs();
+    await t.pumpWidget(buildApp(ds));
     await t.pumpAndSettle();
 
     final boton = t.widget<AppButton>(find.byType(AppButton));

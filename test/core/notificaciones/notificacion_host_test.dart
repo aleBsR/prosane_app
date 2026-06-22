@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:prosane_app/core/notificaciones/notificacion.dart';
 import 'package:prosane_app/core/notificaciones/notificacion_controller.dart';
 import 'package:prosane_app/core/notificaciones/notificacion_host.dart';
 
