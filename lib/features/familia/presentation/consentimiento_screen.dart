@@ -76,7 +76,13 @@ class ConsentimientoScreen extends ConsumerWidget {
           child: Row(children: [
             IconButton(
               icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-              onPressed: () => context.pop(),
+              onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/inicio');
+                  }
+                },
             ),
             Text(
               'Consentimiento',

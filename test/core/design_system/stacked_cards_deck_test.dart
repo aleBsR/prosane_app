@@ -6,14 +6,27 @@ void main() {
   testWidgets('vacío no renderiza nada', (t) async {
     await t.pumpWidget(const MaterialApp(home: Scaffold(body: StackedCardsDeck(cards: []))));
     expect(find.byType(StackedCardsDeck), findsOneWidget);
-    expect(find.byType(Text), findsNothing); // no renderiza contenido de cards
+    expect(find.byType(Text), findsNothing);
   });
 
-  testWidgets('con >3 cards muestra "+N más"', (t) async {
-    final cards = [for (var i = 0; i < 5; i++) SizedBox(key: ValueKey('c$i'), height: 80, child: Text('card $i'))];
+  testWidgets('renderiza todas las cards (todas presentes y tappables)', (t) async {
+    final taps = <int>[];
+    final cards = [
+      for (var i = 0; i < 4; i++)
+        GestureDetector(
+          key: ValueKey('c$i'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => taps.add(i),
+          child: SizedBox(height: 104, child: Text('card $i')),
+        ),
+    ];
     await t.pumpWidget(MaterialApp(home: Scaffold(body: StackedCardsDeck(cards: cards))));
-    expect(find.text('+2 más'), findsOneWidget);
-    // La de adelante (índice 0) está presente.
-    expect(find.text('card 0'), findsOneWidget);
+    // Las 4 están en el árbol.
+    for (var i = 0; i < 4; i++) {
+      expect(find.text('card $i'), findsOneWidget);
+    }
+    // La última (abajo, completa) es tappable.
+    await t.tap(find.text('card 3'));
+    expect(taps, contains(3));
   });
 }

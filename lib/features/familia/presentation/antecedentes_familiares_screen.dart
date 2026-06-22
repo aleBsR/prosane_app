@@ -74,7 +74,13 @@ class _AntecedentesFamiliaresScreenState
           child: Row(children: [
             IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () => context.pop()),
+                onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/inicio');
+                    }
+                  }),
             Expanded(
               child: Text('Antecedentes familiares',
                   style: AppTypography.titulo

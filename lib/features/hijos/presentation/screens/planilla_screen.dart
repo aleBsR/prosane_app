@@ -31,7 +31,13 @@ class PlanillaScreen extends ConsumerWidget {
             child: Row(children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/inicio');
+                  }
+                },
               ),
               Text('Evaluación de tu hijo/a',
                   style: AppTypography.titulo.copyWith(color: AppColors.blanco, fontSize: 22)),

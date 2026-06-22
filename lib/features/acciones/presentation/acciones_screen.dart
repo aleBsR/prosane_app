@@ -55,16 +55,16 @@ class AccionesScreen extends ConsumerWidget {
                                 if (u != null && !u.consentimientoAceptado) {
                                   ref.read(notificacionProvider.notifier).info(
                                       'Primero aceptá el consentimiento para registrar a tu hijo/a.');
-                                  context.go('/consentimiento');
+                                  context.push('/consentimiento');
                                 } else {
-                                  context.go('/hijos/nuevo');
+                                  context.push('/hijos/nuevo');
                                 }
                               case 'verHijos':
-                                context.go('/hijos');
+                                context.push('/hijos');
                               case 'darConsentimiento':
-                                context.go('/consentimiento');
+                                context.push('/consentimiento');
                               case 'cargarAntecedentesFamiliares':
-                                context.go('/antecedentes-familiares');
+                                context.push('/antecedentes-familiares');
                               default:
                                 _placeholder(context, a.label);
                             }

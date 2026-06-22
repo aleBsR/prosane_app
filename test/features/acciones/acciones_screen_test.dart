@@ -77,7 +77,7 @@ void main() {
     await t.tap(find.text('Registrar hijo'));
     await t.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/hijos/nuevo');
+    expect(router.state.uri.path, '/hijos/nuevo');
   });
 
   testWidgets('verHijos navega a /hijos', (t) async {
@@ -106,7 +106,7 @@ void main() {
     await t.tap(find.text('Ver hijos'));
     await t.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/hijos');
+    expect(router.state.uri.path, '/hijos');
   });
 
   testWidgets('registrarHijo sin consentimiento navega a /consentimiento', (t) async {
@@ -135,7 +135,7 @@ void main() {
     await t.tap(find.text('Registrar hijo'));
     await t.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/consentimiento');
+    expect(router.state.uri.path, '/consentimiento');
   });
 
   testWidgets('darConsentimiento navega a /consentimiento', (t) async {
@@ -164,7 +164,7 @@ void main() {
     await t.tap(find.text('Dar consentimiento'));
     await t.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/consentimiento');
+    expect(router.state.uri.path, '/consentimiento');
   });
 
   testWidgets('cargarAntecedentesFamiliares navega a /antecedentes-familiares', (t) async {
@@ -193,6 +193,6 @@ void main() {
     await t.tap(find.text('Antecedentes familiares'));
     await t.pumpAndSettle();
 
-    expect(router.routeInformationProvider.value.uri.path, '/antecedentes-familiares');
+    expect(router.state.uri.path, '/antecedentes-familiares');
   });
 }

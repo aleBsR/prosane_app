@@ -38,7 +38,7 @@ class PendientesScreen extends ConsumerWidget {
               for (final it in items)
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => context.go(it.ruta),
+                  onTap: () => context.push(it.ruta),
                   child: AppCard(
                     child: Row(children: [
                       Icon(it.icono, size: 34, color: Colors.deepPurple),
