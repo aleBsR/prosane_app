@@ -9,9 +9,14 @@ class MeResponse {
     required this.rolName, required this.rolLabel, required this.acciones,
     required this.metaVersion, required this.metaSyncedAt,
     this.tutorId,
+    this.nombrePila,
+    this.apellido,
+    this.tipoDni,
+    this.dni,
   });
   final String id, email, nombre, rolName, rolLabel, metaVersion, metaSyncedAt;
   final String? tutorId;
+  final String? nombrePila, apellido, tipoDni, dni;
   final List<Accion> acciones;
 
   factory MeResponse.fromJson(Map<String, dynamic> j) {
@@ -37,6 +42,10 @@ class MeResponse {
       metaVersion: (meta['version'] as String?) ?? '',
       metaSyncedAt: (meta['permissions_synced_at'] as String?) ?? '',
       tutorId: user['tutor_id'] as String?,
+      nombrePila: user['nombre'] as String?,
+      apellido: user['apellido'] as String?,
+      tipoDni: user['tipo_dni'] as String?,
+      dni: user['dni'] as String?,
     );
   }
 }

@@ -76,4 +76,21 @@ void main() {
     // Sin tutor_id → null (no rompe)
     expect(MeResponse.fromJson(base()).tutorId, isNull);
   });
+
+  test('MeResponse parsea nombrePila, apellido, tipoDni y dni por separado', () {
+    final me = MeResponse.fromJson({
+      'user': {
+        'id': 'u1', 'email': 'j@t.com', 'nombre': 'Juan', 'apellido': 'Arquipa',
+        'tipo_dni': 'DNI', 'dni': '43949474', 'tutor_id': 'tut-1',
+      },
+      'roles': [{'name': 'tutor', 'label': 'Tutor'}],
+      'actions': [],
+      'meta': {'version': '1', 'permissions_synced_at': '2026-06-22T00:00:00Z'},
+    });
+    expect(me.nombre, 'Juan Arquipa');
+    expect(me.nombrePila, 'Juan');
+    expect(me.apellido, 'Arquipa');
+    expect(me.tipoDni, 'DNI');
+    expect(me.dni, '43949474');
+  });
 }

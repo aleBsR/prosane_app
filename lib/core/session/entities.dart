@@ -27,9 +27,24 @@ class Accion {
 }
 
 class Usuario {
-  const Usuario({required this.id, required this.nombre, required this.rolName, required this.rolLabel, this.tutorId});
+  const Usuario({
+    required this.id,
+    required this.nombre,
+    required this.rolName,
+    required this.rolLabel,
+    this.tutorId,
+    this.nombrePila,
+    this.apellido,
+    this.tipoDni,
+    this.dni,
+  });
   final String id, nombre, rolName, rolLabel;
   final String? tutorId;
+  // Identidad desagregada del tutor (para prefill del adulto responsable).
+  final String? nombrePila;
+  final String? apellido;
+  final String? tipoDni;
+  final String? dni;
 }
 
 class Sesion {

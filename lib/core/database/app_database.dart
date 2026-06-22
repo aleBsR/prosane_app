@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -36,6 +36,16 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         await m.createTable(
           hijosRows,
         ); // v2 -> v3: tabla offline-first para hijos
+      }
+      if (from >= 2 && from < 4) {
+        // Solo agregar columnas si la tabla ya existía (creada en v2).
+        // Si from < 2, la tabla se crea recién con m.createTable y ya incluye
+        // las columnas del schema actual (Drift genera siempre el DDL actual).
+        await m.addColumn(cachedSessionRows, cachedSessionRows.tutorId);
+        await m.addColumn(cachedSessionRows, cachedSessionRows.nombrePila);
+        await m.addColumn(cachedSessionRows, cachedSessionRows.apellido);
+        await m.addColumn(cachedSessionRows, cachedSessionRows.tipoDni);
+        await m.addColumn(cachedSessionRows, cachedSessionRows.dni);
       }
     },
   );
@@ -74,6 +84,11 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         rolLabel: s.usuario.rolLabel,
         accionesJson: jsonEncode(s.acciones.map((a) => a.toJson()).toList()),
         metaVersion: version,
+        tutorId: Value(s.usuario.tutorId),
+        nombrePila: Value(s.usuario.nombrePila),
+        apellido: Value(s.usuario.apellido),
+        tipoDni: Value(s.usuario.tipoDni),
+        dni: Value(s.usuario.dni),
         permissionsSyncedAt: Value(DateTime.tryParse(syncedAtIso)?.toUtc()),
       ),
     );
@@ -96,6 +111,11 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         nombre: row.nombre ?? row.email,
         rolName: row.rolName,
         rolLabel: row.rolLabel,
+        tutorId: row.tutorId,
+        nombrePila: row.nombrePila,
+        apellido: row.apellido,
+        tipoDni: row.tipoDni,
+        dni: row.dni,
       ),
       acciones: acciones,
     );

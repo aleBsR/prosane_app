@@ -23,7 +23,11 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final me = await remote.me(); // /me usa el access recién guardado
         final sesion = Sesion(
-          usuario: Usuario(id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel, tutorId: me.tutorId),
+          usuario: Usuario(
+            id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel,
+            tutorId: me.tutorId, nombrePila: me.nombrePila, apellido: me.apellido,
+            tipoDni: me.tipoDni, dni: me.dni,
+          ),
           acciones: me.acciones,
         );
         await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
@@ -49,7 +53,11 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final me = await remote.me();
         final sesion = Sesion(
-          usuario: Usuario(id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel, tutorId: me.tutorId),
+          usuario: Usuario(
+            id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel,
+            tutorId: me.tutorId, nombrePila: me.nombrePila, apellido: me.apellido,
+            tipoDni: me.tipoDni, dni: me.dni,
+          ),
           acciones: me.acciones,
         );
         await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
