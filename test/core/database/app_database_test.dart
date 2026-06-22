@@ -24,4 +24,18 @@ void main() {
     expect(await db.contarHijosPendientes(), 0);
     await db.close();
   });
+
+  test('contarHijos devuelve total de hijos no borrados', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    expect(await db.contarHijos(), 0);
+    await db.insertHijoDraft(
+      id: 'h1', tutorId: 't1', nombreNna: 'Juana', apellidoNna: 'Pérez',
+      payloadJson: '{}',
+    );
+    expect(await db.contarHijos(), 1);
+    // Sincronizar no excluye del conteo total (sólo filtra pendientes)
+    await db.marcarHijoSincronizado('h1');
+    expect(await db.contarHijos(), 1);
+    await db.close();
+  });
 }

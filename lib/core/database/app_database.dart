@@ -108,6 +108,14 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
     return row.read(hijosRows.id.count()) ?? 0;
   }
 
+  Future<int> contarHijos() async {
+    final q = selectOnly(hijosRows)
+      ..addColumns([hijosRows.id.count()])
+      ..where(hijosRows.deletedAt.isNull());
+    final row = await q.getSingle();
+    return row.read(hijosRows.id.count()) ?? 0;
+  }
+
   Future<List<HijosRow>> hijosPendientes() =>
       (select(hijosRows)..where((t) => t.syncStatus.equalsValue(SyncStatus.pendiente))).get();
 
