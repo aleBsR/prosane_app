@@ -2,12 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'storage/token_storage.dart';
 import 'network/dio_client.dart';
+import 'config/app_config.dart';
 import 'database/database_provider.dart';
 import '../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/domain/usecases/login.dart';
 import 'session/session_controller.dart';
+import '../features/hijos/data/hijos_syncer.dart';
+import '../features/familia/data/familia_remote_datasource.dart';
+import 'sync/sync_engine.dart';
+import 'sync/connectivity_service.dart';
+import 'sync/sync_scheduler.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -28,6 +34,23 @@ final dioProvider = Provider<Dio>((ref) {
   });
 });
 
+/// Dio con base `.../api/v1` (sin sufijo `/auth`), para syncers y rutas
+/// que viven fuera del espacio de autenticación (ej: /tutores/, /hijos/).
+/// Comparte los mismos interceptors de auth que [dioProvider].
+final dioV1Provider = Provider<Dio>((ref) {
+  final tokens = ref.watch(tokenStorageProvider);
+  final cache = ref.watch(databaseProvider);
+  return buildDio(
+    tokens,
+    baseUrl: AppConfig.apiV1Base,
+    onLogout: () async {
+      await tokens.limpiar();
+      await cache.limpiarSesion();
+      ref.read(sessionControllerProvider.notifier).cerrar();
+    },
+  );
+});
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepositoryImpl(
       remote: AuthRemoteDataSourceImpl(ref.watch(dioProvider)),
       tokens: ref.watch(tokenStorageProvider),
@@ -36,6 +59,31 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) => AuthRepositoryI
 
 final loginUseCaseProvider =
     Provider((ref) => Login(ref.watch(authRepositoryProvider)));
+
+final hijosSyncerProvider = Provider<HijosSyncer>(
+  (ref) => HijosSyncer(ref.watch(databaseProvider), ref.watch(dioV1Provider)),
+);
+
+final syncEngineProvider = Provider<SyncEngine>(
+  (ref) => SyncEngine([ref.watch(hijosSyncerProvider)]),
+);
+
+final connectivityServiceProvider =
+    Provider<ConnectivityService>((ref) => ConnectivityService());
+
+final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
+  final engine = ref.watch(syncEngineProvider);
+  final conn = ref.watch(connectivityServiceProvider);
+  final scheduler = SyncScheduler(
+    onlineStream: conn.onlineStream,
+    ejecutarCiclo: () => engine.ciclo(ahora: DateTime.now()),
+  );
+  ref.onDispose(scheduler.dispose);
+  return scheduler;
+});
+
+final familiaRemoteDataSourceProvider =
+    Provider<FamiliaRemoteDataSource>((ref) => FamiliaRemoteDataSource(ref.watch(dioV1Provider)));
 
 /// Logout completo: limpia tokens + cache de Drift (authRepository.logout)
 /// y el estado en memoria (sessionController.cerrar). El borrado del cache es

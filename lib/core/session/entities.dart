@@ -27,8 +27,41 @@ class Accion {
 }
 
 class Usuario {
-  const Usuario({required this.id, required this.nombre, required this.rolName, required this.rolLabel});
+  const Usuario({
+    required this.id,
+    required this.nombre,
+    required this.rolName,
+    required this.rolLabel,
+    this.tutorId,
+    this.nombrePila,
+    this.apellido,
+    this.tipoDni,
+    this.dni,
+    this.consentimientoAceptado = false,
+    this.antecedentesFamiliaresCompletos = false,
+  });
   final String id, nombre, rolName, rolLabel;
+  final String? tutorId;
+  // Identidad desagregada del tutor (para prefill del adulto responsable).
+  final String? nombrePila;
+  final String? apellido;
+  final String? tipoDni;
+  final String? dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
+
+  Usuario copyWith({
+    bool? consentimientoAceptado,
+    bool? antecedentesFamiliaresCompletos,
+  }) =>
+      Usuario(
+        id: id, nombre: nombre, rolName: rolName, rolLabel: rolLabel,
+        tutorId: tutorId, nombrePila: nombrePila, apellido: apellido,
+        tipoDni: tipoDni, dni: dni,
+        consentimientoAceptado: consentimientoAceptado ?? this.consentimientoAceptado,
+        antecedentesFamiliaresCompletos:
+            antecedentesFamiliaresCompletos ?? this.antecedentesFamiliaresCompletos,
+      );
 }
 
 class Sesion {

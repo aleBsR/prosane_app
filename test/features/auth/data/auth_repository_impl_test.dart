@@ -56,12 +56,24 @@ void main() {
     expect(cache.guardada!.permisos, {'firmarApto'});
   });
 
-  test('register delega en remote.register', () async {
+  test('register: guarda tokens, trae /me y devuelve Sesion', () async {
     final remote = _MockRemote();
     final tokens = TokenStorage(backend: InMemoryKeyValueStore());
-    when(() => remote.register(any())).thenAnswer((_) async {});
-    await AuthRepositoryImpl(remote: remote, tokens: tokens, cache: _FakeCache()).register({'email': 'a@b.com'});
-    verify(() => remote.register({'email': 'a@b.com'})).called(1);
+    final cache = _FakeCache();
+    final meResponseFake = MeResponse(
+      id: '2', email: 'a@b.com', nombre: 'Carlos', rolName: 'tutor', rolLabel: 'Tutor/a',
+      acciones: const [], metaVersion: 'v1', metaSyncedAt: '2026-06-21T10:00:00Z');
+    when(() => remote.registerTutor(any())).thenAnswer((_) async => (access: 'A', refresh: 'R'));
+    when(() => remote.me()).thenAnswer((_) async => meResponseFake);
+
+    final repo = AuthRepositoryImpl(remote: remote, tokens: tokens, cache: cache);
+    final sesion = await repo.register({'email': 'a@b.com'});
+
+    expect(sesion.usuario.rolName, meResponseFake.rolName);
+    expect(await tokens.access(), 'A');
+    expect(await tokens.refresh(), 'R');
+    verify(() => remote.registerTutor({'email': 'a@b.com'})).called(1);
+    verify(() => remote.me()).called(1);
   });
 
   test('logout llama al backend (blacklist) con el refresh y luego limpia tokens + cache', () async {

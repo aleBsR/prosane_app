@@ -12,6 +12,16 @@ import 'package:prosane_app/core/database/database_provider.dart';
 
 class _FakeAuthRepo extends Mock implements AuthRepository {}
 
+/// Desmonta la app y drena el timer de limpieza interno del stream de Drift
+/// (`StreamQueryStore.markAsClosed`), que al disponer el StreamProvider del
+/// badge queda pendiente y haría fallar el test con "A Timer is still pending".
+Future<void> _desmontarYDrenar(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  // Avanzar el reloj fake dispara el Timer(Duration.zero) que Drift agenda al
+  // cerrar el stream-query; con pump() a cero no llega a ejecutarse.
+  await tester.pump(const Duration(milliseconds: 50));
+}
+
 void main() {
   testWidgets('login exitoso navega de /login a /inicio (AccionesScreen)', (tester) async {
     final repo = _FakeAuthRepo();
@@ -44,6 +54,8 @@ void main() {
     expect(find.text('Bienvenido'), findsNothing);
     // Sin acciones asignadas, AccionesScreen muestra el estado vacío.
     expect(find.text('No tenés acciones disponibles todavía'), findsOneWidget);
+
+    await _desmontarYDrenar(tester);
   });
 
   testWidgets('logout navega de /inicio a /login', (tester) async {
@@ -88,5 +100,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No tenés acciones disponibles todavía'), findsNothing);
     expect(find.text('Bienvenido'), findsOneWidget);
+
+    await _desmontarYDrenar(tester);
   });
 }

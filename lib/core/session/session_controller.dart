@@ -5,6 +5,7 @@ class SessionController extends StateNotifier<SesionState> {
   SessionController() : super(SesionNoAutenticada());
 
   void setSesion(Sesion s) => state = SesionAutenticada(s);
+  void refrescar(Sesion s) => state = SesionAutenticada(s);
   void cerrar() => state = SesionNoAutenticada();
 
   bool can(String permiso) => state.can(permiso);

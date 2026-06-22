@@ -39,4 +39,26 @@ void main() {
     // No hay handler: el tap no debe lanzar excepción (test pasa si no tira).
     expect(tester.takeException(), isNull);
   });
+
+  Opacity opacityDe(WidgetTester tester) => tester.widget<Opacity>(
+        find.descendant(of: find.byType(AppButton), matching: find.byType(Opacity)),
+      );
+
+  testWidgets('deshabilitado (sin onPressed) se ve atenuado', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(
+      body: AppButton(label: 'OK'))));
+    expect(opacityDe(tester).opacity, lessThan(1.0));
+  });
+
+  testWidgets('habilitado se ve a opacidad plena', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: AppButton(label: 'OK', onPressed: () {}))));
+    expect(opacityDe(tester).opacity, 1.0);
+  });
+
+  testWidgets('cargando se ve atenuado', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Scaffold(
+      body: AppButton(label: 'OK', isLoading: true, onPressed: () {}))));
+    expect(opacityDe(tester).opacity, lessThan(1.0));
+  });
 }

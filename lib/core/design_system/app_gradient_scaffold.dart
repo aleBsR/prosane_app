@@ -7,9 +7,15 @@ class AppGradientScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(gradient: AppColors.gradienteFondo),
-          child: SafeArea(child: child),
+        // Tocar fuera de un input cierra el teclado. translucent: el gesto se
+        // detecta en el fondo vacío sin robarle taps a los hijos (botones, campos).
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Container(
+            decoration: const BoxDecoration(gradient: AppColors.gradienteFondo),
+            child: SafeArea(child: child),
+          ),
         ),
       );
 }

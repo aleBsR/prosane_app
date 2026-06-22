@@ -45,8 +45,12 @@ class UsuarioScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(4, 4, 4, 18),
             child: Text('Usuario', style: AppTypography.titulo.copyWith(fontSize: 24, color: Colors.white)),
           ),
-          Container(
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+          // Material (no Container+BoxDecoration) para que el ListTile de adentro
+          // pinte su fondo/ink sobre un Material propio y no quede oculto por la
+          // tarjeta blanca. Mismo look: blanco, redondeado y con clip.
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             clipBehavior: Clip.antiAlias,
             child: Column(children: [
               Padding(

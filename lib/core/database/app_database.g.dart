@@ -315,6 +315,89 @@ class $CachedSessionRowsTable extends CachedSessionRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tutorIdMeta = const VerificationMeta(
+    'tutorId',
+  );
+  @override
+  late final GeneratedColumn<String> tutorId = GeneratedColumn<String>(
+    'tutor_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nombrePilaMeta = const VerificationMeta(
+    'nombrePila',
+  );
+  @override
+  late final GeneratedColumn<String> nombrePila = GeneratedColumn<String>(
+    'nombre_pila',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _apellidoMeta = const VerificationMeta(
+    'apellido',
+  );
+  @override
+  late final GeneratedColumn<String> apellido = GeneratedColumn<String>(
+    'apellido',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tipoDniMeta = const VerificationMeta(
+    'tipoDni',
+  );
+  @override
+  late final GeneratedColumn<String> tipoDni = GeneratedColumn<String>(
+    'tipo_dni',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dniMeta = const VerificationMeta('dni');
+  @override
+  late final GeneratedColumn<String> dni = GeneratedColumn<String>(
+    'dni',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _consentimientoAceptadoMeta =
+      const VerificationMeta('consentimientoAceptado');
+  @override
+  late final GeneratedColumn<bool> consentimientoAceptado =
+      GeneratedColumn<bool>(
+        'consentimiento_aceptado',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("consentimiento_aceptado" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _antecedentesFamiliaresCompletosMeta =
+      const VerificationMeta('antecedentesFamiliaresCompletos');
+  @override
+  late final GeneratedColumn<bool> antecedentesFamiliaresCompletos =
+      GeneratedColumn<bool>(
+        'antecedentes_familiares_completos',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("antecedentes_familiares_completos" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _permissionsSyncedAtMeta =
       const VerificationMeta('permissionsSyncedAt');
   @override
@@ -336,6 +419,13 @@ class $CachedSessionRowsTable extends CachedSessionRows
     rolLabel,
     accionesJson,
     metaVersion,
+    tutorId,
+    nombrePila,
+    apellido,
+    tipoDni,
+    dni,
+    consentimientoAceptado,
+    antecedentesFamiliaresCompletos,
     permissionsSyncedAt,
   ];
   @override
@@ -415,6 +505,54 @@ class $CachedSessionRowsTable extends CachedSessionRows
     } else if (isInserting) {
       context.missing(_metaVersionMeta);
     }
+    if (data.containsKey('tutor_id')) {
+      context.handle(
+        _tutorIdMeta,
+        tutorId.isAcceptableOrUnknown(data['tutor_id']!, _tutorIdMeta),
+      );
+    }
+    if (data.containsKey('nombre_pila')) {
+      context.handle(
+        _nombrePilaMeta,
+        nombrePila.isAcceptableOrUnknown(data['nombre_pila']!, _nombrePilaMeta),
+      );
+    }
+    if (data.containsKey('apellido')) {
+      context.handle(
+        _apellidoMeta,
+        apellido.isAcceptableOrUnknown(data['apellido']!, _apellidoMeta),
+      );
+    }
+    if (data.containsKey('tipo_dni')) {
+      context.handle(
+        _tipoDniMeta,
+        tipoDni.isAcceptableOrUnknown(data['tipo_dni']!, _tipoDniMeta),
+      );
+    }
+    if (data.containsKey('dni')) {
+      context.handle(
+        _dniMeta,
+        dni.isAcceptableOrUnknown(data['dni']!, _dniMeta),
+      );
+    }
+    if (data.containsKey('consentimiento_aceptado')) {
+      context.handle(
+        _consentimientoAceptadoMeta,
+        consentimientoAceptado.isAcceptableOrUnknown(
+          data['consentimiento_aceptado']!,
+          _consentimientoAceptadoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('antecedentes_familiares_completos')) {
+      context.handle(
+        _antecedentesFamiliaresCompletosMeta,
+        antecedentesFamiliaresCompletos.isAcceptableOrUnknown(
+          data['antecedentes_familiares_completos']!,
+          _antecedentesFamiliaresCompletosMeta,
+        ),
+      );
+    }
     if (data.containsKey('permissions_synced_at')) {
       context.handle(
         _permissionsSyncedAtMeta,
@@ -465,6 +603,34 @@ class $CachedSessionRowsTable extends CachedSessionRows
         DriftSqlType.string,
         data['${effectivePrefix}meta_version'],
       )!,
+      tutorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tutor_id'],
+      ),
+      nombrePila: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre_pila'],
+      ),
+      apellido: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}apellido'],
+      ),
+      tipoDni: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tipo_dni'],
+      ),
+      dni: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dni'],
+      ),
+      consentimientoAceptado: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}consentimiento_aceptado'],
+      )!,
+      antecedentesFamiliaresCompletos: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}antecedentes_familiares_completos'],
+      )!,
       permissionsSyncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}permissions_synced_at'],
@@ -488,6 +654,13 @@ class CachedSessionRow extends DataClass
   final String rolLabel;
   final String accionesJson;
   final String metaVersion;
+  final String? tutorId;
+  final String? nombrePila;
+  final String? apellido;
+  final String? tipoDni;
+  final String? dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
   final DateTime? permissionsSyncedAt;
   const CachedSessionRow({
     required this.id,
@@ -498,6 +671,13 @@ class CachedSessionRow extends DataClass
     required this.rolLabel,
     required this.accionesJson,
     required this.metaVersion,
+    this.tutorId,
+    this.nombrePila,
+    this.apellido,
+    this.tipoDni,
+    this.dni,
+    required this.consentimientoAceptado,
+    required this.antecedentesFamiliaresCompletos,
     this.permissionsSyncedAt,
   });
   @override
@@ -513,6 +693,25 @@ class CachedSessionRow extends DataClass
     map['rol_label'] = Variable<String>(rolLabel);
     map['acciones_json'] = Variable<String>(accionesJson);
     map['meta_version'] = Variable<String>(metaVersion);
+    if (!nullToAbsent || tutorId != null) {
+      map['tutor_id'] = Variable<String>(tutorId);
+    }
+    if (!nullToAbsent || nombrePila != null) {
+      map['nombre_pila'] = Variable<String>(nombrePila);
+    }
+    if (!nullToAbsent || apellido != null) {
+      map['apellido'] = Variable<String>(apellido);
+    }
+    if (!nullToAbsent || tipoDni != null) {
+      map['tipo_dni'] = Variable<String>(tipoDni);
+    }
+    if (!nullToAbsent || dni != null) {
+      map['dni'] = Variable<String>(dni);
+    }
+    map['consentimiento_aceptado'] = Variable<bool>(consentimientoAceptado);
+    map['antecedentes_familiares_completos'] = Variable<bool>(
+      antecedentesFamiliaresCompletos,
+    );
     if (!nullToAbsent || permissionsSyncedAt != null) {
       map['permissions_synced_at'] = Variable<DateTime>(permissionsSyncedAt);
     }
@@ -531,6 +730,21 @@ class CachedSessionRow extends DataClass
       rolLabel: Value(rolLabel),
       accionesJson: Value(accionesJson),
       metaVersion: Value(metaVersion),
+      tutorId: tutorId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tutorId),
+      nombrePila: nombrePila == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nombrePila),
+      apellido: apellido == null && nullToAbsent
+          ? const Value.absent()
+          : Value(apellido),
+      tipoDni: tipoDni == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tipoDni),
+      dni: dni == null && nullToAbsent ? const Value.absent() : Value(dni),
+      consentimientoAceptado: Value(consentimientoAceptado),
+      antecedentesFamiliaresCompletos: Value(antecedentesFamiliaresCompletos),
       permissionsSyncedAt: permissionsSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(permissionsSyncedAt),
@@ -551,6 +765,17 @@ class CachedSessionRow extends DataClass
       rolLabel: serializer.fromJson<String>(json['rolLabel']),
       accionesJson: serializer.fromJson<String>(json['accionesJson']),
       metaVersion: serializer.fromJson<String>(json['metaVersion']),
+      tutorId: serializer.fromJson<String?>(json['tutorId']),
+      nombrePila: serializer.fromJson<String?>(json['nombrePila']),
+      apellido: serializer.fromJson<String?>(json['apellido']),
+      tipoDni: serializer.fromJson<String?>(json['tipoDni']),
+      dni: serializer.fromJson<String?>(json['dni']),
+      consentimientoAceptado: serializer.fromJson<bool>(
+        json['consentimientoAceptado'],
+      ),
+      antecedentesFamiliaresCompletos: serializer.fromJson<bool>(
+        json['antecedentesFamiliaresCompletos'],
+      ),
       permissionsSyncedAt: serializer.fromJson<DateTime?>(
         json['permissionsSyncedAt'],
       ),
@@ -568,6 +793,15 @@ class CachedSessionRow extends DataClass
       'rolLabel': serializer.toJson<String>(rolLabel),
       'accionesJson': serializer.toJson<String>(accionesJson),
       'metaVersion': serializer.toJson<String>(metaVersion),
+      'tutorId': serializer.toJson<String?>(tutorId),
+      'nombrePila': serializer.toJson<String?>(nombrePila),
+      'apellido': serializer.toJson<String?>(apellido),
+      'tipoDni': serializer.toJson<String?>(tipoDni),
+      'dni': serializer.toJson<String?>(dni),
+      'consentimientoAceptado': serializer.toJson<bool>(consentimientoAceptado),
+      'antecedentesFamiliaresCompletos': serializer.toJson<bool>(
+        antecedentesFamiliaresCompletos,
+      ),
       'permissionsSyncedAt': serializer.toJson<DateTime?>(permissionsSyncedAt),
     };
   }
@@ -581,6 +815,13 @@ class CachedSessionRow extends DataClass
     String? rolLabel,
     String? accionesJson,
     String? metaVersion,
+    Value<String?> tutorId = const Value.absent(),
+    Value<String?> nombrePila = const Value.absent(),
+    Value<String?> apellido = const Value.absent(),
+    Value<String?> tipoDni = const Value.absent(),
+    Value<String?> dni = const Value.absent(),
+    bool? consentimientoAceptado,
+    bool? antecedentesFamiliaresCompletos,
     Value<DateTime?> permissionsSyncedAt = const Value.absent(),
   }) => CachedSessionRow(
     id: id ?? this.id,
@@ -591,6 +832,15 @@ class CachedSessionRow extends DataClass
     rolLabel: rolLabel ?? this.rolLabel,
     accionesJson: accionesJson ?? this.accionesJson,
     metaVersion: metaVersion ?? this.metaVersion,
+    tutorId: tutorId.present ? tutorId.value : this.tutorId,
+    nombrePila: nombrePila.present ? nombrePila.value : this.nombrePila,
+    apellido: apellido.present ? apellido.value : this.apellido,
+    tipoDni: tipoDni.present ? tipoDni.value : this.tipoDni,
+    dni: dni.present ? dni.value : this.dni,
+    consentimientoAceptado:
+        consentimientoAceptado ?? this.consentimientoAceptado,
+    antecedentesFamiliaresCompletos:
+        antecedentesFamiliaresCompletos ?? this.antecedentesFamiliaresCompletos,
     permissionsSyncedAt: permissionsSyncedAt.present
         ? permissionsSyncedAt.value
         : this.permissionsSyncedAt,
@@ -609,6 +859,20 @@ class CachedSessionRow extends DataClass
       metaVersion: data.metaVersion.present
           ? data.metaVersion.value
           : this.metaVersion,
+      tutorId: data.tutorId.present ? data.tutorId.value : this.tutorId,
+      nombrePila: data.nombrePila.present
+          ? data.nombrePila.value
+          : this.nombrePila,
+      apellido: data.apellido.present ? data.apellido.value : this.apellido,
+      tipoDni: data.tipoDni.present ? data.tipoDni.value : this.tipoDni,
+      dni: data.dni.present ? data.dni.value : this.dni,
+      consentimientoAceptado: data.consentimientoAceptado.present
+          ? data.consentimientoAceptado.value
+          : this.consentimientoAceptado,
+      antecedentesFamiliaresCompletos:
+          data.antecedentesFamiliaresCompletos.present
+          ? data.antecedentesFamiliaresCompletos.value
+          : this.antecedentesFamiliaresCompletos,
       permissionsSyncedAt: data.permissionsSyncedAt.present
           ? data.permissionsSyncedAt.value
           : this.permissionsSyncedAt,
@@ -626,6 +890,15 @@ class CachedSessionRow extends DataClass
           ..write('rolLabel: $rolLabel, ')
           ..write('accionesJson: $accionesJson, ')
           ..write('metaVersion: $metaVersion, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombrePila: $nombrePila, ')
+          ..write('apellido: $apellido, ')
+          ..write('tipoDni: $tipoDni, ')
+          ..write('dni: $dni, ')
+          ..write('consentimientoAceptado: $consentimientoAceptado, ')
+          ..write(
+            'antecedentesFamiliaresCompletos: $antecedentesFamiliaresCompletos, ',
+          )
           ..write('permissionsSyncedAt: $permissionsSyncedAt')
           ..write(')'))
         .toString();
@@ -641,6 +914,13 @@ class CachedSessionRow extends DataClass
     rolLabel,
     accionesJson,
     metaVersion,
+    tutorId,
+    nombrePila,
+    apellido,
+    tipoDni,
+    dni,
+    consentimientoAceptado,
+    antecedentesFamiliaresCompletos,
     permissionsSyncedAt,
   );
   @override
@@ -655,6 +935,14 @@ class CachedSessionRow extends DataClass
           other.rolLabel == this.rolLabel &&
           other.accionesJson == this.accionesJson &&
           other.metaVersion == this.metaVersion &&
+          other.tutorId == this.tutorId &&
+          other.nombrePila == this.nombrePila &&
+          other.apellido == this.apellido &&
+          other.tipoDni == this.tipoDni &&
+          other.dni == this.dni &&
+          other.consentimientoAceptado == this.consentimientoAceptado &&
+          other.antecedentesFamiliaresCompletos ==
+              this.antecedentesFamiliaresCompletos &&
           other.permissionsSyncedAt == this.permissionsSyncedAt);
 }
 
@@ -667,6 +955,13 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
   final Value<String> rolLabel;
   final Value<String> accionesJson;
   final Value<String> metaVersion;
+  final Value<String?> tutorId;
+  final Value<String?> nombrePila;
+  final Value<String?> apellido;
+  final Value<String?> tipoDni;
+  final Value<String?> dni;
+  final Value<bool> consentimientoAceptado;
+  final Value<bool> antecedentesFamiliaresCompletos;
   final Value<DateTime?> permissionsSyncedAt;
   final Value<int> rowid;
   const CachedSessionRowsCompanion({
@@ -678,6 +973,13 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     this.rolLabel = const Value.absent(),
     this.accionesJson = const Value.absent(),
     this.metaVersion = const Value.absent(),
+    this.tutorId = const Value.absent(),
+    this.nombrePila = const Value.absent(),
+    this.apellido = const Value.absent(),
+    this.tipoDni = const Value.absent(),
+    this.dni = const Value.absent(),
+    this.consentimientoAceptado = const Value.absent(),
+    this.antecedentesFamiliaresCompletos = const Value.absent(),
     this.permissionsSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -690,6 +992,13 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     required String rolLabel,
     required String accionesJson,
     required String metaVersion,
+    this.tutorId = const Value.absent(),
+    this.nombrePila = const Value.absent(),
+    this.apellido = const Value.absent(),
+    this.tipoDni = const Value.absent(),
+    this.dni = const Value.absent(),
+    this.consentimientoAceptado = const Value.absent(),
+    this.antecedentesFamiliaresCompletos = const Value.absent(),
     this.permissionsSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -708,6 +1017,13 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     Expression<String>? rolLabel,
     Expression<String>? accionesJson,
     Expression<String>? metaVersion,
+    Expression<String>? tutorId,
+    Expression<String>? nombrePila,
+    Expression<String>? apellido,
+    Expression<String>? tipoDni,
+    Expression<String>? dni,
+    Expression<bool>? consentimientoAceptado,
+    Expression<bool>? antecedentesFamiliaresCompletos,
     Expression<DateTime>? permissionsSyncedAt,
     Expression<int>? rowid,
   }) {
@@ -720,6 +1036,15 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
       if (rolLabel != null) 'rol_label': rolLabel,
       if (accionesJson != null) 'acciones_json': accionesJson,
       if (metaVersion != null) 'meta_version': metaVersion,
+      if (tutorId != null) 'tutor_id': tutorId,
+      if (nombrePila != null) 'nombre_pila': nombrePila,
+      if (apellido != null) 'apellido': apellido,
+      if (tipoDni != null) 'tipo_dni': tipoDni,
+      if (dni != null) 'dni': dni,
+      if (consentimientoAceptado != null)
+        'consentimiento_aceptado': consentimientoAceptado,
+      if (antecedentesFamiliaresCompletos != null)
+        'antecedentes_familiares_completos': antecedentesFamiliaresCompletos,
       if (permissionsSyncedAt != null)
         'permissions_synced_at': permissionsSyncedAt,
       if (rowid != null) 'rowid': rowid,
@@ -735,6 +1060,13 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     Value<String>? rolLabel,
     Value<String>? accionesJson,
     Value<String>? metaVersion,
+    Value<String?>? tutorId,
+    Value<String?>? nombrePila,
+    Value<String?>? apellido,
+    Value<String?>? tipoDni,
+    Value<String?>? dni,
+    Value<bool>? consentimientoAceptado,
+    Value<bool>? antecedentesFamiliaresCompletos,
     Value<DateTime?>? permissionsSyncedAt,
     Value<int>? rowid,
   }) {
@@ -747,6 +1079,16 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
       rolLabel: rolLabel ?? this.rolLabel,
       accionesJson: accionesJson ?? this.accionesJson,
       metaVersion: metaVersion ?? this.metaVersion,
+      tutorId: tutorId ?? this.tutorId,
+      nombrePila: nombrePila ?? this.nombrePila,
+      apellido: apellido ?? this.apellido,
+      tipoDni: tipoDni ?? this.tipoDni,
+      dni: dni ?? this.dni,
+      consentimientoAceptado:
+          consentimientoAceptado ?? this.consentimientoAceptado,
+      antecedentesFamiliaresCompletos:
+          antecedentesFamiliaresCompletos ??
+          this.antecedentesFamiliaresCompletos,
       permissionsSyncedAt: permissionsSyncedAt ?? this.permissionsSyncedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -779,6 +1121,31 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     if (metaVersion.present) {
       map['meta_version'] = Variable<String>(metaVersion.value);
     }
+    if (tutorId.present) {
+      map['tutor_id'] = Variable<String>(tutorId.value);
+    }
+    if (nombrePila.present) {
+      map['nombre_pila'] = Variable<String>(nombrePila.value);
+    }
+    if (apellido.present) {
+      map['apellido'] = Variable<String>(apellido.value);
+    }
+    if (tipoDni.present) {
+      map['tipo_dni'] = Variable<String>(tipoDni.value);
+    }
+    if (dni.present) {
+      map['dni'] = Variable<String>(dni.value);
+    }
+    if (consentimientoAceptado.present) {
+      map['consentimiento_aceptado'] = Variable<bool>(
+        consentimientoAceptado.value,
+      );
+    }
+    if (antecedentesFamiliaresCompletos.present) {
+      map['antecedentes_familiares_completos'] = Variable<bool>(
+        antecedentesFamiliaresCompletos.value,
+      );
+    }
     if (permissionsSyncedAt.present) {
       map['permissions_synced_at'] = Variable<DateTime>(
         permissionsSyncedAt.value,
@@ -801,7 +1168,540 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
           ..write('rolLabel: $rolLabel, ')
           ..write('accionesJson: $accionesJson, ')
           ..write('metaVersion: $metaVersion, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombrePila: $nombrePila, ')
+          ..write('apellido: $apellido, ')
+          ..write('tipoDni: $tipoDni, ')
+          ..write('dni: $dni, ')
+          ..write('consentimientoAceptado: $consentimientoAceptado, ')
+          ..write(
+            'antecedentesFamiliaresCompletos: $antecedentesFamiliaresCompletos, ',
+          )
           ..write('permissionsSyncedAt: $permissionsSyncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HijosRowsTable extends HijosRows
+    with TableInfo<$HijosRowsTable, HijosRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HijosRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now().toUtc(),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<SyncStatus, int> syncStatus =
+      GeneratedColumn<int>(
+        'sync_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: Constant(SyncStatus.pendiente.index),
+      ).withConverter<SyncStatus>($HijosRowsTable.$convertersyncStatus);
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tutorIdMeta = const VerificationMeta(
+    'tutorId',
+  );
+  @override
+  late final GeneratedColumn<String> tutorId = GeneratedColumn<String>(
+    'tutor_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nombreNnaMeta = const VerificationMeta(
+    'nombreNna',
+  );
+  @override
+  late final GeneratedColumn<String> nombreNna = GeneratedColumn<String>(
+    'nombre_nna',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _apellidoNnaMeta = const VerificationMeta(
+    'apellidoNna',
+  );
+  @override
+  late final GeneratedColumn<String> apellidoNna = GeneratedColumn<String>(
+    'apellido_nna',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    tutorId,
+    nombreNna,
+    apellidoNna,
+    payloadJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hijos_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HijosRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('tutor_id')) {
+      context.handle(
+        _tutorIdMeta,
+        tutorId.isAcceptableOrUnknown(data['tutor_id']!, _tutorIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tutorIdMeta);
+    }
+    if (data.containsKey('nombre_nna')) {
+      context.handle(
+        _nombreNnaMeta,
+        nombreNna.isAcceptableOrUnknown(data['nombre_nna']!, _nombreNnaMeta),
+      );
+    }
+    if (data.containsKey('apellido_nna')) {
+      context.handle(
+        _apellidoNnaMeta,
+        apellidoNna.isAcceptableOrUnknown(
+          data['apellido_nna']!,
+          _apellidoNnaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HijosRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HijosRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: $HijosRowsTable.$convertersyncStatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}sync_status'],
+        )!,
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      tutorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tutor_id'],
+      )!,
+      nombreNna: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre_nna'],
+      )!,
+      apellidoNna: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}apellido_nna'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+    );
+  }
+
+  @override
+  $HijosRowsTable createAlias(String alias) {
+    return $HijosRowsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<SyncStatus, int, int> $convertersyncStatus =
+      const EnumIndexConverter<SyncStatus>(SyncStatus.values);
+}
+
+class HijosRow extends DataClass implements Insertable<HijosRow> {
+  final String id;
+  final DateTime updatedAt;
+  final SyncStatus syncStatus;
+  final DateTime? deletedAt;
+  final String tutorId;
+  final String nombreNna;
+  final String apellidoNna;
+  final String payloadJson;
+  const HijosRow({
+    required this.id,
+    required this.updatedAt,
+    required this.syncStatus,
+    this.deletedAt,
+    required this.tutorId,
+    required this.nombreNna,
+    required this.apellidoNna,
+    required this.payloadJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['sync_status'] = Variable<int>(
+        $HijosRowsTable.$convertersyncStatus.toSql(syncStatus),
+      );
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['tutor_id'] = Variable<String>(tutorId);
+    map['nombre_nna'] = Variable<String>(nombreNna);
+    map['apellido_nna'] = Variable<String>(apellidoNna);
+    map['payload_json'] = Variable<String>(payloadJson);
+    return map;
+  }
+
+  HijosRowsCompanion toCompanion(bool nullToAbsent) {
+    return HijosRowsCompanion(
+      id: Value(id),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      tutorId: Value(tutorId),
+      nombreNna: Value(nombreNna),
+      apellidoNna: Value(apellidoNna),
+      payloadJson: Value(payloadJson),
+    );
+  }
+
+  factory HijosRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HijosRow(
+      id: serializer.fromJson<String>(json['id']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: $HijosRowsTable.$convertersyncStatus.fromJson(
+        serializer.fromJson<int>(json['syncStatus']),
+      ),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      tutorId: serializer.fromJson<String>(json['tutorId']),
+      nombreNna: serializer.fromJson<String>(json['nombreNna']),
+      apellidoNna: serializer.fromJson<String>(json['apellidoNna']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<int>(
+        $HijosRowsTable.$convertersyncStatus.toJson(syncStatus),
+      ),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'tutorId': serializer.toJson<String>(tutorId),
+      'nombreNna': serializer.toJson<String>(nombreNna),
+      'apellidoNna': serializer.toJson<String>(apellidoNna),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+    };
+  }
+
+  HijosRow copyWith({
+    String? id,
+    DateTime? updatedAt,
+    SyncStatus? syncStatus,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? tutorId,
+    String? nombreNna,
+    String? apellidoNna,
+    String? payloadJson,
+  }) => HijosRow(
+    id: id ?? this.id,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    tutorId: tutorId ?? this.tutorId,
+    nombreNna: nombreNna ?? this.nombreNna,
+    apellidoNna: apellidoNna ?? this.apellidoNna,
+    payloadJson: payloadJson ?? this.payloadJson,
+  );
+  HijosRow copyWithCompanion(HijosRowsCompanion data) {
+    return HijosRow(
+      id: data.id.present ? data.id.value : this.id,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      tutorId: data.tutorId.present ? data.tutorId.value : this.tutorId,
+      nombreNna: data.nombreNna.present ? data.nombreNna.value : this.nombreNna,
+      apellidoNna: data.apellidoNna.present
+          ? data.apellidoNna.value
+          : this.apellidoNna,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HijosRow(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombreNna: $nombreNna, ')
+          ..write('apellidoNna: $apellidoNna, ')
+          ..write('payloadJson: $payloadJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    tutorId,
+    nombreNna,
+    apellidoNna,
+    payloadJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HijosRow &&
+          other.id == this.id &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.deletedAt == this.deletedAt &&
+          other.tutorId == this.tutorId &&
+          other.nombreNna == this.nombreNna &&
+          other.apellidoNna == this.apellidoNna &&
+          other.payloadJson == this.payloadJson);
+}
+
+class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
+  final Value<String> id;
+  final Value<DateTime> updatedAt;
+  final Value<SyncStatus> syncStatus;
+  final Value<DateTime?> deletedAt;
+  final Value<String> tutorId;
+  final Value<String> nombreNna;
+  final Value<String> apellidoNna;
+  final Value<String> payloadJson;
+  final Value<int> rowid;
+  const HijosRowsCompanion({
+    this.id = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.tutorId = const Value.absent(),
+    this.nombreNna = const Value.absent(),
+    this.apellidoNna = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HijosRowsCompanion.insert({
+    required String id,
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String tutorId,
+    this.nombreNna = const Value.absent(),
+    this.apellidoNna = const Value.absent(),
+    required String payloadJson,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       tutorId = Value(tutorId),
+       payloadJson = Value(payloadJson);
+  static Insertable<HijosRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? syncStatus,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? tutorId,
+    Expression<String>? nombreNna,
+    Expression<String>? apellidoNna,
+    Expression<String>? payloadJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (tutorId != null) 'tutor_id': tutorId,
+      if (nombreNna != null) 'nombre_nna': nombreNna,
+      if (apellidoNna != null) 'apellido_nna': apellidoNna,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HijosRowsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? updatedAt,
+    Value<SyncStatus>? syncStatus,
+    Value<DateTime?>? deletedAt,
+    Value<String>? tutorId,
+    Value<String>? nombreNna,
+    Value<String>? apellidoNna,
+    Value<String>? payloadJson,
+    Value<int>? rowid,
+  }) {
+    return HijosRowsCompanion(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      deletedAt: deletedAt ?? this.deletedAt,
+      tutorId: tutorId ?? this.tutorId,
+      nombreNna: nombreNna ?? this.nombreNna,
+      apellidoNna: apellidoNna ?? this.apellidoNna,
+      payloadJson: payloadJson ?? this.payloadJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(
+        $HijosRowsTable.$convertersyncStatus.toSql(syncStatus.value),
+      );
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (tutorId.present) {
+      map['tutor_id'] = Variable<String>(tutorId.value);
+    }
+    if (nombreNna.present) {
+      map['nombre_nna'] = Variable<String>(nombreNna.value);
+    }
+    if (apellidoNna.present) {
+      map['apellido_nna'] = Variable<String>(apellidoNna.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HijosRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('tutorId: $tutorId, ')
+          ..write('nombreNna: $nombreNna, ')
+          ..write('apellidoNna: $apellidoNna, ')
+          ..write('payloadJson: $payloadJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -814,6 +1714,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncStateRowsTable syncStateRows = $SyncStateRowsTable(this);
   late final $CachedSessionRowsTable cachedSessionRows =
       $CachedSessionRowsTable(this);
+  late final $HijosRowsTable hijosRows = $HijosRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -821,6 +1722,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     syncStateRows,
     cachedSessionRows,
+    hijosRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -982,6 +1884,13 @@ typedef $$CachedSessionRowsTableCreateCompanionBuilder =
       required String rolLabel,
       required String accionesJson,
       required String metaVersion,
+      Value<String?> tutorId,
+      Value<String?> nombrePila,
+      Value<String?> apellido,
+      Value<String?> tipoDni,
+      Value<String?> dni,
+      Value<bool> consentimientoAceptado,
+      Value<bool> antecedentesFamiliaresCompletos,
       Value<DateTime?> permissionsSyncedAt,
       Value<int> rowid,
     });
@@ -995,6 +1904,13 @@ typedef $$CachedSessionRowsTableUpdateCompanionBuilder =
       Value<String> rolLabel,
       Value<String> accionesJson,
       Value<String> metaVersion,
+      Value<String?> tutorId,
+      Value<String?> nombrePila,
+      Value<String?> apellido,
+      Value<String?> tipoDni,
+      Value<String?> dni,
+      Value<bool> consentimientoAceptado,
+      Value<bool> antecedentesFamiliaresCompletos,
       Value<DateTime?> permissionsSyncedAt,
       Value<int> rowid,
     });
@@ -1045,6 +1961,41 @@ class $$CachedSessionRowsTableFilterComposer
 
   ColumnFilters<String> get metaVersion => $composableBuilder(
     column: $table.metaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombrePila => $composableBuilder(
+    column: $table.nombrePila,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get apellido => $composableBuilder(
+    column: $table.apellido,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tipoDni => $composableBuilder(
+    column: $table.tipoDni,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dni => $composableBuilder(
+    column: $table.dni,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get antecedentesFamiliaresCompletos => $composableBuilder(
+    column: $table.antecedentesFamiliaresCompletos,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1103,6 +2054,42 @@ class $$CachedSessionRowsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombrePila => $composableBuilder(
+    column: $table.nombrePila,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get apellido => $composableBuilder(
+    column: $table.apellido,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tipoDni => $composableBuilder(
+    column: $table.tipoDni,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dni => $composableBuilder(
+    column: $table.dni,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get antecedentesFamiliaresCompletos =>
+      $composableBuilder(
+        column: $table.antecedentesFamiliaresCompletos,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<DateTime> get permissionsSyncedAt => $composableBuilder(
     column: $table.permissionsSyncedAt,
     builder: (column) => ColumnOrderings(column),
@@ -1145,6 +2132,34 @@ class $$CachedSessionRowsTableAnnotationComposer
     column: $table.metaVersion,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get tutorId =>
+      $composableBuilder(column: $table.tutorId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombrePila => $composableBuilder(
+    column: $table.nombrePila,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get apellido =>
+      $composableBuilder(column: $table.apellido, builder: (column) => column);
+
+  GeneratedColumn<String> get tipoDni =>
+      $composableBuilder(column: $table.tipoDni, builder: (column) => column);
+
+  GeneratedColumn<String> get dni =>
+      $composableBuilder(column: $table.dni, builder: (column) => column);
+
+  GeneratedColumn<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get antecedentesFamiliaresCompletos =>
+      $composableBuilder(
+        column: $table.antecedentesFamiliaresCompletos,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get permissionsSyncedAt => $composableBuilder(
     column: $table.permissionsSyncedAt,
@@ -1200,6 +2215,14 @@ class $$CachedSessionRowsTableTableManager
                 Value<String> rolLabel = const Value.absent(),
                 Value<String> accionesJson = const Value.absent(),
                 Value<String> metaVersion = const Value.absent(),
+                Value<String?> tutorId = const Value.absent(),
+                Value<String?> nombrePila = const Value.absent(),
+                Value<String?> apellido = const Value.absent(),
+                Value<String?> tipoDni = const Value.absent(),
+                Value<String?> dni = const Value.absent(),
+                Value<bool> consentimientoAceptado = const Value.absent(),
+                Value<bool> antecedentesFamiliaresCompletos =
+                    const Value.absent(),
                 Value<DateTime?> permissionsSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CachedSessionRowsCompanion(
@@ -1211,6 +2234,14 @@ class $$CachedSessionRowsTableTableManager
                 rolLabel: rolLabel,
                 accionesJson: accionesJson,
                 metaVersion: metaVersion,
+                tutorId: tutorId,
+                nombrePila: nombrePila,
+                apellido: apellido,
+                tipoDni: tipoDni,
+                dni: dni,
+                consentimientoAceptado: consentimientoAceptado,
+                antecedentesFamiliaresCompletos:
+                    antecedentesFamiliaresCompletos,
                 permissionsSyncedAt: permissionsSyncedAt,
                 rowid: rowid,
               ),
@@ -1224,6 +2255,14 @@ class $$CachedSessionRowsTableTableManager
                 required String rolLabel,
                 required String accionesJson,
                 required String metaVersion,
+                Value<String?> tutorId = const Value.absent(),
+                Value<String?> nombrePila = const Value.absent(),
+                Value<String?> apellido = const Value.absent(),
+                Value<String?> tipoDni = const Value.absent(),
+                Value<String?> dni = const Value.absent(),
+                Value<bool> consentimientoAceptado = const Value.absent(),
+                Value<bool> antecedentesFamiliaresCompletos =
+                    const Value.absent(),
                 Value<DateTime?> permissionsSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CachedSessionRowsCompanion.insert(
@@ -1235,6 +2274,14 @@ class $$CachedSessionRowsTableTableManager
                 rolLabel: rolLabel,
                 accionesJson: accionesJson,
                 metaVersion: metaVersion,
+                tutorId: tutorId,
+                nombrePila: nombrePila,
+                apellido: apellido,
+                tipoDni: tipoDni,
+                dni: dni,
+                consentimientoAceptado: consentimientoAceptado,
+                antecedentesFamiliaresCompletos:
+                    antecedentesFamiliaresCompletos,
                 permissionsSyncedAt: permissionsSyncedAt,
                 rowid: rowid,
               ),
@@ -1267,6 +2314,265 @@ typedef $$CachedSessionRowsTableProcessedTableManager =
       CachedSessionRow,
       PrefetchHooks Function()
     >;
+typedef $$HijosRowsTableCreateCompanionBuilder =
+    HijosRowsCompanion Function({
+      required String id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      required String tutorId,
+      Value<String> nombreNna,
+      Value<String> apellidoNna,
+      required String payloadJson,
+      Value<int> rowid,
+    });
+typedef $$HijosRowsTableUpdateCompanionBuilder =
+    HijosRowsCompanion Function({
+      Value<String> id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      Value<String> tutorId,
+      Value<String> nombreNna,
+      Value<String> apellidoNna,
+      Value<String> payloadJson,
+      Value<int> rowid,
+    });
+
+class $$HijosRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SyncStatus, SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombreNna => $composableBuilder(
+    column: $table.nombreNna,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HijosRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tutorId => $composableBuilder(
+    column: $table.tutorId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombreNna => $composableBuilder(
+    column: $table.nombreNna,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HijosRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HijosRowsTable> {
+  $$HijosRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get tutorId =>
+      $composableBuilder(column: $table.tutorId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombreNna =>
+      $composableBuilder(column: $table.nombreNna, builder: (column) => column);
+
+  GeneratedColumn<String> get apellidoNna => $composableBuilder(
+    column: $table.apellidoNna,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+}
+
+class $$HijosRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HijosRowsTable,
+          HijosRow,
+          $$HijosRowsTableFilterComposer,
+          $$HijosRowsTableOrderingComposer,
+          $$HijosRowsTableAnnotationComposer,
+          $$HijosRowsTableCreateCompanionBuilder,
+          $$HijosRowsTableUpdateCompanionBuilder,
+          (HijosRow, BaseReferences<_$AppDatabase, $HijosRowsTable, HijosRow>),
+          HijosRow,
+          PrefetchHooks Function()
+        > {
+  $$HijosRowsTableTableManager(_$AppDatabase db, $HijosRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HijosRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HijosRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HijosRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> tutorId = const Value.absent(),
+                Value<String> nombreNna = const Value.absent(),
+                Value<String> apellidoNna = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HijosRowsCompanion(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                tutorId: tutorId,
+                nombreNna: nombreNna,
+                apellidoNna: apellidoNna,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String tutorId,
+                Value<String> nombreNna = const Value.absent(),
+                Value<String> apellidoNna = const Value.absent(),
+                required String payloadJson,
+                Value<int> rowid = const Value.absent(),
+              }) => HijosRowsCompanion.insert(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                tutorId: tutorId,
+                nombreNna: nombreNna,
+                apellidoNna: apellidoNna,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HijosRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HijosRowsTable,
+      HijosRow,
+      $$HijosRowsTableFilterComposer,
+      $$HijosRowsTableOrderingComposer,
+      $$HijosRowsTableAnnotationComposer,
+      $$HijosRowsTableCreateCompanionBuilder,
+      $$HijosRowsTableUpdateCompanionBuilder,
+      (HijosRow, BaseReferences<_$AppDatabase, $HijosRowsTable, HijosRow>),
+      HijosRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1275,4 +2581,6 @@ class $AppDatabaseManager {
       $$SyncStateRowsTableTableManager(_db, _db.syncStateRows);
   $$CachedSessionRowsTableTableManager get cachedSessionRows =>
       $$CachedSessionRowsTableTableManager(_db, _db.cachedSessionRows);
+  $$HijosRowsTableTableManager get hijosRows =>
+      $$HijosRowsTableTableManager(_db, _db.hijosRows);
 }

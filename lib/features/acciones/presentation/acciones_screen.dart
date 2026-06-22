@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/accion_presentacion.dart';
 import '../../../core/design_system/action_group.dart';
 import '../../../core/design_system/action_tile.dart';
 import '../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../core/design_system/empty_state.dart';
+import '../../../core/notificaciones/notificacion_controller.dart';
 import '../../../core/session/agrupar_acciones.dart';
 import '../../../core/session/entities.dart';
 import '../../../core/session/session_controller.dart';
@@ -44,7 +46,29 @@ class AccionesScreen extends ConsumerWidget {
                           color: colorDesdeHex(a.color),
                           icon: accionIcon(a.icon),
                           label: a.label,
-                          onTap: () => _placeholder(context, a.label),
+                          onTap: () {
+                            switch (a.name) {
+                              case 'registrarHijo':
+                                final u = estado is SesionAutenticada
+                                    ? estado.sesion.usuario
+                                    : null;
+                                if (u != null && !u.consentimientoAceptado) {
+                                  ref.read(notificacionProvider.notifier).info(
+                                      'Primero aceptá el consentimiento para registrar a tu hijo/a.');
+                                  context.push('/consentimiento');
+                                } else {
+                                  context.push('/hijos/nuevo');
+                                }
+                              case 'verHijos':
+                                context.push('/hijos');
+                              case 'darConsentimiento':
+                                context.push('/consentimiento');
+                              case 'cargarAntecedentesFamiliares':
+                                context.push('/antecedentes-familiares');
+                              default:
+                                _placeholder(context, a.label);
+                            }
+                          },
                         ),
                     ],
                   ),

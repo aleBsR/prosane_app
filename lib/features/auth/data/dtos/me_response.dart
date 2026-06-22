@@ -1,15 +1,28 @@
 import '../../../../core/session/entities.dart';
 
-/// DTO de `GET /api/v1/auth/me/` — contrato congelado del backend.
-///   { user:{id,email,nombre,apellido,is_staff}, roles:[{name,label}],
-///     actions:[{8 claves}], meta:{version, permissions_synced_at} }
+/// DTO de `GET /api/v1/auth/me/`.
+///   { user:{id,email,nombre,apellido,tipo_dni,dni,is_staff,tutor_id},
+///     roles:[{name,label}], actions:[{8 claves}],
+///     meta:{version, permissions_synced_at} }
+/// `tipo_dni`/`dni` son aditivos (para prefill del adulto responsable).
 class MeResponse {
   MeResponse({
     required this.id, required this.email, required this.nombre,
     required this.rolName, required this.rolLabel, required this.acciones,
     required this.metaVersion, required this.metaSyncedAt,
+    this.tutorId,
+    this.nombrePila,
+    this.apellido,
+    this.tipoDni,
+    this.dni,
+    this.consentimientoAceptado = false,
+    this.antecedentesFamiliaresCompletos = false,
   });
   final String id, email, nombre, rolName, rolLabel, metaVersion, metaSyncedAt;
+  final String? tutorId;
+  final String? nombrePila, apellido, tipoDni, dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
   final List<Accion> acciones;
 
   factory MeResponse.fromJson(Map<String, dynamic> j) {
@@ -34,6 +47,13 @@ class MeResponse {
           .toList(),
       metaVersion: (meta['version'] as String?) ?? '',
       metaSyncedAt: (meta['permissions_synced_at'] as String?) ?? '',
+      tutorId: user['tutor_id'] as String?,
+      nombrePila: user['nombre'] as String?,
+      apellido: user['apellido'] as String?,
+      tipoDni: user['tipo_dni'] as String?,
+      dni: user['dni'] as String?,
+      consentimientoAceptado: user['consentimiento_aceptado'] as bool? ?? false,
+      antecedentesFamiliaresCompletos: user['antecedentes_familiares_completos'] as bool? ?? false,
     );
   }
 }

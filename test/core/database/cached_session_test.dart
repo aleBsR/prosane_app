@@ -41,4 +41,46 @@ void main() {
     await db.limpiarSesion();
     expect(await db.leerSesion(), isNull);
   });
+
+  test('cachea y restaura la identidad del tutor (tutorId + adulto)', () async {
+    db = AppDatabase.forTesting(NativeDatabase.memory());
+    const u = Usuario(
+      id: 'u1', nombre: 'Juan Arquipa', rolName: 'tutor', rolLabel: 'Tutor',
+      tutorId: 'tut-1', nombrePila: 'Juan', apellido: 'Arquipa', tipoDni: 'DNI', dni: '43949474',
+    );
+    await db.guardarSesion(const Sesion(usuario: u, acciones: []),
+        email: 'j@t.com', version: '1', syncedAtIso: '2026-06-22T00:00:00Z');
+
+    final leida = await db.leerSesion();
+    expect(leida!.usuario.tutorId, 'tut-1');
+    expect(leida.usuario.nombrePila, 'Juan');
+    expect(leida.usuario.apellido, 'Arquipa');
+    expect(leida.usuario.tipoDni, 'DNI');
+    expect(leida.usuario.dni, '43949474');
+  });
+
+  test('cachea y restaura los flags de consentimiento y antecedentes (round-trip)', () async {
+    const u = Usuario(
+      id: 'u2', nombre: 'Laura Paz', rolName: 'tutor', rolLabel: 'Tutor',
+      consentimientoAceptado: true, antecedentesFamiliaresCompletos: true,
+    );
+    await db.guardarSesion(const Sesion(usuario: u, acciones: []),
+        email: 'l@t.com', version: '1', syncedAtIso: '2026-06-22T00:00:00Z');
+
+    final leida = await db.leerSesion();
+    expect(leida!.usuario.consentimientoAceptado, isTrue);
+    expect(leida.usuario.antecedentesFamiliaresCompletos, isTrue);
+  });
+
+  test('flags de consentimiento y antecedentes son false por defecto en cache', () async {
+    const u = Usuario(
+      id: 'u3', nombre: 'Pedro S', rolName: 'tutor', rolLabel: 'Tutor',
+    );
+    await db.guardarSesion(const Sesion(usuario: u, acciones: []),
+        email: 'p@t.com', version: '1', syncedAtIso: '');
+
+    final leida = await db.leerSesion();
+    expect(leida!.usuario.consentimientoAceptado, isFalse);
+    expect(leida.usuario.antecedentesFamiliaresCompletos, isFalse);
+  });
 }
