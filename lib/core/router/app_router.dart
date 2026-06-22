@@ -49,7 +49,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (c, ref, _) => AppShell(
             selectedIndex: navigationShell.currentIndex,
             onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
-            badgePendientes: ref.watch(pendientesCountProvider),
+            badgePendientes: ref.watch(pendientesCountProvider).value ?? 0,
             child: navigationShell,
           ),
         ),

@@ -10,19 +10,24 @@ import 'refresh_interceptor.dart';
 ///
 /// - [tokens]: almacén de JWT (access + refresh).
 /// - [onLogout]: callback invocado cuando el refresh falla (sesión expirada).
+/// - [baseUrl]: URL base del Dio. Si se omite, usa [AppConfig.apiBaseUrl].
+///   Pasar [AppConfig.apiV1Base] crea un Dio con base `.../api/v1` (sin `/auth`),
+///   útil para syncers que apuntan a rutas fuera de `/auth`.
 ///
 /// Internamente crea un [refreshDio] bare (sin interceptors) para evitar
 /// recursión al renovar el token.
-Dio buildDio(TokenStorage tokens, {Future<void> Function()? onLogout}) {
+Dio buildDio(TokenStorage tokens, {Future<void> Function()? onLogout, String? baseUrl}) {
+  final resolvedBase = baseUrl ?? AppConfig.apiBaseUrl;
   final dio = Dio(
     BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl,
+      baseUrl: resolvedBase,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
     ),
   );
 
   // refreshDio bare: sin interceptors, solo para POST /token/refresh
+  // Siempre apunta a la base de auth para el endpoint de renovación de token.
   final refreshDio = Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl));
 
   dio.interceptors.addAll([
