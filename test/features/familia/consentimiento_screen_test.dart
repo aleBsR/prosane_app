@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:prosane_app/core/design_system/app_button.dart';
 import 'package:prosane_app/core/design_system/app_switch.dart';
@@ -64,5 +65,48 @@ void main() {
     await t.tap(find.text('Cerrar'));
     await t.pumpAndSettle();
     expect(find.text('Términos del consentimiento'), findsNothing);
+  });
+
+  testWidgets('Aceptar switch y tapping Confirmar llama aceptarConsentimiento', (t) async {
+    final fakeDs = _MockDs();
+    when(() => fakeDs.aceptarConsentimiento(any())).thenAnswer((_) async {});
+
+    final router = GoRouter(
+      initialLocation: '/consentimiento',
+      routes: [
+        GoRoute(
+          path: '/consentimiento',
+          builder: (c, s) => ProviderScope(
+            overrides: [
+              consentimientoControllerProvider.overrideWith((ref) =>
+                  ConsentimientoController(
+                    ds: fakeDs,
+                    refrescarSesion: () async {},
+                    tutorId: 'tut-1',
+                  )),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              home: const Scaffold(body: ConsentimientoScreen()),
+            ),
+          ),
+        ),
+        GoRoute(path: '/inicio', builder: (c, s) => const Scaffold(body: Text('inicio'))),
+      ],
+    );
+
+    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    await t.pumpAndSettle();
+
+    // Tap el switch para aceptar
+    await t.tap(find.byType(AppSwitch));
+    await t.pump();
+
+    // Tap el botón Confirmar
+    await t.tap(find.byType(AppButton));
+    await t.pumpAndSettle();
+
+    // Verificar que aceptarConsentimiento fue llamado con 'tut-1'
+    verify(() => fakeDs.aceptarConsentimiento('tut-1')).called(1);
   });
 }
