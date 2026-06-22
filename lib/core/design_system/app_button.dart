@@ -7,8 +7,11 @@ enum AppButtonState { normal, validado, error }
 
 class AppButton extends StatelessWidget {
   const AppButton({
-    super.key, required this.label, this.onPressed,
-    this.isLoading = false, this.state = AppButtonState.normal,
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.state = AppButtonState.normal,
   });
 
   final String label;
@@ -27,24 +30,34 @@ class AppButton extends StatelessWidget {
       button: true,
       enabled: !disabled,
       label: label,
-      child: GestureDetector(
-        onTap: disabled ? null : onPressed,
-        child: Container(
-          height: 52,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(AppRadii.boton),
+      // Opacity atenúa el botón cuando está deshabilitado (sin handler o cargando)
+      // para que el estado "no se puede tocar" sea visible, no solo funcional.
+      child: Opacity(
+        opacity: disabled ? 0.5 : 1.0,
+        child: GestureDetector(
+          onTap: disabled ? null : onPressed,
+          child: Container(
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(AppRadii.boton),
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: AppColors.blanco,
+                    ),
+                  )
+                : state == AppButtonState.validado
+                ? const Icon(Icons.check, color: AppColors.blanco)
+                : state == AppButtonState.error
+                ? const Icon(Icons.close, color: AppColors.blanco)
+                : Text(label, style: AppTypography.boton),
           ),
-          child: isLoading
-              ? const SizedBox(
-                  height: 22, width: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.blanco))
-              : state == AppButtonState.validado
-                  ? const Icon(Icons.check, color: AppColors.blanco)
-                  : state == AppButtonState.error
-                      ? const Icon(Icons.close, color: AppColors.blanco)
-                      : Text(label, style: AppTypography.boton),
         ),
       ),
     );
