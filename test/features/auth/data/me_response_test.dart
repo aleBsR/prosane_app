@@ -93,4 +93,17 @@ void main() {
     expect(me.tipoDni, 'DNI');
     expect(me.dni, '43949474');
   });
+
+  test('MeResponse parsea los flags de consentimiento y antecedentes', () {
+    final me = MeResponse.fromJson({
+      'user': {
+        'id': 'u1', 'email': 'j@t.com', 'nombre': 'Juan', 'apellido': 'A',
+        'consentimiento_aceptado': true, 'antecedentes_familiares_completos': false,
+      },
+      'roles': [{'name': 'tutor', 'label': 'Tutor'}], 'actions': [],
+      'meta': {'version': '1', 'permissions_synced_at': 'x'},
+    });
+    expect(me.consentimientoAceptado, true);
+    expect(me.antecedentesFamiliaresCompletos, false);
+  });
 }

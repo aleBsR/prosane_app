@@ -37,6 +37,8 @@ class Usuario {
     this.apellido,
     this.tipoDni,
     this.dni,
+    this.consentimientoAceptado = false,
+    this.antecedentesFamiliaresCompletos = false,
   });
   final String id, nombre, rolName, rolLabel;
   final String? tutorId;
@@ -45,6 +47,21 @@ class Usuario {
   final String? apellido;
   final String? tipoDni;
   final String? dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
+
+  Usuario copyWith({
+    bool? consentimientoAceptado,
+    bool? antecedentesFamiliaresCompletos,
+  }) =>
+      Usuario(
+        id: id, nombre: nombre, rolName: rolName, rolLabel: rolLabel,
+        tutorId: tutorId, nombrePila: nombrePila, apellido: apellido,
+        tipoDni: tipoDni, dni: dni,
+        consentimientoAceptado: consentimientoAceptado ?? this.consentimientoAceptado,
+        antecedentesFamiliaresCompletos:
+            antecedentesFamiliaresCompletos ?? this.antecedentesFamiliaresCompletos,
+      );
 }
 
 class Sesion {

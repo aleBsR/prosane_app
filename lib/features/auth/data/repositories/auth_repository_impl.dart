@@ -15,22 +15,30 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenStorage tokens;
   final SessionCache cache;
 
+  Future<Sesion> _sesionDesdeMe() async {
+    final me = await remote.me();
+    final sesion = Sesion(
+      usuario: Usuario(
+        id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel,
+        tutorId: me.tutorId, nombrePila: me.nombrePila, apellido: me.apellido,
+        tipoDni: me.tipoDni, dni: me.dni,
+        consentimientoAceptado: me.consentimientoAceptado,
+        antecedentesFamiliaresCompletos: me.antecedentesFamiliaresCompletos,
+      ),
+      acciones: me.acciones,
+    );
+    await cache.guardarSesion(sesion,
+        email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+    return sesion;
+  }
+
   @override
   Future<Sesion> login(String email, String password) async {
     try {
       final t = await remote.login(email, password);
       await tokens.guardar(access: t.access, refresh: t.refresh); // PRIMERO los tokens
       try {
-        final me = await remote.me(); // /me usa el access recién guardado
-        final sesion = Sesion(
-          usuario: Usuario(
-            id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel,
-            tutorId: me.tutorId, nombrePila: me.nombrePila, apellido: me.apellido,
-            tipoDni: me.tipoDni, dni: me.dni,
-          ),
-          acciones: me.acciones,
-        );
-        await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+        final sesion = await _sesionDesdeMe(); // /me usa el access recién guardado
         return sesion;
       } catch (_) {
         // Login atómico: si /me O el guardado en cache fallan, no dejamos tokens
@@ -51,16 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final t = await remote.registerTutor(datos);
       await tokens.guardar(access: t.access, refresh: t.refresh);
       try {
-        final me = await remote.me();
-        final sesion = Sesion(
-          usuario: Usuario(
-            id: me.id, nombre: me.nombre, rolName: me.rolName, rolLabel: me.rolLabel,
-            tutorId: me.tutorId, nombrePila: me.nombrePila, apellido: me.apellido,
-            tipoDni: me.tipoDni, dni: me.dni,
-          ),
-          acciones: me.acciones,
-        );
-        await cache.guardarSesion(sesion, email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+        final sesion = await _sesionDesdeMe();
         return sesion;
       } catch (_) {
         await tokens.limpiar();
@@ -72,6 +71,9 @@ class AuthRepositoryImpl implements AuthRepository {
       throw mapDioError(e);
     }
   }
+
+  @override
+  Future<Sesion> refrescarSesion() => _sesionDesdeMe();
 
   @override
   Future<Sesion?> sesionCacheada() => cache.leerSesion();

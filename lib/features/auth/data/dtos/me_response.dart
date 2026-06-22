@@ -15,10 +15,14 @@ class MeResponse {
     this.apellido,
     this.tipoDni,
     this.dni,
+    this.consentimientoAceptado = false,
+    this.antecedentesFamiliaresCompletos = false,
   });
   final String id, email, nombre, rolName, rolLabel, metaVersion, metaSyncedAt;
   final String? tutorId;
   final String? nombrePila, apellido, tipoDni, dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
   final List<Accion> acciones;
 
   factory MeResponse.fromJson(Map<String, dynamic> j) {
@@ -48,6 +52,8 @@ class MeResponse {
       apellido: user['apellido'] as String?,
       tipoDni: user['tipo_dni'] as String?,
       dni: user['dni'] as String?,
+      consentimientoAceptado: user['consentimiento_aceptado'] as bool? ?? false,
+      antecedentesFamiliaresCompletos: user['antecedentes_familiares_completos'] as bool? ?? false,
     );
   }
 }

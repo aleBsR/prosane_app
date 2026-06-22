@@ -17,6 +17,8 @@ class CachedSessionRows extends Table {
   TextColumn get apellido => text().nullable()();
   TextColumn get tipoDni => text().nullable()();
   TextColumn get dni => text().nullable()();
+  BoolColumn get consentimientoAceptado => boolean().withDefault(const Constant(false))();
+  BoolColumn get antecedentesFamiliaresCompletos => boolean().withDefault(const Constant(false))();
   DateTimeColumn get permissionsSyncedAt => dateTime().nullable()();
 
   @override

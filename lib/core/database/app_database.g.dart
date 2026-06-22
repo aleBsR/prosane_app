@@ -368,6 +368,36 @@ class $CachedSessionRowsTable extends CachedSessionRows
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _consentimientoAceptadoMeta =
+      const VerificationMeta('consentimientoAceptado');
+  @override
+  late final GeneratedColumn<bool> consentimientoAceptado =
+      GeneratedColumn<bool>(
+        'consentimiento_aceptado',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("consentimiento_aceptado" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _antecedentesFamiliaresCompletosMeta =
+      const VerificationMeta('antecedentesFamiliaresCompletos');
+  @override
+  late final GeneratedColumn<bool> antecedentesFamiliaresCompletos =
+      GeneratedColumn<bool>(
+        'antecedentes_familiares_completos',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("antecedentes_familiares_completos" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _permissionsSyncedAtMeta =
       const VerificationMeta('permissionsSyncedAt');
   @override
@@ -394,6 +424,8 @@ class $CachedSessionRowsTable extends CachedSessionRows
     apellido,
     tipoDni,
     dni,
+    consentimientoAceptado,
+    antecedentesFamiliaresCompletos,
     permissionsSyncedAt,
   ];
   @override
@@ -503,6 +535,24 @@ class $CachedSessionRowsTable extends CachedSessionRows
         dni.isAcceptableOrUnknown(data['dni']!, _dniMeta),
       );
     }
+    if (data.containsKey('consentimiento_aceptado')) {
+      context.handle(
+        _consentimientoAceptadoMeta,
+        consentimientoAceptado.isAcceptableOrUnknown(
+          data['consentimiento_aceptado']!,
+          _consentimientoAceptadoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('antecedentes_familiares_completos')) {
+      context.handle(
+        _antecedentesFamiliaresCompletosMeta,
+        antecedentesFamiliaresCompletos.isAcceptableOrUnknown(
+          data['antecedentes_familiares_completos']!,
+          _antecedentesFamiliaresCompletosMeta,
+        ),
+      );
+    }
     if (data.containsKey('permissions_synced_at')) {
       context.handle(
         _permissionsSyncedAtMeta,
@@ -573,6 +623,14 @@ class $CachedSessionRowsTable extends CachedSessionRows
         DriftSqlType.string,
         data['${effectivePrefix}dni'],
       ),
+      consentimientoAceptado: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}consentimiento_aceptado'],
+      )!,
+      antecedentesFamiliaresCompletos: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}antecedentes_familiares_completos'],
+      )!,
       permissionsSyncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}permissions_synced_at'],
@@ -601,6 +659,8 @@ class CachedSessionRow extends DataClass
   final String? apellido;
   final String? tipoDni;
   final String? dni;
+  final bool consentimientoAceptado;
+  final bool antecedentesFamiliaresCompletos;
   final DateTime? permissionsSyncedAt;
   const CachedSessionRow({
     required this.id,
@@ -616,6 +676,8 @@ class CachedSessionRow extends DataClass
     this.apellido,
     this.tipoDni,
     this.dni,
+    required this.consentimientoAceptado,
+    required this.antecedentesFamiliaresCompletos,
     this.permissionsSyncedAt,
   });
   @override
@@ -646,6 +708,10 @@ class CachedSessionRow extends DataClass
     if (!nullToAbsent || dni != null) {
       map['dni'] = Variable<String>(dni);
     }
+    map['consentimiento_aceptado'] = Variable<bool>(consentimientoAceptado);
+    map['antecedentes_familiares_completos'] = Variable<bool>(
+      antecedentesFamiliaresCompletos,
+    );
     if (!nullToAbsent || permissionsSyncedAt != null) {
       map['permissions_synced_at'] = Variable<DateTime>(permissionsSyncedAt);
     }
@@ -677,6 +743,8 @@ class CachedSessionRow extends DataClass
           ? const Value.absent()
           : Value(tipoDni),
       dni: dni == null && nullToAbsent ? const Value.absent() : Value(dni),
+      consentimientoAceptado: Value(consentimientoAceptado),
+      antecedentesFamiliaresCompletos: Value(antecedentesFamiliaresCompletos),
       permissionsSyncedAt: permissionsSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(permissionsSyncedAt),
@@ -702,6 +770,12 @@ class CachedSessionRow extends DataClass
       apellido: serializer.fromJson<String?>(json['apellido']),
       tipoDni: serializer.fromJson<String?>(json['tipoDni']),
       dni: serializer.fromJson<String?>(json['dni']),
+      consentimientoAceptado: serializer.fromJson<bool>(
+        json['consentimientoAceptado'],
+      ),
+      antecedentesFamiliaresCompletos: serializer.fromJson<bool>(
+        json['antecedentesFamiliaresCompletos'],
+      ),
       permissionsSyncedAt: serializer.fromJson<DateTime?>(
         json['permissionsSyncedAt'],
       ),
@@ -724,6 +798,10 @@ class CachedSessionRow extends DataClass
       'apellido': serializer.toJson<String?>(apellido),
       'tipoDni': serializer.toJson<String?>(tipoDni),
       'dni': serializer.toJson<String?>(dni),
+      'consentimientoAceptado': serializer.toJson<bool>(consentimientoAceptado),
+      'antecedentesFamiliaresCompletos': serializer.toJson<bool>(
+        antecedentesFamiliaresCompletos,
+      ),
       'permissionsSyncedAt': serializer.toJson<DateTime?>(permissionsSyncedAt),
     };
   }
@@ -742,6 +820,8 @@ class CachedSessionRow extends DataClass
     Value<String?> apellido = const Value.absent(),
     Value<String?> tipoDni = const Value.absent(),
     Value<String?> dni = const Value.absent(),
+    bool? consentimientoAceptado,
+    bool? antecedentesFamiliaresCompletos,
     Value<DateTime?> permissionsSyncedAt = const Value.absent(),
   }) => CachedSessionRow(
     id: id ?? this.id,
@@ -757,6 +837,10 @@ class CachedSessionRow extends DataClass
     apellido: apellido.present ? apellido.value : this.apellido,
     tipoDni: tipoDni.present ? tipoDni.value : this.tipoDni,
     dni: dni.present ? dni.value : this.dni,
+    consentimientoAceptado:
+        consentimientoAceptado ?? this.consentimientoAceptado,
+    antecedentesFamiliaresCompletos:
+        antecedentesFamiliaresCompletos ?? this.antecedentesFamiliaresCompletos,
     permissionsSyncedAt: permissionsSyncedAt.present
         ? permissionsSyncedAt.value
         : this.permissionsSyncedAt,
@@ -782,6 +866,13 @@ class CachedSessionRow extends DataClass
       apellido: data.apellido.present ? data.apellido.value : this.apellido,
       tipoDni: data.tipoDni.present ? data.tipoDni.value : this.tipoDni,
       dni: data.dni.present ? data.dni.value : this.dni,
+      consentimientoAceptado: data.consentimientoAceptado.present
+          ? data.consentimientoAceptado.value
+          : this.consentimientoAceptado,
+      antecedentesFamiliaresCompletos:
+          data.antecedentesFamiliaresCompletos.present
+          ? data.antecedentesFamiliaresCompletos.value
+          : this.antecedentesFamiliaresCompletos,
       permissionsSyncedAt: data.permissionsSyncedAt.present
           ? data.permissionsSyncedAt.value
           : this.permissionsSyncedAt,
@@ -804,6 +895,10 @@ class CachedSessionRow extends DataClass
           ..write('apellido: $apellido, ')
           ..write('tipoDni: $tipoDni, ')
           ..write('dni: $dni, ')
+          ..write('consentimientoAceptado: $consentimientoAceptado, ')
+          ..write(
+            'antecedentesFamiliaresCompletos: $antecedentesFamiliaresCompletos, ',
+          )
           ..write('permissionsSyncedAt: $permissionsSyncedAt')
           ..write(')'))
         .toString();
@@ -824,6 +919,8 @@ class CachedSessionRow extends DataClass
     apellido,
     tipoDni,
     dni,
+    consentimientoAceptado,
+    antecedentesFamiliaresCompletos,
     permissionsSyncedAt,
   );
   @override
@@ -843,6 +940,9 @@ class CachedSessionRow extends DataClass
           other.apellido == this.apellido &&
           other.tipoDni == this.tipoDni &&
           other.dni == this.dni &&
+          other.consentimientoAceptado == this.consentimientoAceptado &&
+          other.antecedentesFamiliaresCompletos ==
+              this.antecedentesFamiliaresCompletos &&
           other.permissionsSyncedAt == this.permissionsSyncedAt);
 }
 
@@ -860,6 +960,8 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
   final Value<String?> apellido;
   final Value<String?> tipoDni;
   final Value<String?> dni;
+  final Value<bool> consentimientoAceptado;
+  final Value<bool> antecedentesFamiliaresCompletos;
   final Value<DateTime?> permissionsSyncedAt;
   final Value<int> rowid;
   const CachedSessionRowsCompanion({
@@ -876,6 +978,8 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     this.apellido = const Value.absent(),
     this.tipoDni = const Value.absent(),
     this.dni = const Value.absent(),
+    this.consentimientoAceptado = const Value.absent(),
+    this.antecedentesFamiliaresCompletos = const Value.absent(),
     this.permissionsSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -893,6 +997,8 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     this.apellido = const Value.absent(),
     this.tipoDni = const Value.absent(),
     this.dni = const Value.absent(),
+    this.consentimientoAceptado = const Value.absent(),
+    this.antecedentesFamiliaresCompletos = const Value.absent(),
     this.permissionsSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -916,6 +1022,8 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     Expression<String>? apellido,
     Expression<String>? tipoDni,
     Expression<String>? dni,
+    Expression<bool>? consentimientoAceptado,
+    Expression<bool>? antecedentesFamiliaresCompletos,
     Expression<DateTime>? permissionsSyncedAt,
     Expression<int>? rowid,
   }) {
@@ -933,6 +1041,10 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
       if (apellido != null) 'apellido': apellido,
       if (tipoDni != null) 'tipo_dni': tipoDni,
       if (dni != null) 'dni': dni,
+      if (consentimientoAceptado != null)
+        'consentimiento_aceptado': consentimientoAceptado,
+      if (antecedentesFamiliaresCompletos != null)
+        'antecedentes_familiares_completos': antecedentesFamiliaresCompletos,
       if (permissionsSyncedAt != null)
         'permissions_synced_at': permissionsSyncedAt,
       if (rowid != null) 'rowid': rowid,
@@ -953,6 +1065,8 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     Value<String?>? apellido,
     Value<String?>? tipoDni,
     Value<String?>? dni,
+    Value<bool>? consentimientoAceptado,
+    Value<bool>? antecedentesFamiliaresCompletos,
     Value<DateTime?>? permissionsSyncedAt,
     Value<int>? rowid,
   }) {
@@ -970,6 +1084,11 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
       apellido: apellido ?? this.apellido,
       tipoDni: tipoDni ?? this.tipoDni,
       dni: dni ?? this.dni,
+      consentimientoAceptado:
+          consentimientoAceptado ?? this.consentimientoAceptado,
+      antecedentesFamiliaresCompletos:
+          antecedentesFamiliaresCompletos ??
+          this.antecedentesFamiliaresCompletos,
       permissionsSyncedAt: permissionsSyncedAt ?? this.permissionsSyncedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1017,6 +1136,16 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
     if (dni.present) {
       map['dni'] = Variable<String>(dni.value);
     }
+    if (consentimientoAceptado.present) {
+      map['consentimiento_aceptado'] = Variable<bool>(
+        consentimientoAceptado.value,
+      );
+    }
+    if (antecedentesFamiliaresCompletos.present) {
+      map['antecedentes_familiares_completos'] = Variable<bool>(
+        antecedentesFamiliaresCompletos.value,
+      );
+    }
     if (permissionsSyncedAt.present) {
       map['permissions_synced_at'] = Variable<DateTime>(
         permissionsSyncedAt.value,
@@ -1044,6 +1173,10 @@ class CachedSessionRowsCompanion extends UpdateCompanion<CachedSessionRow> {
           ..write('apellido: $apellido, ')
           ..write('tipoDni: $tipoDni, ')
           ..write('dni: $dni, ')
+          ..write('consentimientoAceptado: $consentimientoAceptado, ')
+          ..write(
+            'antecedentesFamiliaresCompletos: $antecedentesFamiliaresCompletos, ',
+          )
           ..write('permissionsSyncedAt: $permissionsSyncedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1756,6 +1889,8 @@ typedef $$CachedSessionRowsTableCreateCompanionBuilder =
       Value<String?> apellido,
       Value<String?> tipoDni,
       Value<String?> dni,
+      Value<bool> consentimientoAceptado,
+      Value<bool> antecedentesFamiliaresCompletos,
       Value<DateTime?> permissionsSyncedAt,
       Value<int> rowid,
     });
@@ -1774,6 +1909,8 @@ typedef $$CachedSessionRowsTableUpdateCompanionBuilder =
       Value<String?> apellido,
       Value<String?> tipoDni,
       Value<String?> dni,
+      Value<bool> consentimientoAceptado,
+      Value<bool> antecedentesFamiliaresCompletos,
       Value<DateTime?> permissionsSyncedAt,
       Value<int> rowid,
     });
@@ -1849,6 +1986,16 @@ class $$CachedSessionRowsTableFilterComposer
 
   ColumnFilters<String> get dni => $composableBuilder(
     column: $table.dni,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get antecedentesFamiliaresCompletos => $composableBuilder(
+    column: $table.antecedentesFamiliaresCompletos,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1932,6 +2079,17 @@ class $$CachedSessionRowsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get antecedentesFamiliaresCompletos =>
+      $composableBuilder(
+        column: $table.antecedentesFamiliaresCompletos,
+        builder: (column) => ColumnOrderings(column),
+      );
+
   ColumnOrderings<DateTime> get permissionsSyncedAt => $composableBuilder(
     column: $table.permissionsSyncedAt,
     builder: (column) => ColumnOrderings(column),
@@ -1992,6 +2150,17 @@ class $$CachedSessionRowsTableAnnotationComposer
   GeneratedColumn<String> get dni =>
       $composableBuilder(column: $table.dni, builder: (column) => column);
 
+  GeneratedColumn<bool> get consentimientoAceptado => $composableBuilder(
+    column: $table.consentimientoAceptado,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get antecedentesFamiliaresCompletos =>
+      $composableBuilder(
+        column: $table.antecedentesFamiliaresCompletos,
+        builder: (column) => column,
+      );
+
   GeneratedColumn<DateTime> get permissionsSyncedAt => $composableBuilder(
     column: $table.permissionsSyncedAt,
     builder: (column) => column,
@@ -2051,6 +2220,9 @@ class $$CachedSessionRowsTableTableManager
                 Value<String?> apellido = const Value.absent(),
                 Value<String?> tipoDni = const Value.absent(),
                 Value<String?> dni = const Value.absent(),
+                Value<bool> consentimientoAceptado = const Value.absent(),
+                Value<bool> antecedentesFamiliaresCompletos =
+                    const Value.absent(),
                 Value<DateTime?> permissionsSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CachedSessionRowsCompanion(
@@ -2067,6 +2239,9 @@ class $$CachedSessionRowsTableTableManager
                 apellido: apellido,
                 tipoDni: tipoDni,
                 dni: dni,
+                consentimientoAceptado: consentimientoAceptado,
+                antecedentesFamiliaresCompletos:
+                    antecedentesFamiliaresCompletos,
                 permissionsSyncedAt: permissionsSyncedAt,
                 rowid: rowid,
               ),
@@ -2085,6 +2260,9 @@ class $$CachedSessionRowsTableTableManager
                 Value<String?> apellido = const Value.absent(),
                 Value<String?> tipoDni = const Value.absent(),
                 Value<String?> dni = const Value.absent(),
+                Value<bool> consentimientoAceptado = const Value.absent(),
+                Value<bool> antecedentesFamiliaresCompletos =
+                    const Value.absent(),
                 Value<DateTime?> permissionsSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CachedSessionRowsCompanion.insert(
@@ -2101,6 +2279,9 @@ class $$CachedSessionRowsTableTableManager
                 apellido: apellido,
                 tipoDni: tipoDni,
                 dni: dni,
+                consentimientoAceptado: consentimientoAceptado,
+                antecedentesFamiliaresCompletos:
+                    antecedentesFamiliaresCompletos,
                 permissionsSyncedAt: permissionsSyncedAt,
                 rowid: rowid,
               ),

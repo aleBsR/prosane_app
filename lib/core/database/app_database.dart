@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -46,6 +46,13 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         await m.addColumn(cachedSessionRows, cachedSessionRows.apellido);
         await m.addColumn(cachedSessionRows, cachedSessionRows.tipoDni);
         await m.addColumn(cachedSessionRows, cachedSessionRows.dni);
+      }
+      if (from >= 2 && from < 5) {
+        // Solo agregar columnas si la tabla ya existía (creada en v2).
+        // Si from < 2, la tabla se crea recién con m.createTable y ya incluye
+        // las columnas del schema actual (Drift genera siempre el DDL actual).
+        await m.addColumn(cachedSessionRows, cachedSessionRows.consentimientoAceptado);
+        await m.addColumn(cachedSessionRows, cachedSessionRows.antecedentesFamiliaresCompletos);
       }
     },
   );
@@ -89,6 +96,8 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         apellido: Value(s.usuario.apellido),
         tipoDni: Value(s.usuario.tipoDni),
         dni: Value(s.usuario.dni),
+        consentimientoAceptado: Value(s.usuario.consentimientoAceptado),
+        antecedentesFamiliaresCompletos: Value(s.usuario.antecedentesFamiliaresCompletos),
         permissionsSyncedAt: Value(DateTime.tryParse(syncedAtIso)?.toUtc()),
       ),
     );
@@ -116,6 +125,8 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         apellido: row.apellido,
         tipoDni: row.tipoDni,
         dni: row.dni,
+        consentimientoAceptado: row.consentimientoAceptado,
+        antecedentesFamiliaresCompletos: row.antecedentesFamiliaresCompletos,
       ),
       acciones: acciones,
     );

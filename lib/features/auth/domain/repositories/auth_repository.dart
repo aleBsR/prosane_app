@@ -7,4 +7,5 @@ abstract class AuthRepository {
   /// Sesión cacheada para arranque offline (null si no hay / Auth requiere red la 1ra vez).
   Future<Sesion?> sesionCacheada();
   Future<void> logout();
+  Future<Sesion> refrescarSesion();
 }
