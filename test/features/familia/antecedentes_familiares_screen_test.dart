@@ -102,4 +102,53 @@ void main() {
     // isLoading=false y enviando=false, el botón tiene onPressed no nulo
     expect(boton.onPressed, isNotNull);
   });
+
+  testWidgets('precarga: el campo ¿Cuál/es? muestra el valor devuelto por el backend',
+      (t) async {
+    final ds = _MockDs();
+    when(() => ds.getAntecedentes(any())).thenAnswer((_) async => <String, dynamic>{
+          'problema_salud_importante': 'si',
+          'problema_salud_cual': 'asma',
+          'muerte_subita_familiar': 'no',
+        });
+    when(() => ds.guardarAntecedentes(any(), any())).thenAnswer((_) async {});
+
+    final router = GoRouter(
+      initialLocation: '/antecedentes-familiares',
+      routes: [
+        GoRoute(
+          path: '/antecedentes-familiares',
+          builder: (c, s) => ProviderScope(
+            overrides: [
+              antecedentesFamiliaresControllerProvider.overrideWith((ref) =>
+                  AntecedentesFamiliaresController(
+                    ds: ds,
+                    refrescarSesion: () async {},
+                    tutorId: 'tut-1',
+                  )),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.light(),
+              home: const Scaffold(body: AntecedentesFamiliaresScreen()),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/inicio',
+          builder: (c, s) => const Scaffold(body: Text('inicio')),
+        ),
+      ],
+    );
+
+    await t.pumpWidget(MaterialApp.router(routerConfig: router));
+    await t.pumpAndSettle();
+
+    // El campo ¿Cuál/es? debe mostrar el valor precargado desde el backend.
+    expect(find.text('asma'), findsOneWidget);
+
+    // Los dropdowns deben reflejar 'si' y 'no' respectivamente.
+    // AppDropdownField muestra el label correspondiente al value cargado.
+    expect(find.text('Sí'), findsOneWidget);
+    expect(find.text('No'), findsOneWidget);
+  });
 }

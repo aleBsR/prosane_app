@@ -12,7 +12,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import 'controllers/antecedentes_familiares_controller.dart';
 
-class AntecedentesFamiliaresScreen extends ConsumerWidget {
+class AntecedentesFamiliaresScreen extends ConsumerStatefulWidget {
   const AntecedentesFamiliaresScreen({super.key});
 
   static const _opciones = [
@@ -22,9 +22,38 @@ class AntecedentesFamiliaresScreen extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AntecedentesFamiliaresScreen> createState() =>
+      _AntecedentesFamiliaresScreenState();
+}
+
+class _AntecedentesFamiliaresScreenState
+    extends ConsumerState<AntecedentesFamiliaresScreen> {
+  late final TextEditingController _cualCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _cualCtrl = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _cualCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.listen<AntecedentesFamiliaresState>(
         antecedentesFamiliaresControllerProvider, (prev, next) {
+      // Sync precarga into the text field once — only when the loaded value
+      // first arrives and the user hasn't typed anything yet.
+      if (next.problemaCual != (prev?.problemaCual ?? '') &&
+          _cualCtrl.text.isEmpty &&
+          next.problemaCual.isNotEmpty) {
+        _cualCtrl.text = next.problemaCual;
+      }
+
       if (next.exito && !(prev?.exito ?? false)) {
         ref.read(notificacionProvider.notifier).exito('¡Antecedentes guardados!');
         context.go('/inicio');
@@ -70,12 +99,15 @@ class AntecedentesFamiliaresScreen extends ConsumerWidget {
                       value: state.problemaSalud.isEmpty
                           ? null
                           : state.problemaSalud,
-                      items: _opciones,
+                      items: AntecedentesFamiliaresScreen._opciones,
                       onChanged: ctrl.setProblemaSalud,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(
-                        label: '¿Cuál/es?', onChanged: ctrl.setProblemaCual),
+                      label: '¿Cuál/es?',
+                      controller: _cualCtrl,
+                      onChanged: ctrl.setProblemaCual,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     AppDropdownField(
                       label:
@@ -83,7 +115,7 @@ class AntecedentesFamiliaresScreen extends ConsumerWidget {
                       value: state.muerteSubita.isEmpty
                           ? null
                           : state.muerteSubita,
-                      items: _opciones,
+                      items: AntecedentesFamiliaresScreen._opciones,
                       onChanged: ctrl.setMuerteSubita,
                     ),
                     const SizedBox(height: AppSpacing.lg),
