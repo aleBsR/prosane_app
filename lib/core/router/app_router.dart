@@ -12,6 +12,7 @@ import '../../features/pendientes/pendientes_count_provider.dart';
 import '../../features/hijos/presentation/screens/hijos_list_screen.dart';
 import '../../features/hijos/presentation/screens/planilla_screen.dart';
 import '../../features/familia/presentation/consentimiento_screen.dart';
+import '../../features/familia/presentation/antecedentes_familiares_screen.dart';
 import 'app_shell.dart';
 
 typedef Redirect = String? Function(String location);
@@ -46,6 +47,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/hijos', builder: (c, s) => const HijosListScreen()),
       GoRoute(path: '/hijos/nuevo', builder: (c, s) => const PlanillaScreen()),
       GoRoute(path: '/consentimiento', builder: (c, s) => const ConsentimientoScreen()),
+      GoRoute(path: '/antecedentes-familiares', builder: (c, s) => const AntecedentesFamiliaresScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Consumer(
           builder: (c, ref, _) => AppShell(
