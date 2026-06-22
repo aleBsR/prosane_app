@@ -2,54 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:prosane_app/features/pendientes/pendientes_count_provider.dart';
 
 void main() {
-  test('sin tablas de feature reales el conteo es 0 (badge oculto)', () {
-    // Hoy no hay entidades sincronizables: la lista de syncers pendientes está vacía.
-    expect(contarPendientes(const []), 0);
+  test('no-tutor no tiene pendientes', () {
+    expect(
+      armarPendientes(esTutor: false, consentimientoAceptado: false, antecedentesCompletos: false, nombresHijos: []),
+      isEmpty,
+    );
   });
 
-  test('suma los pendientes/error de cada feature', () {
-    expect(contarPendientes(const [2, 0, 3]), 5);
+  test('tutor recién registrado: consentimiento + antecedentes', () {
+    final p = armarPendientes(esTutor: true, consentimientoAceptado: false, antecedentesCompletos: false, nombresHijos: []);
+    expect(p.map((e) => e.ruta), ['/consentimiento', '/antecedentes-familiares']);
   });
 
-  group('calcularBadgePendientes', () {
-    test('tutor recién registrado (0 hijos, 0 borradores) → 1 (consentimiento)', () {
-      expect(
-        calcularBadgePendientes(borradores: 0, totalHijos: 0, esTutor: true),
-        1,
-      );
-    });
+  test('tutor con todo general hecho + 2 hijos: 2 cards de evaluación', () {
+    final p = armarPendientes(esTutor: true, consentimientoAceptado: true, antecedentesCompletos: true, nombresHijos: ['Juana', 'Pedro']);
+    expect(p.length, 2);
+    expect(p.first.titulo, contains('Juana'));
+    expect(p.every((e) => e.ruta == '/hijos'), isTrue);
+  });
 
-    test('tutor con 1 borrador sin sincronizar (ya tiene 1 hijo) → 1', () {
-      expect(
-        calcularBadgePendientes(borradores: 1, totalHijos: 1, esTutor: true),
-        1,
-      );
-    });
-
-    test('tutor con borradores y aún 0 hijos → suma consentimiento', () {
-      // caso defensivo: 2 borradores + consentimiento = 3
-      expect(
-        calcularBadgePendientes(borradores: 2, totalHijos: 0, esTutor: true),
-        3,
-      );
-    });
-
-    test('tutor todo sincronizado (≥1 hijo, 0 borradores) → 0', () {
-      expect(
-        calcularBadgePendientes(borradores: 0, totalHijos: 1, esTutor: true),
-        0,
-      );
-    });
-
-    test('no-tutor nunca cuenta el consentimiento', () {
-      expect(
-        calcularBadgePendientes(borradores: 0, totalHijos: 0, esTutor: false),
-        0,
-      );
-      expect(
-        calcularBadgePendientes(borradores: 2, totalHijos: 0, esTutor: false),
-        2,
-      );
-    });
+  test('orden: consentimiento primero, luego antecedentes, luego hijos', () {
+    final p = armarPendientes(esTutor: true, consentimientoAceptado: false, antecedentesCompletos: false, nombresHijos: ['Ana']);
+    expect(p.map((e) => e.ruta).toList(), ['/consentimiento', '/antecedentes-familiares', '/hijos']);
   });
 }
