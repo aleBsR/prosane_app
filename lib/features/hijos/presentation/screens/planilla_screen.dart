@@ -6,7 +6,6 @@ import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_date_field.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
-import '../../../../core/design_system/app_switch.dart';
 import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -57,14 +56,14 @@ class PlanillaScreen extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(label: 'Apellido', onChanged: ctrl.setApellido),
                       const SizedBox(height: AppSpacing.md),
-                      AppTextField(label: 'DNI', keyboardType: TextInputType.number, onChanged: ctrl.setDni),
-                      const SizedBox(height: AppSpacing.md),
                       AppDropdownField(
                         label: 'Tipo de documento',
                         value: state.tipoDni,
                         items: const [(value: 'DNI', label: 'DNI'), (value: 'Pasaporte', label: 'Pasaporte')],
                         onChanged: ctrl.setTipoDni,
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'N° de documento', keyboardType: TextInputType.number, onChanged: ctrl.setDni),
                       const SizedBox(height: AppSpacing.md),
                       AppDropdownField(
                         label: 'Sexo',
@@ -82,6 +81,20 @@ class PlanillaScreen extends ConsumerWidget {
                         value: state.fechaNacimiento,
                         onChanged: ctrl.setFechaNacimiento,
                       ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDropdownField(
+                        label: 'CUD',
+                        value: state.tieneCud.isEmpty ? null : state.tieneCud,
+                        items: const [
+                          (value: 'SI', label: 'Sí'),
+                          (value: 'NO', label: 'No'),
+                        ],
+                        onChanged: ctrl.setTieneCud,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Teléfono fijo', keyboardType: TextInputType.phone, onChanged: ctrl.setTelefonoFijo),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Celular', keyboardType: TextInputType.phone, onChanged: ctrl.setCelular),
                       const SizedBox(height: AppSpacing.md),
                       AppDropdownField(
                         label: 'Parentesco',
@@ -107,47 +120,45 @@ class PlanillaScreen extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(label: 'Número', keyboardType: TextInputType.number, onChanged: ctrl.setNroCalle),
                       const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Piso', onChanged: ctrl.setPiso),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Departamento (Dpto.)', onChanged: ctrl.setDpto),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Manzana', onChanged: ctrl.setManzana),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Casa', onChanged: ctrl.setCasa),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Número de casa', keyboardType: TextInputType.number, onChanged: ctrl.setNroCasa),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Pieza', onChanged: ctrl.setPieza),
+                      const SizedBox(height: AppSpacing.md),
                       AppTextField(label: 'Provincia', onChanged: ctrl.setProvincia),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Departamento (jurisdicción)', onChanged: ctrl.setDepartamento),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Localidad', onChanged: ctrl.setLocalidad),
                     ]),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   AppCard(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      Text('Cobertura médica', style: AppTypography.subtitulo),
+                      Text('Cobertura de salud', style: AppTypography.subtitulo),
                       const SizedBox(height: AppSpacing.sm),
                       AppDropdownField(
                         label: 'Tipo de cobertura',
                         value: state.tipoCobertura.isEmpty ? null : state.tipoCobertura,
                         items: const [
-                          (value: 'Obra social', label: 'Obra social'),
-                          (value: 'Prepaga', label: 'Prepaga'),
-                          (value: 'Sin cobertura', label: 'Sin cobertura'),
+                          (value: 'obra_social', label: 'Obra Social (incluye PAMI)'),
+                          (value: 'estatal', label: 'Programas o planes estatales'),
+                          (value: 'prepaga', label: 'Plan privado o Prepaga'),
+                          (value: 'sin_cobertura', label: 'No tiene'),
                         ],
                         onChanged: ctrl.setTipoCobertura,
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppTextField(label: 'Nombre de la cobertura', onChanged: ctrl.setNombreCobertura),
-                      const SizedBox(height: AppSpacing.md),
-                      AppDropdownField(
-                        label: 'Tiene CUD',
-                        value: state.tieneCud.isEmpty ? null : state.tieneCud,
-                        items: const [
-                          (value: 'Sí', label: 'Sí'),
-                          (value: 'No', label: 'No'),
-                          (value: 'En trámite', label: 'En trámite'),
-                        ],
-                        onChanged: ctrl.setTieneCud,
-                      ),
-                    ]),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppCard(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('Antecedentes del niño/a', style: AppTypography.subtitulo),
-                      const SizedBox(height: AppSpacing.sm),
-                      AppSwitch(label: 'Asma / espasmos bronquiales', value: state.asmaEspasmos, onChanged: ctrl.setAsmaEspasmos),
-                      const SizedBox(height: AppSpacing.sm),
-                      AppSwitch(label: 'Diabetes', value: state.diabetes, onChanged: ctrl.setDiabetes),
+                      if (state.pideNombreCobertura) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppTextField(label: 'Nombre de la cobertura', onChanged: ctrl.setNombreCobertura),
+                      ],
                     ]),
                   ),
                   if (state.error != null) ...[

@@ -31,21 +31,43 @@ Widget _app(AppDatabase db) {
 }
 
 void main() {
-  testWidgets('NO muestra la sección de consentimiento', (t) async {
+  testWidgets('muestra las 3 cards y NO la de antecedentes', (t) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
     await t.pumpWidget(_app(db));
     await t.pumpAndSettle();
-    expect(find.textContaining('consentimiento', findRichText: true), findsNothing);
     expect(find.text('Datos del niño/a'), findsOneWidget);
+    expect(find.text('Domicilio'), findsOneWidget);
+    expect(find.text('Cobertura de salud'), findsOneWidget);
+    expect(find.textContaining('Antecedentes', findRichText: true), findsNothing);
+    expect(find.textContaining('Asma', findRichText: true), findsNothing);
   });
 
-  testWidgets('Guardar arranca deshabilitado (atenuado) sin requeridos', (t) async {
+  testWidgets('muestra campos nuevos de domicilio y telefonos', (t) async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    await t.pumpWidget(_app(db));
+    await t.pumpAndSettle();
+    expect(find.text('Teléfono fijo'), findsOneWidget);
+    expect(find.text('Celular'), findsOneWidget);
+    expect(find.text('Piso'), findsOneWidget);
+    expect(find.text('Localidad'), findsOneWidget);
+  });
+
+  testWidgets('nombre de cobertura NO aparece por defecto (sin cobertura elegida)', (t) async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    await t.pumpWidget(_app(db));
+    await t.pumpAndSettle();
+    expect(find.text('Nombre de la cobertura'), findsNothing);
+  });
+
+  testWidgets('Guardar arranca deshabilitado sin requeridos', (t) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
     await t.pumpWidget(_app(db));
     await t.pumpAndSettle();
     final boton = t.widget<AppButton>(find.byType(AppButton));
-    expect(boton.onPressed, isNull); // gateado
+    expect(boton.onPressed, isNull);
   });
 }
