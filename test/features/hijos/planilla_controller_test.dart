@@ -62,12 +62,25 @@ void main() {
     await db.close();
   });
 
-  test('setTipoCobertura limpia nombre_cobertura cuando no es obra_social/prepaga', () {
+  test('pideNombreCobertura es true solo para obra_social y prepaga', () {
     const base = PlanillaState();
-    final s1 = base.copyWith(tipoCobertura: 'obra_social', nombreCobertura: 'OSDE');
-    expect(s1.pideNombreCobertura, isTrue);
-    final s2 = base.copyWith(tipoCobertura: 'sin_cobertura', nombreCobertura: 'OSDE');
-    expect(s2.pideNombreCobertura, isFalse);
+    expect(base.copyWith(tipoCobertura: 'obra_social').pideNombreCobertura, isTrue);
+    expect(base.copyWith(tipoCobertura: 'prepaga').pideNombreCobertura, isTrue);
+    expect(base.copyWith(tipoCobertura: 'estatal').pideNombreCobertura, isFalse);
+    expect(base.copyWith(tipoCobertura: 'sin_cobertura').pideNombreCobertura, isFalse);
+  });
+
+  test('setTipoCobertura limpia nombre_cobertura al cambiar a una sin nombre', () {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final ctrl = PlanillaController(db: db, tutorId: 'tut-1');
+    ctrl.setTipoCobertura('obra_social');
+    ctrl.setNombreCobertura('OSDE');
+    expect(ctrl.state.nombreCobertura, 'OSDE'); // se mantiene
+
+    ctrl.setTipoCobertura('sin_cobertura');
+    expect(ctrl.state.pideNombreCobertura, isFalse);
+    expect(ctrl.state.nombreCobertura, isEmpty); // se limpió
   });
 
   test('puedeGuardar exige nombre/apellido/dni/fecha/sexo', () {
