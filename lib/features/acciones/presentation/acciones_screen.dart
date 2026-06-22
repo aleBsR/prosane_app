@@ -6,6 +6,7 @@ import '../../../core/design_system/action_group.dart';
 import '../../../core/design_system/action_tile.dart';
 import '../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../core/design_system/empty_state.dart';
+import '../../../core/notificaciones/notificacion_controller.dart';
 import '../../../core/session/agrupar_acciones.dart';
 import '../../../core/session/entities.dart';
 import '../../../core/session/session_controller.dart';
@@ -48,9 +49,22 @@ class AccionesScreen extends ConsumerWidget {
                           onTap: () {
                             switch (a.name) {
                               case 'registrarHijo':
-                                context.go('/hijos/nuevo');
+                                final u = estado is SesionAutenticada
+                                    ? estado.sesion.usuario
+                                    : null;
+                                if (u != null && !u.consentimientoAceptado) {
+                                  ref.read(notificacionProvider.notifier).info(
+                                      'Primero aceptá el consentimiento para registrar a tu hijo/a.');
+                                  context.go('/consentimiento');
+                                } else {
+                                  context.go('/hijos/nuevo');
+                                }
                               case 'verHijos':
                                 context.go('/hijos');
+                              case 'darConsentimiento':
+                                context.go('/consentimiento');
+                              case 'cargarAntecedentesFamiliares':
+                                context.go('/antecedentes-familiares');
                               default:
                                 _placeholder(context, a.label);
                             }

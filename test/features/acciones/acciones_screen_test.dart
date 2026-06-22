@@ -61,7 +61,7 @@ void main() {
 
     final c = SessionController()
       ..setSesion(Sesion(
-          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor', consentimientoAceptado: true),
           acciones: [_a('registrarHijo', 'Registrar hijo', 'familia')]));
 
     await t.pumpWidget(ProviderScope(
@@ -107,5 +107,92 @@ void main() {
     await t.pumpAndSettle();
 
     expect(router.routeInformationProvider.value.uri.path, '/hijos');
+  });
+
+  testWidgets('registrarHijo sin consentimiento navega a /consentimiento', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/consentimiento', builder: (c, s) => const Scaffold(body: Text('Consentimiento'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor'),
+          acciones: [_a('registrarHijo', 'Registrar hijo', 'familia')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('FAMILIA'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Registrar hijo'));
+    await t.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/consentimiento');
+  });
+
+  testWidgets('darConsentimiento navega a /consentimiento', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/consentimiento', builder: (c, s) => const Scaffold(body: Text('Consentimiento'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor'),
+          acciones: [_a('darConsentimiento', 'Dar consentimiento', 'familia')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('FAMILIA'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Dar consentimiento'));
+    await t.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/consentimiento');
+  });
+
+  testWidgets('cargarAntecedentesFamiliares navega a /antecedentes-familiares', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/antecedentes-familiares', builder: (c, s) => const Scaffold(body: Text('Antecedentes familiares'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor'),
+          acciones: [_a('cargarAntecedentesFamiliares', 'Antecedentes familiares', 'familia')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('FAMILIA'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Antecedentes familiares'));
+    await t.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/antecedentes-familiares');
   });
 }
