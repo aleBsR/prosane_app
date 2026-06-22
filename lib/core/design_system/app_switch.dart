@@ -13,8 +13,11 @@ class AppSwitch extends StatelessWidget {
         // El GestureDetector es la ÚNICA fuente del toggle (permite tocar también
         // el label). El Switch va con IgnorePointer para que no dispare onChanged
         // por su cuenta y evitar el doble-toggle al tocarlo directo.
+        // opaque: toda la fila es tappable (incluido el espacio vacío del label
+        // flexible), no solo donde hay glifos/widgets.
+        behavior: HitTestBehavior.opaque,
         onTap: () => onChanged(!value),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
+        child: Row(children: [
           IgnorePointer(
             child: Switch(
               value: value,
@@ -29,7 +32,9 @@ class AppSwitch extends StatelessWidget {
               onChanged: onChanged,
             ),
           ),
-          if (label != null) Text(label!, style: AppTypography.texto),
+          // Flexible: el label envuelve a varias líneas en vez de desbordar el Row
+          // cuando el texto es largo (ej. "Acepto la política de privacidad y términos").
+          if (label != null) Flexible(child: Text(label!, style: AppTypography.texto)),
         ]),
       );
 }
