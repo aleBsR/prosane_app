@@ -4,29 +4,36 @@ import 'package:prosane_app/core/design_system/stacked_cards_deck.dart';
 
 void main() {
   testWidgets('vacío no renderiza nada', (t) async {
-    await t.pumpWidget(const MaterialApp(home: Scaffold(body: StackedCardsDeck(cards: []))));
+    await t.pumpWidget(const MaterialApp(home: Scaffold(body: StackedCardsDeck(items: []))));
     expect(find.byType(StackedCardsDeck), findsOneWidget);
     expect(find.byType(Text), findsNothing);
   });
 
-  testWidgets('renderiza todas las cards (todas presentes y tappables)', (t) async {
+  testWidgets('tocar la card de adelante dispara su onTap', (t) async {
     final taps = <int>[];
-    final cards = [
-      for (var i = 0; i < 4; i++)
-        GestureDetector(
-          key: ValueKey('c$i'),
-          behavior: HitTestBehavior.opaque,
-          onTap: () => taps.add(i),
-          child: SizedBox(height: 104, child: Text('card $i')),
-        ),
+    final items = <DeckCard>[
+      for (var i = 0; i < 3; i++)
+        (child: SizedBox(height: 120, child: Center(child: Text('card $i'))), onTap: () => taps.add(i)),
     ];
-    await t.pumpWidget(MaterialApp(home: Scaffold(body: StackedCardsDeck(cards: cards))));
-    // Las 4 están en el árbol.
-    for (var i = 0; i < 4; i++) {
-      expect(find.text('card $i'), findsOneWidget);
-    }
-    // La última (abajo, completa) es tappable.
-    await t.tap(find.text('card 3'));
-    expect(taps, contains(3));
+    await t.pumpWidget(MaterialApp(home: Scaffold(body: StackedCardsDeck(items: items))));
+    // index 0 está al frente: tocar su texto dispara su acción.
+    await t.tap(find.text('card 0'));
+    await t.pump();
+    expect(taps, [0]);
+  });
+
+  testWidgets('tocar una card de atrás la trae al frente (no dispara acción)', (t) async {
+    final taps = <int>[];
+    final items = <DeckCard>[
+      for (var i = 0; i < 3; i++)
+        (child: SizedBox(height: 120, child: Center(child: Text('card $i'))), onTap: () => taps.add(i)),
+    ];
+    await t.pumpWidget(MaterialApp(home: Scaffold(body: StackedCardsDeck(items: items, offset: 40))));
+    // La card de atrás (index 1) asoma debajo de la de adelante; tocar su franja
+    // baja no dispara acción sino que la trae al frente. Tocamos cerca del fondo.
+    final deckRect = t.getRect(find.byType(StackedCardsDeck));
+    await t.tapAt(Offset(deckRect.center.dx, deckRect.bottom - 5));
+    await t.pump();
+    expect(taps, isEmpty); // trajo al frente, no navegó
   });
 }

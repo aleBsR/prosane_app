@@ -34,11 +34,9 @@ class PendientesScreen extends ConsumerWidget {
                 style: AppTypography.titulo.copyWith(fontSize: 24, color: Colors.white)),
           ),
           StackedCardsDeck(
-            cards: [
+            items: [
               for (final it in items)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => context.push(it.ruta),
+                (
                   child: AppCard(
                     child: Row(children: [
                       Icon(it.icono, size: 34, color: Colors.deepPurple),
@@ -47,17 +45,24 @@ class PendientesScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(it.titulo,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                             const SizedBox(height: 2),
-                            Text(it.subtitulo, style: Theme.of(context).textTheme.bodySmall),
+                            Text(it.subtitulo,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),
                       const Icon(Icons.chevron_right, color: Colors.grey),
                     ]),
                   ),
+                  onTap: () => context.push(it.ruta),
                 ),
             ],
           ),
