@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
+import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_date_field.dart';
+import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_switch.dart';
 import '../../../../core/design_system/app_text_field.dart';
@@ -22,24 +25,17 @@ class PlanillaScreen extends ConsumerWidget {
     return AppGradientScaffold(
       child: Column(
         children: [
-          // AppBar manual dentro del gradiente
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                  onPressed: () => context.pop(),
-                ),
-                Text(
-                  'Planilla familiar',
-                  style: AppTypography.titulo.copyWith(color: AppColors.blanco),
-                ),
-              ],
-            ),
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Row(children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                onPressed: () => context.pop(),
+              ),
+              Text('Evaluación de tu hijo/a',
+                  style: AppTypography.titulo.copyWith(color: AppColors.blanco, fontSize: 22)),
+            ]),
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -47,202 +43,127 @@ class PlanillaScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ── Sección 1: Datos del NNA ──────────────────────────────
-                  _SectionTitle('Datos del niño/a'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: 'Nombre',
-                    hint: 'Nombre del niño/a',
-                    onChanged: ctrl.setNombre,
+                  AppCard(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      Text('Datos del niño/a', style: AppTypography.subtitulo),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(label: 'Nombre', onChanged: ctrl.setNombre),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Apellido', onChanged: ctrl.setApellido),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'DNI', keyboardType: TextInputType.number, onChanged: ctrl.setDni),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDropdownField(
+                        label: 'Tipo de documento',
+                        value: state.tipoDni,
+                        items: const [(value: 'DNI', label: 'DNI'), (value: 'Pasaporte', label: 'Pasaporte')],
+                        onChanged: ctrl.setTipoDni,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDropdownField(
+                        label: 'Sexo',
+                        value: state.sexo.isEmpty ? null : state.sexo,
+                        items: const [
+                          (value: 'F', label: 'Femenino'),
+                          (value: 'M', label: 'Masculino'),
+                          (value: 'X', label: 'Otro'),
+                        ],
+                        onChanged: ctrl.setSexo,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDateField(
+                        label: 'Fecha de nacimiento',
+                        value: state.fechaNacimiento,
+                        onChanged: ctrl.setFechaNacimiento,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDropdownField(
+                        label: 'Parentesco',
+                        value: state.parentesco.isEmpty ? null : state.parentesco,
+                        items: const [
+                          (value: 'Hijo/a', label: 'Hijo/a'),
+                          (value: 'Hijastro/a', label: 'Hijastro/a'),
+                          (value: 'Nieto/a', label: 'Nieto/a'),
+                          (value: 'Sobrino/a', label: 'Sobrino/a'),
+                          (value: 'Tutelado/a', label: 'Tutelado/a'),
+                          (value: 'Otro', label: 'Otro'),
+                        ],
+                        onChanged: ctrl.setParentesco,
+                      ),
+                    ]),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Apellido',
-                    hint: 'Apellido',
-                    onChanged: ctrl.setApellido,
+                  AppCard(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      Text('Domicilio', style: AppTypography.subtitulo),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(label: 'Calle', onChanged: ctrl.setCalle),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Número', keyboardType: TextInputType.number, onChanged: ctrl.setNroCalle),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Provincia', onChanged: ctrl.setProvincia),
+                    ]),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'DNI',
-                    hint: 'Número de DNI',
-                    keyboardType: TextInputType.number,
-                    onChanged: ctrl.setDni,
+                  AppCard(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      Text('Cobertura médica', style: AppTypography.subtitulo),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppDropdownField(
+                        label: 'Tipo de cobertura',
+                        value: state.tipoCobertura.isEmpty ? null : state.tipoCobertura,
+                        items: const [
+                          (value: 'Obra social', label: 'Obra social'),
+                          (value: 'Prepaga', label: 'Prepaga'),
+                          (value: 'Sin cobertura', label: 'Sin cobertura'),
+                        ],
+                        onChanged: ctrl.setTipoCobertura,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(label: 'Nombre de la cobertura', onChanged: ctrl.setNombreCobertura),
+                      const SizedBox(height: AppSpacing.md),
+                      AppDropdownField(
+                        label: 'Tiene CUD',
+                        value: state.tieneCud.isEmpty ? null : state.tieneCud,
+                        items: const [
+                          (value: 'Sí', label: 'Sí'),
+                          (value: 'No', label: 'No'),
+                          (value: 'En trámite', label: 'En trámite'),
+                        ],
+                        onChanged: ctrl.setTieneCud,
+                      ),
+                    ]),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Tipo de documento',
-                    hint: 'DNI / Pasaporte...',
-                    onChanged: ctrl.setTipoDni,
+                  AppCard(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Antecedentes del niño/a', style: AppTypography.subtitulo),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppSwitch(label: 'Asma / espasmos bronquiales', value: state.asmaEspasmos, onChanged: ctrl.setAsmaEspasmos),
+                      AppSwitch(label: 'Diabetes', value: state.diabetes, onChanged: ctrl.setDiabetes),
+                    ]),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Sexo',
-                    hint: 'M / F / X',
-                    onChanged: ctrl.setSexo,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Fecha de nacimiento',
-                    hint: 'AAAA-MM-DD',
-                    onChanged: (v) {
-                      final d = DateTime.tryParse(v);
-                      if (d != null) ctrl.setFechaNacimiento(d);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Edad',
-                    hint: 'Años',
-                    keyboardType: TextInputType.number,
-                    onChanged: (v) {
-                      final n = int.tryParse(v);
-                      if (n != null) ctrl.setEdad(n);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Parentesco',
-                    hint: 'Hijo/a, sobrino/a...',
-                    onChanged: ctrl.setParentesco,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Sección 2: Domicilio ───────────────────────────────────
-                  _SectionTitle('Domicilio'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: 'Calle',
-                    onChanged: ctrl.setCalle,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Número',
-                    keyboardType: TextInputType.number,
-                    onChanged: ctrl.setNroCalle,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Provincia',
-                    onChanged: ctrl.setProvincia,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Sección 3: Cobertura ───────────────────────────────────
-                  _SectionTitle('Cobertura médica'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: 'Tipo de cobertura',
-                    hint: 'Obra social, prepaga, sin cobertura...',
-                    onChanged: ctrl.setTipoCobertura,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Nombre de la cobertura',
-                    onChanged: ctrl.setNombreCobertura,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: 'Tiene CUD',
-                    hint: 'Sí / No / En trámite',
-                    onChanged: ctrl.setTieneCud,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Sección 4: Antecedentes ────────────────────────────────
-                  _SectionTitle('Antecedentes personales'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppSwitch(
-                    label: 'Asma / espasmos bronquiales',
-                    value: state.asmaEspasmos,
-                    onChanged: ctrl.setAsmaEspasmos,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppSwitch(
-                    label: 'Diabetes',
-                    value: state.diabetes,
-                    onChanged: ctrl.setDiabetes,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  _SectionTitle('Antecedentes familiares'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppSwitch(
-                    label: 'Asma en familia',
-                    value: state.antFamAsma,
-                    onChanged: ctrl.setAntFamAsma,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppSwitch(
-                    label: 'Diabetes en familia',
-                    value: state.antFamDiabetes,
-                    onChanged: ctrl.setAntFamDiabetes,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Sección 5: Consentimiento ──────────────────────────────
-                  _SectionTitle('Consentimiento informado'),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppSwitch(
-                    label: 'Acepto el consentimiento informado',
-                    value: state.consentimientoAceptado,
-                    onChanged: ctrl.setConsentimientoAceptado,
-                  ),
-                  if (state.consentimientoAceptado) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      label: 'Nombre del adulto responsable',
-                      onChanged: ctrl.setAdultoNombre,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      label: 'Apellido del adulto responsable',
-                      onChanged: ctrl.setAdultoApellido,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      label: 'Tipo de documento del adulto',
-                      hint: 'DNI / Pasaporte...',
-                      onChanged: ctrl.setAdultoTipoDocumento,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      label: 'DNI del adulto',
-                      keyboardType: TextInputType.number,
-                      onChanged: ctrl.setAdultoDni,
-                    ),
-                  ],
-
                   if (state.error != null) ...[
                     const SizedBox(height: AppSpacing.md),
-                    Text(
-                      state.error!,
-                      style: AppTypography.texto.copyWith(color: AppColors.error),
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(state.error!,
+                        style: AppTypography.texto.copyWith(color: AppColors.error),
+                        textAlign: TextAlign.center),
                   ],
-
                   const SizedBox(height: AppSpacing.lg),
-
-                  // ── Guardar ────────────────────────────────────────────────
                   AppButton(
                     label: 'Guardar',
                     isLoading: state.guardando,
-                    onPressed: state.guardando
-                        ? null
-                        : () async {
+                    onPressed: (state.puedeGuardar && !state.guardando)
+                        ? () async {
                             await ctrl.guardar();
-                            if (context.mounted && ref.read(planillaControllerProvider).error == null) {
+                            if (context.mounted &&
+                                ref.read(planillaControllerProvider).error == null) {
                               ref.read(syncSchedulerProvider).dispararPorEscritura();
                               context.go('/inicio');
                             }
-                          },
+                          }
+                        : null,
                   ),
-
                   const SizedBox(height: AppSpacing.lg),
                 ],
               ),
@@ -252,17 +173,4 @@ class PlanillaScreen extends ConsumerWidget {
       ),
     );
   }
-}
-
-// ─── Widget auxiliar ──────────────────────────────────────────────────────────
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: AppTypography.subtitulo.copyWith(color: AppColors.blanco),
-      );
 }
