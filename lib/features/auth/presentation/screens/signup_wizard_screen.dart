@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_link.dart';
+import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -25,14 +26,17 @@ class SignupWizardScreen extends ConsumerWidget {
     // navegar más de una vez ante rebuilds posteriores.
     ref.listen<SignupState>(signupControllerProvider, (prev, next) {
       if (next.registrado && !(prev?.registrado ?? false)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Registro exitoso! Podés iniciar sesión.'),
-            backgroundColor: AppColors.primario,
-          ),
-        );
+        // El registro ya deja la sesión iniciada; mostramos una notificación
+        // de bienvenida sobre el nav bar (no un SnackBar tapado por la barra).
+        ref
+            .read(notificacionProvider.notifier)
+            .exito('¡Cuenta creada! Bienvenido/a a PROSANE.');
         // El router redirige /signup → /inicio automáticamente al detectar
         // la sesión autenticada; no es necesario navegar explícitamente.
+      }
+      // Errores del registro: notificación roja.
+      if (next.error != null && next.error != prev?.error) {
+        ref.read(notificacionProvider.notifier).error(next.error!);
       }
     });
 

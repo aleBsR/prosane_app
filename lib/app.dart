@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/notificaciones/notificacion_host.dart';
 import 'core/providers.dart';
 import 'core/router/app_router.dart';
 import 'core/session/session_controller.dart';
@@ -17,7 +18,8 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
   void initState() {
     super.initState();
     // Hidrata la sesión desde el cache de Drift (arranque offline-first).
-    ref.read(sessionControllerProvider.notifier)
+    ref
+        .read(sessionControllerProvider.notifier)
         .hidratar(ref.read(authRepositoryProvider).sesionCacheada);
 
     // Arranca el scheduler: reacciona a cambios de conectividad y hace un
@@ -31,9 +33,14 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-        title: 'PROSANE',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        routerConfig: ref.watch(goRouterProvider),
-      );
+    title: 'PROSANE',
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light(),
+    routerConfig: ref.watch(goRouterProvider),
+    // El host de notificaciones se monta una vez, por encima del router,
+    // así la tarjeta flota sobre cualquier pantalla (incluida la de registro,
+    // que está fuera del shell con nav bar).
+    builder: (context, child) =>
+        Stack(children: [?child, const NotificacionHost()]),
+  );
 }
