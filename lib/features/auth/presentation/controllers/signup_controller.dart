@@ -153,7 +153,8 @@ class SignupController extends StateNotifier<SignupState> {
         'dni': f.numeroDocumento,
         'tipo_dni': f.tipoDocumento,
         'sexo': f.sexo,
-        'fecha_nacimiento': f.fechaNacimiento?.toIso8601String(),
+        // El backend (DateField) espera 'YYYY-MM-DD', no un datetime ISO completo.
+        'fecha_nacimiento': _soloFecha(f.fechaNacimiento),
       },
     };
     try {
@@ -170,6 +171,14 @@ class SignupController extends StateNotifier<SignupState> {
     }
   }
 }
+
+/// Formatea una fecha como 'YYYY-MM-DD' (lo que espera el DateField del backend),
+/// descartando hora y zona. Devuelve null si la fecha es null.
+String? _soloFecha(DateTime? d) => d == null
+    ? null
+    : '${d.year.toString().padLeft(4, '0')}-'
+        '${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
 
 // --- Providers ---
 final registerUseCaseProvider =

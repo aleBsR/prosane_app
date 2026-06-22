@@ -137,6 +137,9 @@ void main() {
     expect((capturado!['persona'] as Map)['dni'], isNotNull);
     expect((capturado!['persona'] as Map)['tipo_dni'], isNotNull);
 
+    // fecha_nacimiento va como 'YYYY-MM-DD' (DateField del backend), sin hora.
+    expect((capturado!['persona'] as Map)['fecha_nacimiento'], '2010-05-01');
+
     // NO debe tener campos planos del viejo formato
     expect(capturado!.containsKey('lugar_nacimiento'), isFalse);
     expect(capturado!.containsKey('numero_documento'), isFalse);
