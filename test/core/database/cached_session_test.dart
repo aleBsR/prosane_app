@@ -43,7 +43,7 @@ void main() {
   });
 
   test('cachea y restaura la identidad del tutor (tutorId + adulto)', () async {
-    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    db = AppDatabase.forTesting(NativeDatabase.memory());
     const u = Usuario(
       id: 'u1', nombre: 'Juan Arquipa', rolName: 'tutor', rolLabel: 'Tutor',
       tutorId: 'tut-1', nombrePila: 'Juan', apellido: 'Arquipa', tipoDni: 'DNI', dni: '43949474',
@@ -57,6 +57,5 @@ void main() {
     expect(leida.usuario.apellido, 'Arquipa');
     expect(leida.usuario.tipoDni, 'DNI');
     expect(leida.usuario.dni, '43949474');
-    await db.close();
   });
 }

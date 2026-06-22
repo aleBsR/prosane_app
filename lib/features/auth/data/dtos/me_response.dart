@@ -1,8 +1,10 @@
 import '../../../../core/session/entities.dart';
 
-/// DTO de `GET /api/v1/auth/me/` — contrato congelado del backend.
-///   { user:{id,email,nombre,apellido,is_staff}, roles:[{name,label}],
-///     actions:[{8 claves}], meta:{version, permissions_synced_at} }
+/// DTO de `GET /api/v1/auth/me/`.
+///   { user:{id,email,nombre,apellido,tipo_dni,dni,is_staff,tutor_id},
+///     roles:[{name,label}], actions:[{8 claves}],
+///     meta:{version, permissions_synced_at} }
+/// `tipo_dni`/`dni` son aditivos (para prefill del adulto responsable).
 class MeResponse {
   MeResponse({
     required this.id, required this.email, required this.nombre,
