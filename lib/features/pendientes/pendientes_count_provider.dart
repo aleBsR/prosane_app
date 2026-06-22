@@ -40,6 +40,8 @@ List<ItemPendiente> armarPendientes({
         ruta: '/antecedentes-familiares',
         icono: Icons.family_restroom_outlined,
       ),
+    // Placeholder: por ahora todas las cards de hijo van al listado /hijos.
+    // La "segunda parte" por-hijo (ruta específica) se definirá más adelante.
     for (final nombre in nombresHijos)
       ItemPendiente(
         titulo: 'Evaluación de ${nombre.isEmpty ? 'tu hijo/a' : nombre}',
@@ -53,6 +55,8 @@ List<ItemPendiente> armarPendientes({
 /// Lista reactiva de pendientes (sesión + tabla de hijos).
 final pendientesItemsProvider = StreamProvider<List<ItemPendiente>>((ref) {
   final db = ref.watch(databaseProvider);
+  // ref.watch (no read): al cambiar la sesión (p.ej. tras aceptar consentimiento)
+  // el provider se reconstruye y re-evalúa los flags + re-suscribe el stream.
   final s = ref.watch(sessionControllerProvider);
   final esTutor = s is SesionAutenticada && s.sesion.usuario.rolName == 'tutor';
   final consent = s is SesionAutenticada && s.sesion.usuario.consentimientoAceptado;

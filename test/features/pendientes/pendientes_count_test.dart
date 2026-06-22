@@ -1,4 +1,10 @@
+import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:prosane_app/core/database/app_database.dart';
+import 'package:prosane_app/core/database/database_provider.dart';
+import 'package:prosane_app/core/session/entities.dart';
+import 'package:prosane_app/core/session/session_controller.dart';
 import 'package:prosane_app/features/pendientes/pendientes_count_provider.dart';
 
 void main() {
@@ -24,5 +30,23 @@ void main() {
   test('orden: consentimiento primero, luego antecedentes, luego hijos', () {
     final p = armarPendientes(esTutor: true, consentimientoAceptado: false, antecedentesCompletos: false, nombresHijos: ['Ana']);
     expect(p.map((e) => e.ruta).toList(), ['/consentimiento', '/antecedentes-familiares', '/hijos']);
+  });
+
+  test('pendientesCountProvider cuenta los items (tutor sin consentimiento → >=1)', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final c = ProviderContainer(overrides: [
+      databaseProvider.overrideWithValue(db),
+      sessionControllerProvider.overrideWith((ref) => SessionController()
+        ..setSesion(const Sesion(
+          usuario: Usuario(id: 'u1', nombre: 'Ana', rolName: 'tutor', rolLabel: 'Tutor'),
+          acciones: [],
+        ))),
+    ]);
+    addTearDown(c.dispose);
+    c.listen(pendientesCountProvider, (_, _) {}); // mantiene vivo el stream
+    // primera emisión del stream
+    await c.read(pendientesItemsProvider.future);
+    expect(c.read(pendientesCountProvider).value, greaterThanOrEqualTo(1));
   });
 }

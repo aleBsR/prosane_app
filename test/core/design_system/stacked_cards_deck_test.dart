@@ -5,7 +5,8 @@ import 'package:prosane_app/core/design_system/stacked_cards_deck.dart';
 void main() {
   testWidgets('vacío no renderiza nada', (t) async {
     await t.pumpWidget(const MaterialApp(home: Scaffold(body: StackedCardsDeck(cards: []))));
-    expect(find.byType(SizedBox), findsWidgets); // shrink
+    expect(find.byType(StackedCardsDeck), findsOneWidget);
+    expect(find.byType(Text), findsNothing); // no renderiza contenido de cards
   });
 
   testWidgets('con >3 cards muestra "+N más"', (t) async {
