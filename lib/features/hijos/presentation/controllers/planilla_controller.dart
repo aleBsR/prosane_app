@@ -16,25 +16,33 @@ class PlanillaState {
     this.tipoDni = 'DNI',
     this.sexo = '',
     this.fechaNacimiento,
+    this.tieneCud = '',
+    this.telefonoFijo = '',
+    this.celular = '',
+    this.parentesco = '',
     this.calle = '',
     this.nroCalle = '',
+    this.piso = '',
+    this.dpto = '',
+    this.manzana = '',
+    this.casa = '',
+    this.nroCasa = '',
+    this.pieza = '',
     this.provincia = '',
-    this.tieneCud = '',
+    this.departamento = '',
+    this.localidad = '',
     this.tipoCobertura = '',
     this.nombreCobertura = '',
-    this.parentesco = '',
-    this.asmaEspasmos = false,
-    this.diabetes = false,
     this.guardando = false,
     this.error,
   });
 
   final String nombre, apellido, dni, tipoDni, sexo;
   final DateTime? fechaNacimiento;
-  final String calle, nroCalle, provincia;
-  final String tieneCud, tipoCobertura, nombreCobertura;
-  final String parentesco;
-  final bool asmaEspasmos, diabetes;
+  final String tieneCud, telefonoFijo, celular, parentesco;
+  final String calle, nroCalle, piso, dpto, manzana, casa, nroCasa, pieza,
+      provincia, departamento, localidad;
+  final String tipoCobertura, nombreCobertura;
   final bool guardando;
   final String? error;
 
@@ -46,6 +54,10 @@ class PlanillaState {
       sexo.isNotEmpty &&
       fechaNacimiento != null;
 
+  /// `nombre_cobertura` solo aplica a obra social / prepaga.
+  bool get pideNombreCobertura =>
+      tipoCobertura == 'obra_social' || tipoCobertura == 'prepaga';
+
   PlanillaState copyWith({
     String? nombre,
     String? apellido,
@@ -53,15 +65,23 @@ class PlanillaState {
     String? tipoDni,
     String? sexo,
     DateTime? fechaNacimiento,
+    String? tieneCud,
+    String? telefonoFijo,
+    String? celular,
+    String? parentesco,
     String? calle,
     String? nroCalle,
+    String? piso,
+    String? dpto,
+    String? manzana,
+    String? casa,
+    String? nroCasa,
+    String? pieza,
     String? provincia,
-    String? tieneCud,
+    String? departamento,
+    String? localidad,
     String? tipoCobertura,
     String? nombreCobertura,
-    String? parentesco,
-    bool? asmaEspasmos,
-    bool? diabetes,
     bool? guardando,
     Object? error = _sentinel,
   }) {
@@ -72,15 +92,23 @@ class PlanillaState {
       tipoDni: tipoDni ?? this.tipoDni,
       sexo: sexo ?? this.sexo,
       fechaNacimiento: fechaNacimiento ?? this.fechaNacimiento,
+      tieneCud: tieneCud ?? this.tieneCud,
+      telefonoFijo: telefonoFijo ?? this.telefonoFijo,
+      celular: celular ?? this.celular,
+      parentesco: parentesco ?? this.parentesco,
       calle: calle ?? this.calle,
       nroCalle: nroCalle ?? this.nroCalle,
+      piso: piso ?? this.piso,
+      dpto: dpto ?? this.dpto,
+      manzana: manzana ?? this.manzana,
+      casa: casa ?? this.casa,
+      nroCasa: nroCasa ?? this.nroCasa,
+      pieza: pieza ?? this.pieza,
       provincia: provincia ?? this.provincia,
-      tieneCud: tieneCud ?? this.tieneCud,
+      departamento: departamento ?? this.departamento,
+      localidad: localidad ?? this.localidad,
       tipoCobertura: tipoCobertura ?? this.tipoCobertura,
       nombreCobertura: nombreCobertura ?? this.nombreCobertura,
-      parentesco: parentesco ?? this.parentesco,
-      asmaEspasmos: asmaEspasmos ?? this.asmaEspasmos,
-      diabetes: diabetes ?? this.diabetes,
       guardando: guardando ?? this.guardando,
       error: identical(error, _sentinel) ? this.error : error as String?,
     );
@@ -111,15 +139,33 @@ class PlanillaController extends StateNotifier<PlanillaState> {
   void setTipoDni(String v) => state = state.copyWith(tipoDni: v);
   void setSexo(String v) => state = state.copyWith(sexo: v);
   void setFechaNacimiento(DateTime v) => state = state.copyWith(fechaNacimiento: v);
+  void setTieneCud(String v) => state = state.copyWith(tieneCud: v);
+  void setTelefonoFijo(String v) => state = state.copyWith(telefonoFijo: v);
+  void setCelular(String v) => state = state.copyWith(celular: v);
+  void setParentesco(String v) => state = state.copyWith(parentesco: v);
+
   void setCalle(String v) => state = state.copyWith(calle: v);
   void setNroCalle(String v) => state = state.copyWith(nroCalle: v);
+  void setPiso(String v) => state = state.copyWith(piso: v);
+  void setDpto(String v) => state = state.copyWith(dpto: v);
+  void setManzana(String v) => state = state.copyWith(manzana: v);
+  void setCasa(String v) => state = state.copyWith(casa: v);
+  void setNroCasa(String v) => state = state.copyWith(nroCasa: v);
+  void setPieza(String v) => state = state.copyWith(pieza: v);
   void setProvincia(String v) => state = state.copyWith(provincia: v);
-  void setTieneCud(String v) => state = state.copyWith(tieneCud: v);
-  void setTipoCobertura(String v) => state = state.copyWith(tipoCobertura: v);
+  void setDepartamento(String v) => state = state.copyWith(departamento: v);
+  void setLocalidad(String v) => state = state.copyWith(localidad: v);
+
   void setNombreCobertura(String v) => state = state.copyWith(nombreCobertura: v);
-  void setParentesco(String v) => state = state.copyWith(parentesco: v);
-  void setAsmaEspasmos(bool v) => state = state.copyWith(asmaEspasmos: v);
-  void setDiabetes(bool v) => state = state.copyWith(diabetes: v);
+
+  /// Al cambiar a una cobertura que no lleva nombre, lo limpia.
+  void setTipoCobertura(String v) {
+    if (v == 'obra_social' || v == 'prepaga') {
+      state = state.copyWith(tipoCobertura: v);
+    } else {
+      state = state.copyWith(tipoCobertura: v, nombreCobertura: '');
+    }
+  }
 
   /// Edad en años cumplidos a partir de la fecha de nacimiento.
   int? _edadEnAnios(DateTime? f) {
@@ -153,17 +199,23 @@ class PlanillaController extends StateNotifier<PlanillaState> {
         'domicilio': {
           'calle': s.calle,
           'nro_calle': s.nroCalle,
+          'piso': s.piso,
+          'dpto': s.dpto,
+          'manzana': s.manzana,
+          'casa': s.casa,
+          'nro_casa': s.nroCasa,
+          'pieza': s.pieza,
           'provincia': s.provincia,
+          'departamento': s.departamento,
+          'localidad': s.localidad,
         },
         'edad': _edadEnAnios(s.fechaNacimiento),
         'tiene_cud': s.tieneCud,
         'tipo_cobertura': s.tipoCobertura,
         'nombre_cobertura': s.nombreCobertura,
+        'telefono_fijo': s.telefonoFijo,
+        'celular': s.celular,
         'parentesco': s.parentesco,
-        'antecedentes_personales': {
-          'asma_espasmos': s.asmaEspasmos,
-          'diabetes': s.diabetes,
-        },
       };
       await _db.insertHijoDraft(
         id: _generarId(),
