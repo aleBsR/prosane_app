@@ -22,9 +22,9 @@ El endpoint de alta ya acepta `persona` / `domicilio` / cobertura completos (ver
 
 ## Dependencia de backend (teléfonos)
 
-El PDF pide **Teléfono fijo** y **Celular** en "Datos del niño", pero no existen en `Persona`/`Domicilio`/`Paciente`/`Tutor`. El lugar correcto es `Persona` (la persona del NNA). Hay un prompt de handoff entregado al backend para agregar `telefono_fijo` y `celular` a `Persona` (+migración) y aceptarlos en el bloque `persona` del alta de hijo.
+El PDF pide **Teléfono fijo** y **Celular** en "Datos del niño", pero no existen en `Persona`/`Domicilio`/`Paciente`/`Tutor`. **Decisión (def.):** van en el modelo **`Paciente`** (2 campos propios del paciente), **no** en `Persona` — `Persona` ya la usa la lógica de registro del tutor y no se toca. Como son campos de `Paciente`, viajan en el **nivel superior** del payload del alta (junto a `tiene_cud`/`tipo_cobertura`), no dentro de `persona`. Hay un prompt de handoff para que el backend agregue `telefono_fijo` y `celular` a `Paciente` (+migración) y los acepte a nivel raíz del alta de hijo.
 
-**Decisión:** el front incluye los 2 campos **ya** y los envía dentro del bloque `persona`. Mientras el backend no los persista, los ignora (son opcionales) y **no rompe** el alta. No hay bloqueo para la Entrega 1.
+**Decisión:** el front incluye los 2 campos **ya** y los envía a nivel raíz del body. Mientras el backend no los persista, los ignora (son opcionales) y **no rompe** el alta. No hay bloqueo para la Entrega 1.
 
 ## Inventario de campos y mapeo (PDF → estado → payload)
 
@@ -40,8 +40,8 @@ Restricciones de longitud del backend a respetar (valores enviados): `tiene_cud`
 | Sexo (F/M) | `sexo` | AppDropdownField (F / M / X) | `persona.sexo` | requerido; se mantiene `X=Otro` (superset del PDF) |
 | Fecha de nacimiento | `fechaNacimiento` | AppDateField | `persona.fecha_nacimiento` (YYYY-MM-DD) | requerido; `edad` se deriva con `_edadEnAnios` |
 | CUD (SI/NO) | `tieneCud` | AppDropdownField (Sí=`SI` / No=`NO`) | `tiene_cud` | **se mueve a esta card**; se quita `En trámite` (no entra en `max_length=2` ni está en el PDF) |
-| Teléfono fijo | `telefonoFijo` | AppTextField (phone) | `persona.telefono_fijo` | **nuevo**; backend pendiente |
-| Celular | `celular` | AppTextField (phone) | `persona.celular` | **nuevo**; backend pendiente |
+| Teléfono fijo | `telefonoFijo` | AppTextField (phone) | `telefono_fijo` (raíz / Paciente) | **nuevo**; backend pendiente |
+| Celular | `celular` | AppTextField (phone) | `celular` (raíz / Paciente) | **nuevo**; backend pendiente |
 | (parentesco — app) | `parentesco` | AppDropdownField | `parentesco` | se mantiene tal cual (no está en el PDF pero el backend lo usa) |
 
 ### Card 2 — "Domicilio" (los 11 campos del modelo `Domicilio`)
@@ -82,8 +82,7 @@ La card "Antecedentes del niño/a" con los `AppSwitch` de `asma_espasmos` y `dia
 {
   "persona": {
     "nombre", "apellido", "dni", "tipo_dni", "sexo",
-    "fecha_nacimiento",        // YYYY-MM-DD
-    "telefono_fijo", "celular" // nuevos
+    "fecha_nacimiento"         // YYYY-MM-DD
   },
   "domicilio": {
     "calle","nro_calle","piso","dpto","manzana","casa",
@@ -93,6 +92,8 @@ La card "Antecedentes del niño/a" con los `AppSwitch` de `asma_espasmos` y `dia
   "tiene_cud": "SI" | "NO",
   "tipo_cobertura": "obra_social" | "estatal" | "prepaga" | "sin_cobertura",
   "nombre_cobertura": "<texto o vacío>",
+  "telefono_fijo": "<texto o vacío>",  // nuevo (Paciente, nivel raíz)
+  "celular": "<texto o vacío>",        // nuevo (Paciente, nivel raíz)
   "parentesco": "<...>"
   // ya NO se envía "antecedentes_personales"
 }
@@ -120,7 +121,7 @@ Sin cambios en el provider, en la base de datos local, ni en el scheduler.
 
 ## Testing
 
-- **`planilla_controller_test`**: actualizar/crear casos que verifiquen el shape del payload nuevo (persona con teléfonos, domicilio con 11 campos, `tiene_cud` `SI/NO`, `tipo_cobertura` con códigos, **ausencia** de `antecedentes_personales`); `puedeGuardar` con requeridos.
+- **`planilla_controller_test`**: actualizar/crear casos que verifiquen el shape del payload nuevo (teléfonos a nivel raíz, domicilio con 11 campos, `tiene_cud` `SI/NO`, `tipo_cobertura` con códigos, **ausencia** de `antecedentes_personales`); `puedeGuardar` con requeridos.
 - **`planilla_screen_test`**: render de las 3 cards y sus campos; la card de antecedentes **no** está; `nombre_cobertura` aparece solo con `obra_social`/`prepaga`; CUD muestra Sí/No.
 
 ## Fuera de alcance (Entrega 2, spec aparte)
