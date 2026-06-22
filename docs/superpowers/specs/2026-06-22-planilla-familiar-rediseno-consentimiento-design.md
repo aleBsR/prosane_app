@@ -101,6 +101,42 @@ Se mantiene la forma actual de `POST /tutores/<id>/hijos/`:
 - Dropdown de provincias.
 - Remodelado de los campos de consentimiento en `Paciente` (se respeta "no modificar Paciente" por ahora).
 
+## ⚠️ REVISIÓN (2026-06-22, tarde) — Nuevo modelo (consentimiento general por checkbox)
+
+Durante la ejecución el usuario redefinió el consentimiento. Lo ya hecho (T1–T4: `AppDropdownField`/`AppDateField`, `/me` con `tipo_dni`+`dni`, identidad del tutor en sesión + cache con `tutorId`) **queda commiteado y sigue siendo válido**. **T5–T7 del plan original quedan obsoletos** (la planilla ya NO lleva el consentimiento ni los antecedentes familiares); se re-planean.
+
+### Decisión clave sobre la "firma"
+- **Ahora el consentimiento es SOLO un checkbox** (aceptar términos). **No hay firma** (ni dibujada, ni firma_hash, ni entidad criptográfica) en esta etapa.
+- La **firma** se hará en **otra fase/etapa de desarrollo** (futuro). → Esto **desbloquea** el rediseño: no se necesita la decisión del equipo sobre persistencia de firma para avanzar.
+
+### Modelo nuevo (acordado)
+- **Consentimiento = general del tutor** (NO por hijo, sin campo "a qué hijo"). Es un **checkbox** de aceptación. Se **renueva por año** (la renovación anual se deja para más adelante).
+- Es **precondición**: sin consentimiento aceptado, el tutor **no puede registrar un hijo**. Al intentarlo → **notificación/alerta de obligatorio** y redirección a completarlo.
+- **Antecedentes de salud familiares** (padre/madre/hermanos) = **general del tutor**, se completa una vez (no por hijo).
+- **Dos tareas generales SEPARADAS** → (1) Consentimiento (gatea el registro de hijos) y (2) Antecedentes familiares.
+- **Per-hijo:** la planilla "Para ser completado por la familia" = datos del niño + domicilio + cobertura + **antecedentes DEL NIÑO** (sin consentimiento, sin antecedentes familiares).
+- **Pendientes:** **mazo de cards apiladas/superpuestas** (estilo de la captura `Captura de pantalla 2026-06-22 ... 4.41.54 p. m.`); cuando hay **más de 3** tareas, las extra se **acumulan al fondo** como un mazo. Items: las 2 tareas generales (hasta completarse) + una por cada hijo (su formulario familiar).
+
+### Persistencia (decidido) — backend mínimo a nivel Tutor
+- **`Tutor`**: agregar `consentimiento_aceptado` (bool, default False) + `fecha_consentimiento` (datetime null). Endpoint para aceptar el consentimiento (checkbox). `/me` expone `consentimiento_aceptado` para el gating en el front.
+- **Antecedentes familiares**: modelo propio `AntecedentesFamiliares` con **FK a `Tutor`** (uno por tutor) + endpoint para crear/actualizar. Lleva las preguntas del PDF "ANTECEDENTES DE SALUD DEL PADRE/MADRE Y/O HERMANOS".
+- **Gating**: el front bloquea "Registrar hijo" si `consentimiento_aceptado == false` (lo lee de `/me`/sesión) y muestra alerta/notificación. (Opcional defensa server-side: rechazar el alta de hijo sin consentimiento.)
+- La **firma** NO entra (fase futura).
+
+### Task breakdown nuevo (a re-planear formalmente con writing-plans)
+**Backend (`prosane_api`):**
+- NB1: `Tutor.consentimiento_aceptado` + `fecha_consentimiento` (+migración) + endpoint aceptar consentimiento; `/me` expone `consentimiento_aceptado`.
+- NB2: modelo `AntecedentesFamiliares` (FK Tutor) + endpoint crear/actualizar.
+**Frontend (`prosane_app`):**
+- NF1: sesión/`/me`/cache transportan `consentimientoAceptado` (patrón T4).
+- NF2: pantalla general **Consentimiento** (checkbox + modal de términos) → POST.
+- NF3: pantalla general **Antecedentes familiares** → POST.
+- NF4: **gating** de "Registrar hijo" + alerta de obligatorio + redirección.
+- NF5: **planilla per-hijo**: quitar consentimiento y antecedentes familiares; dejar datos del niño + antecedentes del niño; ajustar payload de `hijos`.
+- NF6: **Pendientes** como mazo apilado (colapsa >3): consentimiento + antecedentes familiares + 1 por hijo.
+
+---
+
 ## Testing
 - **Componentes**: `AppDropdownField` (renderiza items, dispara onChanged), `AppDateField` (muestra fecha formateada, abre picker, dispara onChanged).
 - **PlanillaScreen**: el "Guardar" queda atenuado sin requeridos/consentimiento; el modal de términos abre y muestra el texto; el adulto responsable se muestra read-only desde la sesión.
