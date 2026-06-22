@@ -10,6 +10,7 @@ import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/domain/usecases/login.dart';
 import 'session/session_controller.dart';
 import '../features/hijos/data/hijos_syncer.dart';
+import '../features/familia/data/familia_remote_datasource.dart';
 import 'sync/sync_engine.dart';
 import 'sync/connectivity_service.dart';
 import 'sync/sync_scheduler.dart';
@@ -80,6 +81,9 @@ final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
   ref.onDispose(scheduler.dispose);
   return scheduler;
 });
+
+final familiaRemoteDataSourceProvider =
+    Provider<FamiliaRemoteDataSource>((ref) => FamiliaRemoteDataSource(ref.watch(dioV1Provider)));
 
 /// Logout completo: limpia tokens + cache de Drift (authRepository.logout)
 /// y el estado en memoria (sessionController.cerrar). El borrado del cache es
