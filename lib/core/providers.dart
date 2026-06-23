@@ -15,6 +15,8 @@ import '../features/familia/data/familia_remote_datasource.dart';
 import 'sync/sync_engine.dart';
 import 'sync/connectivity_service.dart';
 import 'sync/sync_scheduler.dart';
+import '../features/operativos/data/operativos_repository.dart';
+import '../features/operativos/data/escuelas_repository.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -104,3 +106,11 @@ final logoutProvider = Provider<Future<void> Function()>((ref) {
     session.cerrar();
   };
 });
+
+final operativosRepositoryProvider = Provider<OperativosRepository>(
+  (ref) => OperativosRepository(ref.watch(dioV1Provider)),
+);
+
+final escuelasRepositoryProvider = Provider<EscuelasRepository>(
+  (ref) => EscuelasRepository(ref.watch(dioV1Provider)),
+);
