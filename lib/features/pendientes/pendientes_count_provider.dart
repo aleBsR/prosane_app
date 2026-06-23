@@ -69,27 +69,62 @@ final pendientesItemsProvider = StreamProvider<List<ItemPendiente>>((ref) {
       ));
 });
 
-/// Operativos en borrador (sin confirmar) → pendientes del ayudante/superadmin.
+/// Devuelve el título legible de un operativo (nombre o escuela).
+String _tituloOperativo(Map<String, dynamic> o) =>
+    (o['nombre'] as String?)?.isNotEmpty == true
+        ? o['nombre'] as String
+        : (o['escuela_nombre'] as String? ?? 'Operativo');
+
+/// Operativos pendientes según el rol del usuario.
+/// - Ayudante/superadmin (verOperativo): operativos en borrador sin confirmar.
+/// - Médico/odontólogo (cargarEvaluacionMedica/Odontologica): operativos
+///   asignados en estado 'confirmado' o 'en_curso' con alumnos por evaluar.
 /// Solo se consulta si el usuario puede ver operativos (evita 403 en tutores).
 final operativosPendientesProvider =
     FutureProvider.autoDispose<List<ItemPendiente>>((ref) async {
   final s = ref.watch(sessionControllerProvider);
   if (s is! SesionAutenticada) return const [];
-  if (!s.sesion.permisos.contains('verOperativo')) return const [];
+
+  final permisos = s.sesion.permisos;
+  final puedeVer = permisos.contains('verOperativo');
+  final esProfesional = permisos.contains('cargarEvaluacionMedica') ||
+      permisos.contains('cargarEvaluacionOdontologica');
+
+  // Sin permisos para ver operativos ni evaluar → nada que mostrar (tutor).
+  if (!puedeVer && !esProfesional) return const [];
 
   final repo = ref.watch(operativosRepositoryProvider);
   final operativos = await repo.listar();
-  return operativos
-      .where((o) => o['estado'] == 'borrador')
-      .map((o) => ItemPendiente(
-            titulo: (o['nombre'] as String?)?.isNotEmpty == true
-                ? o['nombre'] as String
-                : (o['escuela_nombre'] as String? ?? 'Operativo'),
-            subtitulo: 'Operativo sin confirmar — completá y confirmalo',
-            ruta: '/operativos/${o['id']}',
-            icono: Icons.assignment_late_outlined,
-          ))
-      .toList();
+
+  final items = <ItemPendiente>[];
+
+  // Borradores del ayudante/superadmin (comportamiento existente).
+  if (puedeVer) {
+    items.addAll(operativos
+        .where((o) => o['estado'] == 'borrador')
+        .map((o) => ItemPendiente(
+              titulo: _tituloOperativo(o),
+              subtitulo: 'Operativo sin confirmar — completá y confirmalo',
+              ruta: '/operativos/${o['id']}',
+              icono: Icons.assignment_late_outlined,
+            )));
+  }
+
+  // Operativos asignados al profesional con alumnos por evaluar.
+  // El backend ya filtra la lista por asignación.
+  if (esProfesional) {
+    items.addAll(operativos
+        .where((o) =>
+            o['estado'] == 'confirmado' || o['estado'] == 'en_curso')
+        .map((o) => ItemPendiente(
+              titulo: _tituloOperativo(o),
+              subtitulo: 'Tenés alumnos por evaluar',
+              ruta: '/operativos/${o['id']}',
+              icono: Icons.medical_services_outlined,
+            )));
+  }
+
+  return items;
 });
 
 /// Lista combinada: pendientes del tutor (Drift) + operativos borrador.

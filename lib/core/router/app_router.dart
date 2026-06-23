@@ -17,6 +17,9 @@ import '../../features/familia/presentation/antecedentes_familiares_screen.dart'
 import '../../features/operativos/presentation/screens/operativos_list_screen.dart';
 import '../../features/operativos/presentation/screens/operativo_create_screen.dart';
 import '../../features/operativos/presentation/screens/operativo_detail_screen.dart';
+import '../../features/operativos/presentation/screens/evaluacion_medica_screen.dart';
+import '../../features/operativos/presentation/screens/evaluacion_odontologica_screen.dart';
+import '../../features/operativos/presentation/screens/seccion_escuela_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
 import 'app_shell.dart';
 
@@ -62,6 +65,27 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/operativos/:operativoId',
         builder: (c, s) => OperativoDetailScreen(operativoId: s.pathParameters['operativoId']!),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/medica',
+        builder: (c, s) => EvaluacionMedicaScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/odontologica',
+        builder: (c, s) => EvaluacionOdontologicaScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/escuela',
+        builder: (c, s) => SeccionEscuelaScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
       ),
       GoRoute(path: '/escuelas/nuevo', builder: (c, s) => const EscuelaCreateScreen()),
       StatefulShellRoute.indexedStack(

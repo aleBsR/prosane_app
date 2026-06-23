@@ -7,7 +7,7 @@ class AppConfig {
   // Mejor aún: inyectar al correr →
   //   flutter run --dart-define=API_BASE_URL=http://10.120.174.47:8000/api/v1/auth
   static const apiBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.120.174.47:8000/api/v1/auth');
+    String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.26.3.142:8000/api/v1/auth');
 
   /// Base para rutas fuera de /auth (tutores, hijos, etc.).
   /// Quita el sufijo `/auth` de [apiBaseUrl] para quedar en `.../api/v1`.

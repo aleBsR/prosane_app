@@ -60,4 +60,60 @@ class OperativosRepository {
     final resp = await _dio.post('/operativos/$operativoId/alumnos/importar-csv/', data: formData);
     return resp.data as Map<String, dynamic>;
   }
+
+  Future<List<Map<String, dynamic>>> listarAlumnos(String operativoId) async {
+    final resp = await _dio.get('/operativos/$operativoId/alumnos/');
+    return List<Map<String, dynamic>>.from(resp.data as List);
+  }
+
+  Future<Map<String, dynamic>> getEvaluacionMedica(String opId, String alumnoId) async {
+    final resp = await _dio.get('/operativos/$opId/alumnos/$alumnoId/evaluacion-medica/');
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> putEvaluacionMedica(
+    String opId,
+    String alumnoId,
+    Map<String, dynamic> data,
+  ) async {
+    final resp = await _dio.put(
+      '/operativos/$opId/alumnos/$alumnoId/evaluacion-medica/',
+      data: data,
+    );
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getEvaluacionOdontologica(String opId, String alumnoId) async {
+    final resp = await _dio.get('/operativos/$opId/alumnos/$alumnoId/evaluacion-odontologica/');
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> putEvaluacionOdontologica(
+    String opId,
+    String alumnoId,
+    Map<String, dynamic> data,
+  ) async {
+    final resp = await _dio.put(
+      '/operativos/$opId/alumnos/$alumnoId/evaluacion-odontologica/',
+      data: data,
+    );
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> patchSeccionEscuela(
+    String opId,
+    String alumnoId,
+    Map<String, dynamic> data,
+  ) async {
+    final resp = await _dio.patch(
+      '/operativos/$opId/alumnos/$alumnoId/seccion-escuela/',
+      data: data,
+    );
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getCompletitud(String operativoId) async {
+    final resp = await _dio.get('/operativos/$operativoId/completitud/');
+    return resp.data as Map<String, dynamic>;
+  }
 }
