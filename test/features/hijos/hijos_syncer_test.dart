@@ -25,4 +25,23 @@ void main() {
     expect(await db.contarHijosPendientes(), 0);
     await db.close();
   });
+
+  test('pushLote captura el id del paciente del 201 (serverPacienteId)', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final dio = Dio(BaseOptions(baseUrl: 'http://x/api/v1'));
+    final mock = DioAdapter(dio: dio);
+    await db.insertHijoDraft(
+      id: 'h1', tutorId: 'tut-1', nombreNna: 'Juan', apellidoNna: 'Pérez',
+      payloadJson: '{"persona":{"dni":"1"}}',
+    );
+    mock.onPost('/tutores/tut-1/hijos/', (s) => s.reply(201, {'id': 'pac-1'}), data: Matchers.any);
+
+    final syncer = HijosSyncer(db, dio);
+    final res = await syncer.pushLote(['h1']);
+
+    expect(res.single.outcome, PushOutcome.ok);
+    final hijo = await db.hijoPorId('h1');
+    expect(hijo!.serverPacienteId, 'pac-1');
+  });
 }
