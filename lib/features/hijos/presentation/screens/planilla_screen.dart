@@ -7,6 +7,7 @@ import '../../../../core/design_system/app_date_field.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_text_field.dart';
+import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -51,10 +52,14 @@ class PlanillaScreen extends ConsumerWidget {
                   AppCard(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       Text('Datos del niño/a', style: AppTypography.subtitulo),
+                      const SizedBox(height: 4),
+                      Text('Los campos con * son obligatorios. El resto es opcional.',
+                          style: AppTypography.texto.copyWith(
+                              fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
                       const SizedBox(height: AppSpacing.sm),
-                      AppTextField(label: 'Nombre', onChanged: ctrl.setNombre),
+                      AppTextField(label: 'Nombre *', onChanged: ctrl.setNombre),
                       const SizedBox(height: AppSpacing.md),
-                      AppTextField(label: 'Apellido', onChanged: ctrl.setApellido),
+                      AppTextField(label: 'Apellido *', onChanged: ctrl.setApellido),
                       const SizedBox(height: AppSpacing.md),
                       AppDropdownField(
                         label: 'Tipo de documento',
@@ -63,10 +68,10 @@ class PlanillaScreen extends ConsumerWidget {
                         onChanged: ctrl.setTipoDni,
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      AppTextField(label: 'N° de documento', keyboardType: TextInputType.number, onChanged: ctrl.setDni),
+                      AppTextField(label: 'N° de documento *', keyboardType: TextInputType.number, onChanged: ctrl.setDni),
                       const SizedBox(height: AppSpacing.md),
                       AppDropdownField(
-                        label: 'Sexo',
+                        label: 'Sexo *',
                         value: state.sexo.isEmpty ? null : state.sexo,
                         items: const [
                           (value: 'F', label: 'Femenino'),
@@ -77,7 +82,7 @@ class PlanillaScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppDateField(
-                        label: 'Fecha de nacimiento',
+                        label: 'Fecha de nacimiento *',
                         value: state.fechaNacimiento,
                         onChanged: ctrl.setFechaNacimiento,
                       ),
@@ -161,26 +166,33 @@ class PlanillaScreen extends ConsumerWidget {
                       ],
                     ]),
                   ),
-                  if (state.error != null) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    Text(state.error!,
-                        style: AppTypography.texto.copyWith(color: AppColors.error),
-                        textAlign: TextAlign.center),
-                  ],
-                  const SizedBox(height: AppSpacing.lg),
-                  AppButton(
-                    label: 'Guardar',
-                    isLoading: state.guardando,
-                    onPressed: (state.puedeGuardar && !state.guardando)
-                        ? () async {
-                            await ctrl.guardar();
-                            if (context.mounted &&
-                                ref.read(planillaControllerProvider).error == null) {
-                              ref.read(syncSchedulerProvider).dispararPorEscritura();
-                              context.go('/inicio');
-                            }
-                          }
-                        : null,
+                  const SizedBox(height: AppSpacing.md),
+                  AppCard(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      if (state.error != null) ...[
+                        Text(state.error!,
+                            style: AppTypography.texto.copyWith(color: AppColors.error),
+                            textAlign: TextAlign.center),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      AppButton(
+                        label: 'Guardar',
+                        isLoading: state.guardando,
+                        onPressed: (state.puedeGuardar && !state.guardando)
+                            ? () async {
+                                await ctrl.guardar();
+                                if (context.mounted &&
+                                    ref.read(planillaControllerProvider).error == null) {
+                                  ref.read(syncSchedulerProvider).dispararPorEscritura();
+                                  ref
+                                      .read(notificacionProvider.notifier)
+                                      .exito('¡Hijo registrado!');
+                                  context.go('/inicio');
+                                }
+                              }
+                            : null,
+                      ),
+                    ]),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                 ],
