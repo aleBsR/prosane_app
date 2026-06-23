@@ -10,6 +10,7 @@ import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/domain/usecases/login.dart';
 import 'session/session_controller.dart';
 import '../features/hijos/data/hijos_syncer.dart';
+import '../features/hijos/data/antecedentes_nino_syncer.dart';
 import '../features/familia/data/familia_remote_datasource.dart';
 import 'sync/sync_engine.dart';
 import 'sync/connectivity_service.dart';
@@ -64,8 +65,15 @@ final hijosSyncerProvider = Provider<HijosSyncer>(
   (ref) => HijosSyncer(ref.watch(databaseProvider), ref.watch(dioV1Provider)),
 );
 
+final antecedentesNinoSyncerProvider = Provider<AntecedentesNinoSyncer>(
+  (ref) => AntecedentesNinoSyncer(ref.watch(databaseProvider), ref.watch(dioV1Provider)),
+);
+
 final syncEngineProvider = Provider<SyncEngine>(
-  (ref) => SyncEngine([ref.watch(hijosSyncerProvider)]),
+  (ref) => SyncEngine([
+    ref.watch(hijosSyncerProvider),
+    ref.watch(antecedentesNinoSyncerProvider),
+  ]),
 );
 
 final connectivityServiceProvider =
