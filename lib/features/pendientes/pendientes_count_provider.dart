@@ -17,12 +17,12 @@ class ItemPendiente {
 }
 
 /// Arma la lista de pendientes (función pura, testeable).
-/// Orden: consentimiento, antecedentes familiares, luego una card por hijo.
+/// Orden: consentimiento, antecedentes familiares, luego una card por hijo sin antecedentes.
 List<ItemPendiente> armarPendientes({
   required bool esTutor,
   required bool consentimientoAceptado,
   required bool antecedentesCompletos,
-  required List<String> nombresHijos,
+  required List<({String id, String nombre, bool tieneAntecedentes})> hijos,
 }) {
   if (!esTutor) return const [];
   return [
@@ -40,15 +40,14 @@ List<ItemPendiente> armarPendientes({
         ruta: '/antecedentes-familiares',
         icono: Icons.family_restroom_outlined,
       ),
-    // Placeholder: por ahora todas las cards de hijo van al listado /hijos.
-    // La "segunda parte" por-hijo (ruta específica) se definirá más adelante.
-    for (final nombre in nombresHijos)
-      ItemPendiente(
-        titulo: 'Evaluación de ${nombre.isEmpty ? 'tu hijo/a' : nombre}',
-        subtitulo: 'Completá la evaluación integral',
-        ruta: '/hijos',
-        icono: Icons.assignment_outlined,
-      ),
+    for (final h in hijos)
+      if (!h.tieneAntecedentes)
+        ItemPendiente(
+          titulo: 'Antecedentes de ${h.nombre.isEmpty ? 'tu hijo/a' : h.nombre}',
+          subtitulo: 'Completá los antecedentes de salud del niño/a',
+          ruta: '/hijos/${h.id}/antecedentes',
+          icono: Icons.medical_information_outlined,
+        ),
   ];
 }
 
@@ -61,11 +60,11 @@ final pendientesItemsProvider = StreamProvider<List<ItemPendiente>>((ref) {
   final esTutor = s is SesionAutenticada && s.sesion.usuario.rolName == 'tutor';
   final consent = s is SesionAutenticada && s.sesion.usuario.consentimientoAceptado;
   final antec = s is SesionAutenticada && s.sesion.usuario.antecedentesFamiliaresCompletos;
-  return db.watchHijosVivos().map((hijos) => armarPendientes(
+  return db.watchHijosConAntecedentes().map((hijos) => armarPendientes(
         esTutor: esTutor,
         consentimientoAceptado: consent,
         antecedentesCompletos: antec,
-        nombresHijos: [for (final h in hijos) h.nombreNna],
+        hijos: hijos,
       ));
 });
 
