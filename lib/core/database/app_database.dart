@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'sync_columns.dart';
+import 'tables/antecedentes_nino_table.dart';
 import 'tables/cached_session_table.dart';
 import 'tables/hijos_table.dart';
 import 'tables/sync_state_table.dart';
@@ -9,7 +10,7 @@ import '../session/session_cache.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [SyncStateRows, CachedSessionRows, HijosRows])
+@DriftDatabase(tables: [SyncStateRows, CachedSessionRows, HijosRows, AntecedentesNinoRows])
 class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase(super.e);
 
@@ -18,7 +19,7 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -53,6 +54,12 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         // las columnas del schema actual (Drift genera siempre el DDL actual).
         await m.addColumn(cachedSessionRows, cachedSessionRows.consentimientoAceptado);
         await m.addColumn(cachedSessionRows, cachedSessionRows.antecedentesFamiliaresCompletos);
+      }
+      if (from < 6) {
+        await m.createTable(antecedentesNinoRows);
+      }
+      if (from >= 3 && from < 6) {
+        await m.addColumn(hijosRows, hijosRows.serverPacienteId);
       }
     },
   );
@@ -183,4 +190,71 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
       (update(hijosRows)..where((t) => t.id.equals(id))).write(
         const HijosRowsCompanion(syncStatus: Value(SyncStatus.sincronizado)),
       );
+
+  // ── Hijos: id de paciente del servidor ──────────────────────────────────
+  Future<void> guardarServerPacienteId(String hijoLocalId, String serverPacienteId) =>
+      (update(hijosRows)..where((t) => t.id.equals(hijoLocalId))).write(
+        HijosRowsCompanion(serverPacienteId: Value(serverPacienteId)),
+      );
+
+  Future<HijosRow?> hijoPorId(String id) =>
+      (select(hijosRows)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  // ── Antecedentes del niño (offline-first) ───────────────────────────────
+  Future<AntecedentesNinoRow?> antecedenteNinoPorHijo(String hijoLocalId) =>
+      (select(antecedentesNinoRows)
+            ..where((t) => t.hijoLocalId.equals(hijoLocalId) & t.deletedAt.isNull()))
+          .getSingleOrNull();
+
+  Future<void> upsertAntecedenteNinoDraft({
+    required String id,
+    required String hijoLocalId,
+    required String payloadJson,
+  }) async {
+    final existente = await antecedenteNinoPorHijo(hijoLocalId);
+    if (existente == null) {
+      await into(antecedentesNinoRows).insert(
+        AntecedentesNinoRowsCompanion.insert(
+          id: id,
+          hijoLocalId: hijoLocalId,
+          payloadJson: payloadJson,
+        ),
+      );
+    } else {
+      await (update(antecedentesNinoRows)..where((t) => t.id.equals(existente.id))).write(
+        AntecedentesNinoRowsCompanion(
+          payloadJson: Value(payloadJson),
+          syncStatus: const Value(SyncStatus.pendiente),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+    }
+  }
+
+  Future<List<AntecedentesNinoRow>> antecedentesNinoPendientes() =>
+      (select(antecedentesNinoRows)
+            ..where((t) => t.syncStatus.equalsValue(SyncStatus.pendiente)))
+          .get();
+
+  Future<void> marcarAntecedenteNinoSincronizado(String id) =>
+      (update(antecedentesNinoRows)..where((t) => t.id.equals(id))).write(
+        const AntecedentesNinoRowsCompanion(syncStatus: Value(SyncStatus.sincronizado)),
+      );
+
+  /// Hijos vivos + si ya tienen antecedentes del niño cargados (reactivo).
+  Stream<List<({String id, String nombre, bool tieneAntecedentes})>>
+      watchHijosConAntecedentes() {
+    final q = select(hijosRows).join([
+      leftOuterJoin(
+        antecedentesNinoRows,
+        antecedentesNinoRows.hijoLocalId.equalsExp(hijosRows.id) &
+            antecedentesNinoRows.deletedAt.isNull(),
+      ),
+    ])..where(hijosRows.deletedAt.isNull());
+    return q.watch().map((rows) => rows.map((r) {
+          final hijo = r.readTable(hijosRows);
+          final ant = r.readTableOrNull(antecedentesNinoRows);
+          return (id: hijo.id, nombre: hijo.nombreNna, tieneAntecedentes: ant != null);
+        }).toList());
+  }
 }

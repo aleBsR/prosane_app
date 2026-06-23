@@ -11,8 +11,13 @@ import '../../features/usuario/presentation/usuario_screen.dart';
 import '../../features/pendientes/pendientes_count_provider.dart';
 import '../../features/hijos/presentation/screens/hijos_list_screen.dart';
 import '../../features/hijos/presentation/screens/planilla_screen.dart';
+import '../../features/hijos/presentation/screens/antecedentes_nino_screen.dart';
 import '../../features/familia/presentation/consentimiento_screen.dart';
 import '../../features/familia/presentation/antecedentes_familiares_screen.dart';
+import '../../features/operativos/presentation/screens/operativos_list_screen.dart';
+import '../../features/operativos/presentation/screens/operativo_create_screen.dart';
+import '../../features/operativos/presentation/screens/operativo_detail_screen.dart';
+import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
 import 'app_shell.dart';
 
 typedef Redirect = String? Function(String location);
@@ -46,16 +51,30 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/signup', builder: (c, s) => const SignupWizardScreen()),
       GoRoute(path: '/hijos', builder: (c, s) => const HijosListScreen()),
       GoRoute(path: '/hijos/nuevo', builder: (c, s) => const PlanillaScreen()),
+      GoRoute(
+        path: '/hijos/:hijoLocalId/antecedentes',
+        builder: (c, s) => AntecedentesNinoScreen(hijoLocalId: s.pathParameters['hijoLocalId']!),
+      ),
       GoRoute(path: '/consentimiento', builder: (c, s) => const ConsentimientoScreen()),
       GoRoute(path: '/antecedentes-familiares', builder: (c, s) => const AntecedentesFamiliaresScreen()),
+      GoRoute(path: '/operativos', builder: (c, s) => const OperativosListScreen()),
+      GoRoute(path: '/operativos/nuevo', builder: (c, s) => const OperativoCreateScreen()),
+      GoRoute(
+        path: '/operativos/:operativoId',
+        builder: (c, s) => OperativoDetailScreen(operativoId: s.pathParameters['operativoId']!),
+      ),
+      GoRoute(path: '/escuelas/nuevo', builder: (c, s) => const EscuelaCreateScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Consumer(
-          builder: (c, ref, _) => AppShell(
-            selectedIndex: navigationShell.currentIndex,
-            onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
-            badgePendientes: ref.watch(pendientesCountProvider).value ?? 0,
-            child: navigationShell,
-          ),
+          builder: (c, ref, _) {
+            // Pendientes visible para todos los roles → sin remapeo de índices.
+            return AppShell(
+              selectedIndex: navigationShell.currentIndex,
+              onTap: (i) => navigationShell.goBranch(i, initialLocation: i == navigationShell.currentIndex),
+              badgePendientes: ref.watch(pendientesCountProvider).value ?? 0,
+              child: navigationShell,
+            );
+          },
         ),
         branches: [
           StatefulShellBranch(routes: [GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen())]),

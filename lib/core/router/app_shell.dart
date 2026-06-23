@@ -42,6 +42,7 @@ class _AppShellState extends State<AppShell> {
       NavItemData(outlinedIcon: Icons.sync_outlined, filledIcon: Icons.sync, label: 'Pendientes', badgeCount: widget.badgePendientes),
       _itemUsuario,
     ];
+
     // I2: respetar el safe-area inferior (home indicator de iPhone).
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     return Stack(children: [

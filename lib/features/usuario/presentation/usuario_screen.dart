@@ -19,9 +19,9 @@ class UsuarioScreen extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Cancelar')),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogCtx);
-              ref.read(logoutProvider)();
+              await ref.read(logoutProvider)();
             },
             child: const Text('Confirmar'),
           ),

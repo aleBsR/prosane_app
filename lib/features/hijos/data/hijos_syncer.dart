@@ -29,7 +29,11 @@ class HijosSyncer implements FeatureSyncer {
         final body = jsonDecode(row.payloadJson) as Map<String, dynamic>;
         // Base URL es `.../api/v1`; apuntamos directamente a
         // `/tutores/<tutorId>/hijos/` bajo esa base.
-        await _dio.post('/tutores/${row.tutorId}/hijos/', data: body);
+        final resp = await _dio.post('/tutores/${row.tutorId}/hijos/', data: body);
+        final pacienteId = (resp.data is Map) ? (resp.data as Map)['id'] as String? : null;
+        if (pacienteId != null && pacienteId.isNotEmpty) {
+          await _db.guardarServerPacienteId(row.id, pacienteId);
+        }
         results.add(PushItemResult(row.id, PushOutcome.ok));
       } on DioException catch (e) {
         final code = e.response?.statusCode ?? 0;

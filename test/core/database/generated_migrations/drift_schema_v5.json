@@ -1,1 +1,235 @@
-{"_meta":{"description":"This file contains a serialized version of schema entities for drift.","version":"1.2.0"},"options":{"store_date_time_values_as_text":true},"entities":[{"id":0,"references":[],"type":"table","data":{"name":"sync_state_rows","was_declared_in_moor":false,"columns":[{"name":"feature","getter_name":"feature","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"last_synced_at","getter_name":"lastSyncedAt","moor_type":"dateTime","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]}],"is_virtual":false,"without_rowid":false,"constraints":[],"explicit_pk":["feature"]}},{"id":1,"references":[],"type":"table","data":{"name":"cached_session_rows","was_declared_in_moor":false,"columns":[{"name":"id","getter_name":"id","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"user_id","getter_name":"userId","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"email","getter_name":"email","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"nombre","getter_name":"nombre","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"rol_name","getter_name":"rolName","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"rol_label","getter_name":"rolLabel","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"acciones_json","getter_name":"accionesJson","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"meta_version","getter_name":"metaVersion","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"tutor_id","getter_name":"tutorId","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"nombre_pila","getter_name":"nombrePila","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"apellido","getter_name":"apellido","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"tipo_dni","getter_name":"tipoDni","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"dni","getter_name":"dni","moor_type":"string","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"consentimiento_aceptado","getter_name":"consentimientoAceptado","moor_type":"bool","nullable":false,"customConstraints":null,"defaultConstraints":"CHECK (\"consentimiento_aceptado\" IN (0, 1))","dialectAwareDefaultConstraints":{"sqlite":"CHECK (\"consentimiento_aceptado\" IN (0, 1))"},"default_dart":"const CustomExpression('0')","default_client_dart":null,"dsl_features":[]},{"name":"antecedentes_familiares_completos","getter_name":"antecedentesFamiliaresCompletos","moor_type":"bool","nullable":false,"customConstraints":null,"defaultConstraints":"CHECK (\"antecedentes_familiares_completos\" IN (0, 1))","dialectAwareDefaultConstraints":{"sqlite":"CHECK (\"antecedentes_familiares_completos\" IN (0, 1))"},"default_dart":"const CustomExpression('0')","default_client_dart":null,"dsl_features":[]},{"name":"permissions_synced_at","getter_name":"permissionsSyncedAt","moor_type":"dateTime","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]}],"is_virtual":false,"without_rowid":false,"constraints":[],"explicit_pk":["id"]}},{"id":2,"references":[],"type":"table","data":{"name":"hijos_rows","was_declared_in_moor":false,"columns":[{"name":"id","getter_name":"id","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"updated_at","getter_name":"updatedAt","moor_type":"dateTime","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":"() => DateTime.now().toUtc()","dsl_features":[]},{"name":"sync_status","getter_name":"syncStatus","moor_type":"int","nullable":false,"customConstraints":null,"default_dart":"const CustomExpression('0')","default_client_dart":null,"dsl_features":[],"type_converter":{"dart_expr":"const EnumIndexConverter<SyncStatus>(SyncStatus.values)","dart_type_name":"SyncStatus"}},{"name":"deleted_at","getter_name":"deletedAt","moor_type":"dateTime","nullable":true,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"tutor_id","getter_name":"tutorId","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]},{"name":"nombre_nna","getter_name":"nombreNna","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":"const CustomExpression('\\'\\'')","default_client_dart":null,"dsl_features":[]},{"name":"apellido_nna","getter_name":"apellidoNna","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":"const CustomExpression('\\'\\'')","default_client_dart":null,"dsl_features":[]},{"name":"payload_json","getter_name":"payloadJson","moor_type":"string","nullable":false,"customConstraints":null,"default_dart":null,"default_client_dart":null,"dsl_features":[]}],"is_virtual":false,"without_rowid":false,"constraints":[],"explicit_pk":["id"]}}]}
+{
+  "schemaVersion": 5,
+  "entities": [
+    {
+      "name": "SyncStateRows",
+      "columns": [
+        {
+          "name": "feature",
+          "getter": "feature",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "last_synced_at",
+          "getter": "lastSyncedAt",
+          "columnType": "DateTime",
+          "dartType": "DateTime?",
+          "required": false,
+          "nullable": true
+        }
+      ],
+      "primaryKey": [
+        "feature"
+      ],
+      "foreigs": [],
+      "indices": []
+    },
+    {
+      "name": "CachedSessionRows",
+      "columns": [
+        {
+          "name": "id",
+          "getter": "id",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "getter": "userId",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "getter": "email",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "nombre",
+          "getter": "nombre",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "rol_name",
+          "getter": "rolName",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "rol_label",
+          "getter": "rolLabel",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "acciones_json",
+          "getter": "accionesJson",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "meta_version",
+          "getter": "metaVersion",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "tutor_id",
+          "getter": "tutorId",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "nombre_pila",
+          "getter": "nombrePila",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "apellido",
+          "getter": "apellido",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "tipo_dni",
+          "getter": "tipoDni",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "dni",
+          "getter": "dni",
+          "columnType": "String",
+          "dartType": "String?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "consentimiento_aceptado",
+          "getter": "consentimientoAceptado",
+          "columnType": "Boolean",
+          "dartType": "bool",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "antecedentes_familiares_completos",
+          "getter": "antecedentesFamiliaresCompletos",
+          "columnType": "Boolean",
+          "dartType": "bool",
+          "required": true,
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreigs": [],
+      "indices": []
+    },
+    {
+      "name": "HijosRows",
+      "columns": [
+        {
+          "name": "id",
+          "getter": "id",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "getter": "updatedAt",
+          "columnType": "DateTime",
+          "dartType": "DateTime",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "sync_status",
+          "getter": "syncStatus",
+          "columnType": "Int",
+          "dartType": "int",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "deleted_at",
+          "getter": "deletedAt",
+          "columnType": "DateTime",
+          "dartType": "DateTime?",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "name": "tutor_id",
+          "getter": "tutorId",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "nombre_nna",
+          "getter": "nombreNna",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "apellido_nna",
+          "getter": "apellidoNna",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "name": "payload_json",
+          "getter": "payloadJson",
+          "columnType": "String",
+          "dartType": "String",
+          "required": true,
+          "nullable": false
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "foreigs": [],
+      "indices": []
+    }
+  ]
+}
