@@ -28,4 +28,10 @@ void main() {
       selectedIndex: 0, onTap: (_) {}, badgePendientes: 0, child: const SizedBox())));
     expect(find.text('0'), findsNothing);
   });
+
+  testWidgets('el tab Pendientes está visible para todos los roles', (t) async {
+    await t.pumpWidget(MaterialApp(home: AppShell(
+      selectedIndex: 0, onTap: (_) {}, child: const SizedBox())));
+    expect(find.text('Pendientes'), findsOneWidget);
+  });
 }

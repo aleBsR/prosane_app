@@ -65,6 +65,14 @@ class AccionesScreen extends ConsumerWidget {
                                 context.push('/consentimiento');
                               case 'cargarAntecedentesFamiliares':
                                 context.push('/antecedentes-familiares');
+                              case 'crearEscuela':
+                                context.push('/escuelas/nuevo');
+                              case 'crearOperativo':
+                                context.push('/operativos/nuevo');
+                              case 'verOperativo':
+                                context.push('/operativos');
+                              case 'verEscuelas':
+                                context.push('/operativos');
                               default:
                                 _placeholder(context, a.label);
                             }

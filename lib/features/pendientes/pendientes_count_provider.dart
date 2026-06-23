@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database/database_provider.dart';
+import '../../core/providers.dart';
 import '../../core/session/entities.dart';
 import '../../core/session/session_controller.dart';
 
@@ -17,12 +18,12 @@ class ItemPendiente {
 }
 
 /// Arma la lista de pendientes (función pura, testeable).
-/// Orden: consentimiento, antecedentes familiares, luego una card por hijo.
+/// Orden: consentimiento, antecedentes familiares, luego una card por hijo sin antecedentes.
 List<ItemPendiente> armarPendientes({
   required bool esTutor,
   required bool consentimientoAceptado,
   required bool antecedentesCompletos,
-  required List<String> nombresHijos,
+  required List<({String id, String nombre, bool tieneAntecedentes})> hijos,
 }) {
   if (!esTutor) return const [];
   return [
@@ -40,15 +41,14 @@ List<ItemPendiente> armarPendientes({
         ruta: '/antecedentes-familiares',
         icono: Icons.family_restroom_outlined,
       ),
-    // Placeholder: por ahora todas las cards de hijo van al listado /hijos.
-    // La "segunda parte" por-hijo (ruta específica) se definirá más adelante.
-    for (final nombre in nombresHijos)
-      ItemPendiente(
-        titulo: 'Evaluación de ${nombre.isEmpty ? 'tu hijo/a' : nombre}',
-        subtitulo: 'Completá la evaluación integral',
-        ruta: '/hijos',
-        icono: Icons.assignment_outlined,
-      ),
+    for (final h in hijos)
+      if (!h.tieneAntecedentes)
+        ItemPendiente(
+          titulo: 'Antecedentes de ${h.nombre.isEmpty ? 'tu hijo/a' : h.nombre}',
+          subtitulo: 'Completá los antecedentes de salud del niño/a',
+          ruta: '/hijos/${h.id}/antecedentes',
+          icono: Icons.medical_information_outlined,
+        ),
   ];
 }
 
@@ -61,16 +61,51 @@ final pendientesItemsProvider = StreamProvider<List<ItemPendiente>>((ref) {
   final esTutor = s is SesionAutenticada && s.sesion.usuario.rolName == 'tutor';
   final consent = s is SesionAutenticada && s.sesion.usuario.consentimientoAceptado;
   final antec = s is SesionAutenticada && s.sesion.usuario.antecedentesFamiliaresCompletos;
-  return db.watchHijosVivos().map((hijos) => armarPendientes(
+  return db.watchHijosConAntecedentes().map((hijos) => armarPendientes(
         esTutor: esTutor,
         consentimientoAceptado: consent,
         antecedentesCompletos: antec,
-        nombresHijos: [for (final h in hijos) h.nombreNna],
+        hijos: hijos,
       ));
 });
 
-/// Conteo para el badge del nav bar (deriva de los items). Los consumidores
-/// resuelven el AsyncValue con `.value ?? 0`.
+/// Operativos en borrador (sin confirmar) → pendientes del ayudante/superadmin.
+/// Solo se consulta si el usuario puede ver operativos (evita 403 en tutores).
+final operativosPendientesProvider =
+    FutureProvider.autoDispose<List<ItemPendiente>>((ref) async {
+  final s = ref.watch(sessionControllerProvider);
+  if (s is! SesionAutenticada) return const [];
+  if (!s.sesion.permisos.contains('verOperativo')) return const [];
+
+  final repo = ref.watch(operativosRepositoryProvider);
+  final operativos = await repo.listar();
+  return operativos
+      .where((o) => o['estado'] == 'borrador')
+      .map((o) => ItemPendiente(
+            titulo: (o['nombre'] as String?)?.isNotEmpty == true
+                ? o['nombre'] as String
+                : (o['escuela_nombre'] as String? ?? 'Operativo'),
+            subtitulo: 'Operativo sin confirmar — completá y confirmalo',
+            ruta: '/operativos/${o['id']}',
+            icono: Icons.assignment_late_outlined,
+          ))
+      .toList();
+});
+
+/// Lista combinada: pendientes del tutor (Drift) + operativos borrador.
+final pendientesTotalProvider = Provider.autoDispose<List<ItemPendiente>>((ref) {
+  final tutor = ref.watch(pendientesItemsProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => const <ItemPendiente>[],
+      );
+  final ops = ref.watch(operativosPendientesProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => const <ItemPendiente>[],
+      );
+  return [...tutor, ...ops];
+});
+
+/// Conteo para el badge del nav bar (tutor + operativos borrador).
 final pendientesCountProvider = Provider<AsyncValue<int>>(
-  (ref) => ref.watch(pendientesItemsProvider).whenData((items) => items.length),
+  (ref) => AsyncValue.data(ref.watch(pendientesTotalProvider).length),
 );

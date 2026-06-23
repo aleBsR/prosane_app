@@ -13,10 +13,7 @@ class PendientesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(pendientesItemsProvider).maybeWhen(
-          data: (v) => v,
-          orElse: () => const <ItemPendiente>[],
-        );
+    final items = ref.watch(pendientesTotalProvider);
 
     if (items.isEmpty) {
       return const AppGradientScaffold(

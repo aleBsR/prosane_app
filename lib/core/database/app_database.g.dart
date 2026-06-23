@@ -1278,6 +1278,17 @@ class $HijosRowsTable extends HijosRows
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _serverPacienteIdMeta = const VerificationMeta(
+    'serverPacienteId',
+  );
+  @override
+  late final GeneratedColumn<String> serverPacienteId = GeneratedColumn<String>(
+    'server_paciente_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1288,6 +1299,7 @@ class $HijosRowsTable extends HijosRows
     nombreNna,
     apellidoNna,
     payloadJson,
+    serverPacienteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1352,6 +1364,15 @@ class $HijosRowsTable extends HijosRows
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
+    if (data.containsKey('server_paciente_id')) {
+      context.handle(
+        _serverPacienteIdMeta,
+        serverPacienteId.isAcceptableOrUnknown(
+          data['server_paciente_id']!,
+          _serverPacienteIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1395,6 +1416,10 @@ class $HijosRowsTable extends HijosRows
         DriftSqlType.string,
         data['${effectivePrefix}payload_json'],
       )!,
+      serverPacienteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_paciente_id'],
+      ),
     );
   }
 
@@ -1416,6 +1441,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
   final String nombreNna;
   final String apellidoNna;
   final String payloadJson;
+  final String? serverPacienteId;
   const HijosRow({
     required this.id,
     required this.updatedAt,
@@ -1425,6 +1451,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
     required this.nombreNna,
     required this.apellidoNna,
     required this.payloadJson,
+    this.serverPacienteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1443,6 +1470,9 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
     map['nombre_nna'] = Variable<String>(nombreNna);
     map['apellido_nna'] = Variable<String>(apellidoNna);
     map['payload_json'] = Variable<String>(payloadJson);
+    if (!nullToAbsent || serverPacienteId != null) {
+      map['server_paciente_id'] = Variable<String>(serverPacienteId);
+    }
     return map;
   }
 
@@ -1458,6 +1488,9 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
       nombreNna: Value(nombreNna),
       apellidoNna: Value(apellidoNna),
       payloadJson: Value(payloadJson),
+      serverPacienteId: serverPacienteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverPacienteId),
     );
   }
 
@@ -1477,6 +1510,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
       nombreNna: serializer.fromJson<String>(json['nombreNna']),
       apellidoNna: serializer.fromJson<String>(json['apellidoNna']),
       payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      serverPacienteId: serializer.fromJson<String?>(json['serverPacienteId']),
     );
   }
   @override
@@ -1493,6 +1527,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
       'nombreNna': serializer.toJson<String>(nombreNna),
       'apellidoNna': serializer.toJson<String>(apellidoNna),
       'payloadJson': serializer.toJson<String>(payloadJson),
+      'serverPacienteId': serializer.toJson<String?>(serverPacienteId),
     };
   }
 
@@ -1505,6 +1540,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
     String? nombreNna,
     String? apellidoNna,
     String? payloadJson,
+    Value<String?> serverPacienteId = const Value.absent(),
   }) => HijosRow(
     id: id ?? this.id,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -1514,6 +1550,9 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
     nombreNna: nombreNna ?? this.nombreNna,
     apellidoNna: apellidoNna ?? this.apellidoNna,
     payloadJson: payloadJson ?? this.payloadJson,
+    serverPacienteId: serverPacienteId.present
+        ? serverPacienteId.value
+        : this.serverPacienteId,
   );
   HijosRow copyWithCompanion(HijosRowsCompanion data) {
     return HijosRow(
@@ -1531,6 +1570,9 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
       payloadJson: data.payloadJson.present
           ? data.payloadJson.value
           : this.payloadJson,
+      serverPacienteId: data.serverPacienteId.present
+          ? data.serverPacienteId.value
+          : this.serverPacienteId,
     );
   }
 
@@ -1544,7 +1586,8 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
           ..write('tutorId: $tutorId, ')
           ..write('nombreNna: $nombreNna, ')
           ..write('apellidoNna: $apellidoNna, ')
-          ..write('payloadJson: $payloadJson')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('serverPacienteId: $serverPacienteId')
           ..write(')'))
         .toString();
   }
@@ -1559,6 +1602,7 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
     nombreNna,
     apellidoNna,
     payloadJson,
+    serverPacienteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1571,7 +1615,8 @@ class HijosRow extends DataClass implements Insertable<HijosRow> {
           other.tutorId == this.tutorId &&
           other.nombreNna == this.nombreNna &&
           other.apellidoNna == this.apellidoNna &&
-          other.payloadJson == this.payloadJson);
+          other.payloadJson == this.payloadJson &&
+          other.serverPacienteId == this.serverPacienteId);
 }
 
 class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
@@ -1583,6 +1628,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
   final Value<String> nombreNna;
   final Value<String> apellidoNna;
   final Value<String> payloadJson;
+  final Value<String?> serverPacienteId;
   final Value<int> rowid;
   const HijosRowsCompanion({
     this.id = const Value.absent(),
@@ -1593,6 +1639,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
     this.nombreNna = const Value.absent(),
     this.apellidoNna = const Value.absent(),
     this.payloadJson = const Value.absent(),
+    this.serverPacienteId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   HijosRowsCompanion.insert({
@@ -1604,6 +1651,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
     this.nombreNna = const Value.absent(),
     this.apellidoNna = const Value.absent(),
     required String payloadJson,
+    this.serverPacienteId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        tutorId = Value(tutorId),
@@ -1617,6 +1665,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
     Expression<String>? nombreNna,
     Expression<String>? apellidoNna,
     Expression<String>? payloadJson,
+    Expression<String>? serverPacienteId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1628,6 +1677,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
       if (nombreNna != null) 'nombre_nna': nombreNna,
       if (apellidoNna != null) 'apellido_nna': apellidoNna,
       if (payloadJson != null) 'payload_json': payloadJson,
+      if (serverPacienteId != null) 'server_paciente_id': serverPacienteId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1641,6 +1691,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
     Value<String>? nombreNna,
     Value<String>? apellidoNna,
     Value<String>? payloadJson,
+    Value<String?>? serverPacienteId,
     Value<int>? rowid,
   }) {
     return HijosRowsCompanion(
@@ -1652,6 +1703,7 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
       nombreNna: nombreNna ?? this.nombreNna,
       apellidoNna: apellidoNna ?? this.apellidoNna,
       payloadJson: payloadJson ?? this.payloadJson,
+      serverPacienteId: serverPacienteId ?? this.serverPacienteId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1685,6 +1737,9 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
     if (payloadJson.present) {
       map['payload_json'] = Variable<String>(payloadJson.value);
     }
+    if (serverPacienteId.present) {
+      map['server_paciente_id'] = Variable<String>(serverPacienteId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1702,6 +1757,443 @@ class HijosRowsCompanion extends UpdateCompanion<HijosRow> {
           ..write('nombreNna: $nombreNna, ')
           ..write('apellidoNna: $apellidoNna, ')
           ..write('payloadJson: $payloadJson, ')
+          ..write('serverPacienteId: $serverPacienteId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AntecedentesNinoRowsTable extends AntecedentesNinoRows
+    with TableInfo<$AntecedentesNinoRowsTable, AntecedentesNinoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AntecedentesNinoRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    clientDefault: () => DateTime.now().toUtc(),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<SyncStatus, int> syncStatus =
+      GeneratedColumn<int>(
+        'sync_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: Constant(SyncStatus.pendiente.index),
+      ).withConverter<SyncStatus>(
+        $AntecedentesNinoRowsTable.$convertersyncStatus,
+      );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _hijoLocalIdMeta = const VerificationMeta(
+    'hijoLocalId',
+  );
+  @override
+  late final GeneratedColumn<String> hijoLocalId = GeneratedColumn<String>(
+    'hijo_local_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    hijoLocalId,
+    payloadJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'antecedentes_nino_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AntecedentesNinoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('hijo_local_id')) {
+      context.handle(
+        _hijoLocalIdMeta,
+        hijoLocalId.isAcceptableOrUnknown(
+          data['hijo_local_id']!,
+          _hijoLocalIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_hijoLocalIdMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AntecedentesNinoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AntecedentesNinoRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: $AntecedentesNinoRowsTable.$convertersyncStatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}sync_status'],
+        )!,
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      hijoLocalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hijo_local_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+    );
+  }
+
+  @override
+  $AntecedentesNinoRowsTable createAlias(String alias) {
+    return $AntecedentesNinoRowsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<SyncStatus, int, int> $convertersyncStatus =
+      const EnumIndexConverter<SyncStatus>(SyncStatus.values);
+}
+
+class AntecedentesNinoRow extends DataClass
+    implements Insertable<AntecedentesNinoRow> {
+  final String id;
+  final DateTime updatedAt;
+  final SyncStatus syncStatus;
+  final DateTime? deletedAt;
+  final String hijoLocalId;
+  final String payloadJson;
+  const AntecedentesNinoRow({
+    required this.id,
+    required this.updatedAt,
+    required this.syncStatus,
+    this.deletedAt,
+    required this.hijoLocalId,
+    required this.payloadJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['sync_status'] = Variable<int>(
+        $AntecedentesNinoRowsTable.$convertersyncStatus.toSql(syncStatus),
+      );
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['hijo_local_id'] = Variable<String>(hijoLocalId);
+    map['payload_json'] = Variable<String>(payloadJson);
+    return map;
+  }
+
+  AntecedentesNinoRowsCompanion toCompanion(bool nullToAbsent) {
+    return AntecedentesNinoRowsCompanion(
+      id: Value(id),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      hijoLocalId: Value(hijoLocalId),
+      payloadJson: Value(payloadJson),
+    );
+  }
+
+  factory AntecedentesNinoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AntecedentesNinoRow(
+      id: serializer.fromJson<String>(json['id']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: $AntecedentesNinoRowsTable.$convertersyncStatus.fromJson(
+        serializer.fromJson<int>(json['syncStatus']),
+      ),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      hijoLocalId: serializer.fromJson<String>(json['hijoLocalId']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<int>(
+        $AntecedentesNinoRowsTable.$convertersyncStatus.toJson(syncStatus),
+      ),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'hijoLocalId': serializer.toJson<String>(hijoLocalId),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+    };
+  }
+
+  AntecedentesNinoRow copyWith({
+    String? id,
+    DateTime? updatedAt,
+    SyncStatus? syncStatus,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    String? hijoLocalId,
+    String? payloadJson,
+  }) => AntecedentesNinoRow(
+    id: id ?? this.id,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    hijoLocalId: hijoLocalId ?? this.hijoLocalId,
+    payloadJson: payloadJson ?? this.payloadJson,
+  );
+  AntecedentesNinoRow copyWithCompanion(AntecedentesNinoRowsCompanion data) {
+    return AntecedentesNinoRow(
+      id: data.id.present ? data.id.value : this.id,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      hijoLocalId: data.hijoLocalId.present
+          ? data.hijoLocalId.value
+          : this.hijoLocalId,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AntecedentesNinoRow(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('hijoLocalId: $hijoLocalId, ')
+          ..write('payloadJson: $payloadJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    updatedAt,
+    syncStatus,
+    deletedAt,
+    hijoLocalId,
+    payloadJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AntecedentesNinoRow &&
+          other.id == this.id &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.deletedAt == this.deletedAt &&
+          other.hijoLocalId == this.hijoLocalId &&
+          other.payloadJson == this.payloadJson);
+}
+
+class AntecedentesNinoRowsCompanion
+    extends UpdateCompanion<AntecedentesNinoRow> {
+  final Value<String> id;
+  final Value<DateTime> updatedAt;
+  final Value<SyncStatus> syncStatus;
+  final Value<DateTime?> deletedAt;
+  final Value<String> hijoLocalId;
+  final Value<String> payloadJson;
+  final Value<int> rowid;
+  const AntecedentesNinoRowsCompanion({
+    this.id = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.hijoLocalId = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AntecedentesNinoRowsCompanion.insert({
+    required String id,
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    required String hijoLocalId,
+    required String payloadJson,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       hijoLocalId = Value(hijoLocalId),
+       payloadJson = Value(payloadJson);
+  static Insertable<AntecedentesNinoRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? syncStatus,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? hijoLocalId,
+    Expression<String>? payloadJson,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (hijoLocalId != null) 'hijo_local_id': hijoLocalId,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AntecedentesNinoRowsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? updatedAt,
+    Value<SyncStatus>? syncStatus,
+    Value<DateTime?>? deletedAt,
+    Value<String>? hijoLocalId,
+    Value<String>? payloadJson,
+    Value<int>? rowid,
+  }) {
+    return AntecedentesNinoRowsCompanion(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      deletedAt: deletedAt ?? this.deletedAt,
+      hijoLocalId: hijoLocalId ?? this.hijoLocalId,
+      payloadJson: payloadJson ?? this.payloadJson,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(
+        $AntecedentesNinoRowsTable.$convertersyncStatus.toSql(syncStatus.value),
+      );
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (hijoLocalId.present) {
+      map['hijo_local_id'] = Variable<String>(hijoLocalId.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AntecedentesNinoRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('hijoLocalId: $hijoLocalId, ')
+          ..write('payloadJson: $payloadJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1715,6 +2207,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedSessionRowsTable cachedSessionRows =
       $CachedSessionRowsTable(this);
   late final $HijosRowsTable hijosRows = $HijosRowsTable(this);
+  late final $AntecedentesNinoRowsTable antecedentesNinoRows =
+      $AntecedentesNinoRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1723,6 +2217,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncStateRows,
     cachedSessionRows,
     hijosRows,
+    antecedentesNinoRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -2324,6 +2819,7 @@ typedef $$HijosRowsTableCreateCompanionBuilder =
       Value<String> nombreNna,
       Value<String> apellidoNna,
       required String payloadJson,
+      Value<String?> serverPacienteId,
       Value<int> rowid,
     });
 typedef $$HijosRowsTableUpdateCompanionBuilder =
@@ -2336,6 +2832,7 @@ typedef $$HijosRowsTableUpdateCompanionBuilder =
       Value<String> nombreNna,
       Value<String> apellidoNna,
       Value<String> payloadJson,
+      Value<String?> serverPacienteId,
       Value<int> rowid,
     });
 
@@ -2388,6 +2885,11 @@ class $$HijosRowsTableFilterComposer
     column: $table.payloadJson,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get serverPacienteId => $composableBuilder(
+    column: $table.serverPacienteId,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$HijosRowsTableOrderingComposer
@@ -2438,6 +2940,11 @@ class $$HijosRowsTableOrderingComposer
     column: $table.payloadJson,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get serverPacienteId => $composableBuilder(
+    column: $table.serverPacienteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HijosRowsTableAnnotationComposer
@@ -2479,6 +2986,11 @@ class $$HijosRowsTableAnnotationComposer
     column: $table.payloadJson,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get serverPacienteId => $composableBuilder(
+    column: $table.serverPacienteId,
+    builder: (column) => column,
+  );
 }
 
 class $$HijosRowsTableTableManager
@@ -2517,6 +3029,7 @@ class $$HijosRowsTableTableManager
                 Value<String> nombreNna = const Value.absent(),
                 Value<String> apellidoNna = const Value.absent(),
                 Value<String> payloadJson = const Value.absent(),
+                Value<String?> serverPacienteId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HijosRowsCompanion(
                 id: id,
@@ -2527,6 +3040,7 @@ class $$HijosRowsTableTableManager
                 nombreNna: nombreNna,
                 apellidoNna: apellidoNna,
                 payloadJson: payloadJson,
+                serverPacienteId: serverPacienteId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2539,6 +3053,7 @@ class $$HijosRowsTableTableManager
                 Value<String> nombreNna = const Value.absent(),
                 Value<String> apellidoNna = const Value.absent(),
                 required String payloadJson,
+                Value<String?> serverPacienteId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HijosRowsCompanion.insert(
                 id: id,
@@ -2549,6 +3064,7 @@ class $$HijosRowsTableTableManager
                 nombreNna: nombreNna,
                 apellidoNna: apellidoNna,
                 payloadJson: payloadJson,
+                serverPacienteId: serverPacienteId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2573,6 +3089,249 @@ typedef $$HijosRowsTableProcessedTableManager =
       HijosRow,
       PrefetchHooks Function()
     >;
+typedef $$AntecedentesNinoRowsTableCreateCompanionBuilder =
+    AntecedentesNinoRowsCompanion Function({
+      required String id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      required String hijoLocalId,
+      required String payloadJson,
+      Value<int> rowid,
+    });
+typedef $$AntecedentesNinoRowsTableUpdateCompanionBuilder =
+    AntecedentesNinoRowsCompanion Function({
+      Value<String> id,
+      Value<DateTime> updatedAt,
+      Value<SyncStatus> syncStatus,
+      Value<DateTime?> deletedAt,
+      Value<String> hijoLocalId,
+      Value<String> payloadJson,
+      Value<int> rowid,
+    });
+
+class $$AntecedentesNinoRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $AntecedentesNinoRowsTable> {
+  $$AntecedentesNinoRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SyncStatus, SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hijoLocalId => $composableBuilder(
+    column: $table.hijoLocalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AntecedentesNinoRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AntecedentesNinoRowsTable> {
+  $$AntecedentesNinoRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hijoLocalId => $composableBuilder(
+    column: $table.hijoLocalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AntecedentesNinoRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AntecedentesNinoRowsTable> {
+  $$AntecedentesNinoRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SyncStatus, int> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get hijoLocalId => $composableBuilder(
+    column: $table.hijoLocalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+}
+
+class $$AntecedentesNinoRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AntecedentesNinoRowsTable,
+          AntecedentesNinoRow,
+          $$AntecedentesNinoRowsTableFilterComposer,
+          $$AntecedentesNinoRowsTableOrderingComposer,
+          $$AntecedentesNinoRowsTableAnnotationComposer,
+          $$AntecedentesNinoRowsTableCreateCompanionBuilder,
+          $$AntecedentesNinoRowsTableUpdateCompanionBuilder,
+          (
+            AntecedentesNinoRow,
+            BaseReferences<
+              _$AppDatabase,
+              $AntecedentesNinoRowsTable,
+              AntecedentesNinoRow
+            >,
+          ),
+          AntecedentesNinoRow,
+          PrefetchHooks Function()
+        > {
+  $$AntecedentesNinoRowsTableTableManager(
+    _$AppDatabase db,
+    $AntecedentesNinoRowsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AntecedentesNinoRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AntecedentesNinoRowsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AntecedentesNinoRowsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String> hijoLocalId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AntecedentesNinoRowsCompanion(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                hijoLocalId: hijoLocalId,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                required String hijoLocalId,
+                required String payloadJson,
+                Value<int> rowid = const Value.absent(),
+              }) => AntecedentesNinoRowsCompanion.insert(
+                id: id,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                deletedAt: deletedAt,
+                hijoLocalId: hijoLocalId,
+                payloadJson: payloadJson,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AntecedentesNinoRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AntecedentesNinoRowsTable,
+      AntecedentesNinoRow,
+      $$AntecedentesNinoRowsTableFilterComposer,
+      $$AntecedentesNinoRowsTableOrderingComposer,
+      $$AntecedentesNinoRowsTableAnnotationComposer,
+      $$AntecedentesNinoRowsTableCreateCompanionBuilder,
+      $$AntecedentesNinoRowsTableUpdateCompanionBuilder,
+      (
+        AntecedentesNinoRow,
+        BaseReferences<
+          _$AppDatabase,
+          $AntecedentesNinoRowsTable,
+          AntecedentesNinoRow
+        >,
+      ),
+      AntecedentesNinoRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2583,4 +3342,6 @@ class $AppDatabaseManager {
       $$CachedSessionRowsTableTableManager(_db, _db.cachedSessionRows);
   $$HijosRowsTableTableManager get hijosRows =>
       $$HijosRowsTableTableManager(_db, _db.hijosRows);
+  $$AntecedentesNinoRowsTableTableManager get antecedentesNinoRows =>
+      $$AntecedentesNinoRowsTableTableManager(_db, _db.antecedentesNinoRows);
 }

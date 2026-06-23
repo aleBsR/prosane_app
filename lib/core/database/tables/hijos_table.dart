@@ -8,4 +8,5 @@ class HijosRows extends Table with SyncColumns {
   TextColumn get nombreNna => text().withDefault(const Constant(''))();
   TextColumn get apellidoNna => text().withDefault(const Constant(''))();
   TextColumn get payloadJson => text()(); // body exacto del POST /tutores/<id>/hijos/
+  TextColumn get serverPacienteId => text().nullable()();
 }
