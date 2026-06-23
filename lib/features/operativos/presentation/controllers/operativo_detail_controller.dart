@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers.dart';
-import '../../../../core/notificaciones/notificacion.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../data/operativos_repository.dart';
 
@@ -40,6 +39,26 @@ class OperativoDetailController extends StateNotifier<OperativoDetailState> {
   final OperativosRepository repo;
   final String operativoId;
   final NotificacionController notificacionController;
+
+  Future<void> asignarProfesional(String profesionalId, String rol) async {
+    state = state.copyWith(procesando: true, error: null);
+    try {
+      await repo.asignarProfesional(operativoId, profesionalId, rol);
+      if (!mounted) return;
+      state = state.copyWith(procesando: false, operativoActualizado: true);
+      notificacionController.exito('Profesional asignado');
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final msg = _extractErrorMessage(e.response?.data) ??
+          'No se pudo asignar el profesional.';
+      state = state.copyWith(procesando: false, error: msg);
+      notificacionController.error(msg);
+    } catch (_) {
+      if (!mounted) return;
+      state = state.copyWith(
+          procesando: false, error: 'No se pudo asignar el profesional.');
+    }
+  }
 
   Future<void> confirmar() async {
     state = state.copyWith(procesando: true, error: null);
@@ -196,4 +215,10 @@ final operativoDetailProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, operativoId) async {
   final repo = ref.watch(operativosRepositoryProvider);
   return repo.detalle(operativoId);
+});
+
+final profesionalesDisponiblesProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final repo = ref.watch(operativosRepositoryProvider);
+  return repo.profesionalesDisponibles();
 });

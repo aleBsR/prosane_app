@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database/database_provider.dart';
+import '../../core/providers.dart';
 import '../../core/session/entities.dart';
 import '../../core/session/session_controller.dart';
 
@@ -68,8 +69,43 @@ final pendientesItemsProvider = StreamProvider<List<ItemPendiente>>((ref) {
       ));
 });
 
-/// Conteo para el badge del nav bar (deriva de los items). Los consumidores
-/// resuelven el AsyncValue con `.value ?? 0`.
+/// Operativos en borrador (sin confirmar) → pendientes del ayudante/superadmin.
+/// Solo se consulta si el usuario puede ver operativos (evita 403 en tutores).
+final operativosPendientesProvider =
+    FutureProvider.autoDispose<List<ItemPendiente>>((ref) async {
+  final s = ref.watch(sessionControllerProvider);
+  if (s is! SesionAutenticada) return const [];
+  if (!s.sesion.permisos.contains('verOperativo')) return const [];
+
+  final repo = ref.watch(operativosRepositoryProvider);
+  final operativos = await repo.listar();
+  return operativos
+      .where((o) => o['estado'] == 'borrador')
+      .map((o) => ItemPendiente(
+            titulo: (o['nombre'] as String?)?.isNotEmpty == true
+                ? o['nombre'] as String
+                : (o['escuela_nombre'] as String? ?? 'Operativo'),
+            subtitulo: 'Operativo sin confirmar — completá y confirmalo',
+            ruta: '/operativos/${o['id']}',
+            icono: Icons.assignment_late_outlined,
+          ))
+      .toList();
+});
+
+/// Lista combinada: pendientes del tutor (Drift) + operativos borrador.
+final pendientesTotalProvider = Provider.autoDispose<List<ItemPendiente>>((ref) {
+  final tutor = ref.watch(pendientesItemsProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => const <ItemPendiente>[],
+      );
+  final ops = ref.watch(operativosPendientesProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => const <ItemPendiente>[],
+      );
+  return [...tutor, ...ops];
+});
+
+/// Conteo para el badge del nav bar (tutor + operativos borrador).
 final pendientesCountProvider = Provider<AsyncValue<int>>(
-  (ref) => ref.watch(pendientesItemsProvider).whenData((items) => items.length),
+  (ref) => AsyncValue.data(ref.watch(pendientesTotalProvider).length),
 );

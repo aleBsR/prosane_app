@@ -16,7 +16,7 @@ import 'sync/sync_engine.dart';
 import 'sync/connectivity_service.dart';
 import 'sync/sync_scheduler.dart';
 import '../features/operativos/data/operativos_repository.dart';
-import '../features/operativos/data/escuelas_repository.dart';
+import '../features/escuelas/data/escuelas_repository.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 

@@ -9,6 +9,7 @@ class AppColors {
   static const texto = Color(0xFF2D2D3A);
   static const link = Color(0xFF6C4DE0);
   static const blanco = Color(0xFFFFFFFF);
+  static const gris = Color(0xFF9CA3AF);
 
   static const gradienteFondo = LinearGradient(
     begin: Alignment.topCenter, end: Alignment.bottomCenter,

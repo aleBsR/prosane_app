@@ -10,7 +10,9 @@ import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../pendientes/pendientes_count_provider.dart';
 import '../controllers/operativo_detail_controller.dart';
+import '../controllers/operativos_list_controller.dart';
 
 class OperativoDetailScreen extends ConsumerStatefulWidget {
   const OperativoDetailScreen({super.key, required this.operativoId});
@@ -52,7 +54,13 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
             child: Row(children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/operativos');
+                  }
+                },
               ),
               Expanded(
                 child: Text('Detalle del operativo',
@@ -111,11 +119,22 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                                   style: AppTypography.texto.copyWith(color: AppColors.texto.withValues(alpha: 0.6))),
                             )
                           else
-                            ...(op['profesionales_asignados'] as List).map((p) => Padding(
-                              padding: const EdgeInsets.only(top: AppSpacing.sm),
-                              child: Text('${p['profesional_nombre']} ${p['profesional_apellido']} (${p['rol_en_operativo']})',
-                                  style: AppTypography.texto),
-                            )),
+                            ...(op['profesionales_asignados'] as List).map((p) {
+                              final nom = '${p['profesional_nombre'] ?? ''} ${p['profesional_apellido'] ?? ''}'.trim();
+                              final display = nom.isEmpty ? (p['profesional_email'] ?? 'Profesional') : nom;
+                              return Padding(
+                                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                                child: Text('$display (${p['rol_en_operativo']})',
+                                    style: AppTypography.texto),
+                              );
+                            }),
+                          if (op['estado'] == 'borrador') ...[
+                            const SizedBox(height: AppSpacing.md),
+                            AppButton(
+                              label: 'Asignar profesional',
+                              onPressed: () => _asignarProfesionalDialog(context),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -172,19 +191,27 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     );
   }
 
+  Future<void> _accionEstado(Future<void> Function() accion) async {
+    await accion();
+    ref.invalidate(operativoDetailProvider(widget.operativoId));
+    // El estado cambió (p.ej. borrador → confirmado): refrescar la lista y los pendientes.
+    ref.invalidate(operativosListControllerProvider);
+    ref.invalidate(operativosPendientesProvider);
+  }
+
   List<Widget> _botonesPorEstado(String estado, OperativoDetailController ctrl) {
     switch (estado) {
       case 'borrador':
         return [
-          AppCard(child: AppButton(label: 'Confirmar operativo', onPressed: ctrl.confirmar)),
+          AppCard(child: AppButton(label: 'Confirmar operativo', onPressed: () => _accionEstado(ctrl.confirmar))),
         ];
       case 'confirmado':
         return [
           Row(
             children: [
-              Expanded(child: AppCard(child: AppButton(label: 'Iniciar', onPressed: ctrl.iniciar))),
+              Expanded(child: AppCard(child: AppButton(label: 'Iniciar', onPressed: () => _accionEstado(ctrl.iniciar)))),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: ctrl.cancelar))),
+              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
             ],
           ),
         ];
@@ -192,9 +219,9 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         return [
           Row(
             children: [
-              Expanded(child: AppCard(child: AppButton(label: 'Finalizar', onPressed: ctrl.finalizar))),
+              Expanded(child: AppCard(child: AppButton(label: 'Finalizar', onPressed: () => _accionEstado(ctrl.finalizar)))),
               const SizedBox(width: AppSpacing.md),
-              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: ctrl.cancelar))),
+              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
             ],
           ),
         ];
@@ -228,6 +255,86 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
 
     final ctrl = ref.read(operativoDetailControllerProvider(widget.operativoId).notifier);
     await ctrl.importarCsv(file);
+    ref.invalidate(operativoDetailProvider(widget.operativoId));
+    ref.invalidate(operativosListControllerProvider);
+  }
+
+  Future<void> _asignarProfesionalDialog(BuildContext context) async {
+    String? profId;
+    String rol = 'medico';
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Asignar profesional'),
+        content: Consumer(
+          builder: (c, dialogRef, _) {
+            final async = dialogRef.watch(profesionalesDisponiblesProvider);
+            return async.when(
+              loading: () => const SizedBox(
+                  height: 80, child: Center(child: CircularProgressIndicator())),
+              error: (e, _) => const Text('Error al cargar profesionales'),
+              data: (profs) {
+                if (profs.isEmpty) {
+                  return const Text(
+                      'No hay profesionales disponibles. Creá médicos u odontólogos primero.');
+                }
+                return StatefulBuilder(
+                  builder: (c, setLocal) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButton<String>(
+                        isExpanded: true,
+                        hint: const Text('Elegí un profesional'),
+                        value: profId,
+                        items: profs.map((p) {
+                          final nom =
+                              '${p['nombre'] ?? ''} ${p['apellido'] ?? ''}'.trim();
+                          final label = nom.isEmpty ? (p['email'] ?? '') : nom;
+                          return DropdownMenuItem(
+                              value: p['id'] as String, child: Text('$label'));
+                        }).toList(),
+                        onChanged: (v) => setLocal(() => profId = v),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      DropdownButton<String>(
+                        isExpanded: true,
+                        value: rol,
+                        items: const [
+                          DropdownMenuItem(value: 'medico', child: Text('Médico')),
+                          DropdownMenuItem(
+                              value: 'odontologo', child: Text('Odontólogo')),
+                          DropdownMenuItem(
+                              value: 'ayudante', child: Text('Ayudante')),
+                        ],
+                        onChanged: (v) => setLocal(() => rol = v ?? 'medico'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () async {
+              if (profId == null) return;
+              Navigator.pop(dialogCtx);
+              final ctrl = ref.read(
+                  operativoDetailControllerProvider(widget.operativoId).notifier);
+              await ctrl.asignarProfesional(profId!, rol);
+              ref.invalidate(operativoDetailProvider(widget.operativoId));
+              ref.invalidate(operativosListControllerProvider);
+              ref.invalidate(profesionalesDisponiblesProvider);
+            },
+            child: const Text('Asignar'),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _colorEstado(String estado) {

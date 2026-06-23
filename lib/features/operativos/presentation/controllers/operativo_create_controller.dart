@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers.dart';
 import '../../data/operativos_repository.dart';
-import '../../data/escuelas_repository.dart';
+import '../../../escuelas/data/escuelas_repository.dart';
 
 class OperativoCreateState {
   const OperativoCreateState({
@@ -87,12 +87,16 @@ class OperativoCreateController extends StateNotifier<OperativoCreateState> {
     if (!state.puedeGuardar) return;
     state = state.copyWith(guardando: true, error: null);
     try {
+      final f = state.fecha;
+      final fechaStr = f == null
+          ? null
+          : '${f.year.toString().padLeft(4, '0')}-${f.month.toString().padLeft(2, '0')}-${f.day.toString().padLeft(2, '0')}';
       final datos = {
-        'nombre': state.nombre,
+        'nombre': state.nombre ?? '',
         'escuela': state.escuelaId,
-        'fecha': state.fecha?.toIso8601String(),
+        'fecha': fechaStr,
         'lugar_realizacion': state.lugar,
-        'notas': state.notas,
+        'notas': state.notas ?? '',
       };
       final resultado = await repo.crear(datos);
       if (!mounted) return;
