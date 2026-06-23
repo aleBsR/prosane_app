@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'sync_columns.dart';
+import 'tables/antecedentes_nino_table.dart';
 import 'tables/cached_session_table.dart';
 import 'tables/hijos_table.dart';
 import 'tables/sync_state_table.dart';
@@ -9,7 +10,7 @@ import '../session/session_cache.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [SyncStateRows, CachedSessionRows, HijosRows])
+@DriftDatabase(tables: [SyncStateRows, CachedSessionRows, HijosRows, AntecedentesNinoRows])
 class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase(super.e);
 
@@ -18,7 +19,7 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   // INVARIANTE DE MIGRACIONES: al subir schemaVersion, escribir acá el step
   // versionado correspondiente Y su test en migration_test.dart. Nunca bumpear
@@ -53,6 +54,12 @@ class AppDatabase extends _$AppDatabase implements SessionCache {
         // las columnas del schema actual (Drift genera siempre el DDL actual).
         await m.addColumn(cachedSessionRows, cachedSessionRows.consentimientoAceptado);
         await m.addColumn(cachedSessionRows, cachedSessionRows.antecedentesFamiliaresCompletos);
+      }
+      if (from < 6) {
+        await m.createTable(antecedentesNinoRows);
+      }
+      if (from >= 3 && from < 6) {
+        await m.addColumn(hijosRows, hijosRows.serverPacienteId);
       }
     },
   );
