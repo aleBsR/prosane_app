@@ -31,6 +31,7 @@ class AppDropdownField extends StatelessWidget {
         Text(label, style: AppTypography.subtitulo),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
+          isExpanded: true, // evita overflow horizontal en anchos fijos (ej: grilla del odontograma)
           initialValue: (value == null || value!.isEmpty) ? null : value,
           hint: Text(hint),
           decoration: InputDecoration(
