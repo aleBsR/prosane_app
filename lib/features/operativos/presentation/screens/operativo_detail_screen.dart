@@ -7,6 +7,8 @@ import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
+import '../../../../core/session/entities.dart';
+import '../../../../core/session/session_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -176,6 +178,8 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                                 ),
                             ],
                           ),
+                          const SizedBox(height: AppSpacing.md),
+                          _listaAlumnos(),
                         ],
                       ),
                     ),
@@ -217,17 +221,206 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         ];
       case 'en_curso':
         return [
-          Row(
-            children: [
-              Expanded(child: AppCard(child: AppButton(label: 'Finalizar', onPressed: () => _accionEstado(ctrl.finalizar)))),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
-            ],
-          ),
+          _gatingFinalizacion(ctrl),
         ];
       default:
         return [];
     }
+  }
+
+  Widget _gatingFinalizacion(OperativoDetailController ctrl) {
+    final completitudAsync = ref.watch(completitudProvider(widget.operativoId));
+    return completitudAsync.when(
+      loading: () => const AppCard(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      error: (e, _) => Row(
+        children: [
+          Expanded(
+              child: AppCard(
+                  child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
+        ],
+      ),
+      data: (c) {
+        final total = (c['total_alumnos'] as num?)?.toInt() ?? 0;
+        final completos = (c['completos'] as num?)?.toInt() ?? 0;
+        final puedeFinalizar = c['puede_finalizar'] as bool? ?? false;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$completos/$total alumnos completos', style: AppTypography.subtitulo),
+                  if (!puedeFinalizar) ...[
+                    const SizedBox(height: 4),
+                    Text('Faltan evaluaciones para finalizar',
+                        style: AppTypography.texto.copyWith(
+                            fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                    child: AppCard(
+                        child: AppButton(
+                  label: 'Finalizar',
+                  onPressed: puedeFinalizar ? () => _accionEstado(ctrl.finalizar) : null,
+                ))),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                    child: AppCard(
+                        child: AppButton(
+                            label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _listaAlumnos() {
+    final alumnosAsync = ref.watch(alumnosProvider(widget.operativoId));
+    final sesion = ref.watch(sessionControllerProvider);
+    final permisos = sesion is SesionAutenticada ? sesion.sesion.permisos : const <String>{};
+
+    return alumnosAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Text('No se pudo cargar la lista de alumnos.',
+          style: AppTypography.texto.copyWith(color: AppColors.texto.withValues(alpha: 0.6))),
+      data: (alumnos) {
+        if (alumnos.isEmpty) {
+          return Text('Aún no hay alumnos cargados.',
+              style: AppTypography.texto.copyWith(color: AppColors.texto.withValues(alpha: 0.6)));
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final a in alumnos) _filaAlumno(a, permisos),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _filaAlumno(Map<String, dynamic> a, Set<String> permisos) {
+    final id = '${a['id']}';
+    final nombre = '${a['nombre'] ?? ''} ${a['apellido'] ?? ''}'.trim();
+    final dni = '${a['dni'] ?? ''}';
+    final completo = a['completo'] as bool? ?? false;
+    final opId = widget.operativoId;
+
+    final acciones = <Widget>[];
+    if (permisos.contains('cargarEvaluacionMedica')) {
+      acciones.add(_botonAccion(
+          'Evaluación médica', () => context.push('/operativos/$opId/alumnos/$id/medica')));
+    }
+    if (permisos.contains('cargarEvaluacionOdontologica')) {
+      acciones.add(_botonAccion(
+          'Eval. odontológica', () => context.push('/operativos/$opId/alumnos/$id/odontologica')));
+    }
+    if (permisos.contains('cargarSeccionEscuela')) {
+      acciones.add(_botonAccion(
+          'Sección escuela', () => context.push('/operativos/$opId/alumnos/$id/escuela')));
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.gris.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(nombre.isEmpty ? 'Alumno' : nombre,
+                        style: AppTypography.texto.copyWith(fontWeight: FontWeight.bold)),
+                    if (dni.isNotEmpty)
+                      Text('DNI $dni',
+                          style: AppTypography.texto.copyWith(
+                              fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
+                  ],
+                ),
+              ),
+              _badgeEstado(completo),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              if (a['medica_completada'] as bool? ?? false) _chip('M ✓'),
+              if (a['odontologica_completada'] as bool? ?? false) _chip('O ✓'),
+              if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
+            ],
+          ),
+          if (acciones.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(spacing: 8, runSpacing: 8, children: acciones),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _botonAccion(String label, VoidCallback onTap) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        backgroundColor: AppColors.gris.withValues(alpha: 0.15),
+        foregroundColor: AppColors.texto,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+      child: Text(label, style: AppTypography.texto.copyWith(fontSize: 12)),
+    );
+  }
+
+  Widget _badgeEstado(bool completo) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: completo ? Colors.green : AppColors.gris,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(completo ? 'Completo' : 'Pendiente',
+          style: const TextStyle(
+              color: AppColors.blanco, fontSize: 11, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _chip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(label,
+          style: const TextStyle(
+              color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+    );
   }
 
   Future<void> _importarCsv(BuildContext context) async {
@@ -256,6 +449,8 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     final ctrl = ref.read(operativoDetailControllerProvider(widget.operativoId).notifier);
     await ctrl.importarCsv(file);
     ref.invalidate(operativoDetailProvider(widget.operativoId));
+    ref.invalidate(alumnosProvider(widget.operativoId));
+    ref.invalidate(completitudProvider(widget.operativoId));
     ref.invalidate(operativosListControllerProvider);
   }
 

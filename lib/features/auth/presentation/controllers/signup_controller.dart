@@ -141,7 +141,25 @@ class SignupController extends StateNotifier<SignupState> {
     if (state.registrado || state.isSubmitting) return; // evita doble registro
     // Valida TODO el form (no solo la etapa 3): defensa por si la navegación se
     // bypassea. El payload nunca sale con etapas anteriores incompletas.
-    if (![0, 1, 2, 3].every(etapaValida)) return;
+    // Si alguna etapa es inválida, avisamos (en vez de retornar en silencio) y
+    // saltamos a la primera etapa con problemas para que el usuario la corrija.
+    final primeraInvalida = [0, 1, 2, 3].firstWhere(
+      (s) => !etapaValida(s),
+      orElse: () => -1,
+    );
+    if (primeraInvalida != -1) {
+      const mensajes = {
+        0: 'Revisá tus datos: documento (solo números) y aceptar la política.',
+        1: 'Faltan datos personales: nombre, apellido, sexo, lugar y fecha de nacimiento.',
+        2: 'Revisá el email (válido y que ambos campos coincidan) y el país.',
+        3: 'La contraseña debe tener 8+ caracteres, sin espacios, y coincidir en ambos campos.',
+      };
+      state = state.copyWith(
+        currentStep: primeraInvalida,
+        error: mensajes[primeraInvalida],
+      );
+      return;
+    }
     state = state.copyWith(isSubmitting: true, error: null);
     final f = state.formData;
     final payload = <String, dynamic>{

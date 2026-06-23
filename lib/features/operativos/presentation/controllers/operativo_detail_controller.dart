@@ -222,3 +222,15 @@ final profesionalesDisponiblesProvider =
   final repo = ref.watch(operativosRepositoryProvider);
   return repo.profesionalesDisponibles();
 });
+
+final alumnosProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, opId) async {
+  final repo = ref.watch(operativosRepositoryProvider);
+  return repo.listarAlumnos(opId);
+});
+
+final completitudProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, opId) async {
+  final repo = ref.watch(operativosRepositoryProvider);
+  return repo.getCompletitud(opId);
+});
