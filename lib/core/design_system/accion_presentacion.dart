@@ -19,6 +19,11 @@ IconData accionIcon(String name) => switch (name) {
       'straighten' => Icons.straighten_outlined,
       'description' => Icons.description_outlined,
       'how_to_reg' => Icons.how_to_reg_outlined,
+      'school' => Icons.school_outlined,
+      'menu_book' => Icons.menu_book_outlined,
+      'groups' => Icons.groups_outlined,
+      'person_add' => Icons.person_add_outlined,
+      'manage_accounts' => Icons.manage_accounts_outlined,
       _ => kIconFallback,
     };
 

@@ -56,6 +56,26 @@ void main() {
     expect(cache.guardada!.permisos, {'firmarApto'});
   });
 
+  test('login efímero (recordarme=false): tokens en memoria y sin caché de Drift', () async {
+    final remote = _MockRemote();
+    final tokens = TokenStorage(backend: InMemoryKeyValueStore());
+    final cache = _FakeCache()..guardada = const Sesion(
+        usuario: Usuario(id: '9', nombre: 'Vieja', rolName: 'r', rolLabel: 'R'), acciones: []);
+    when(() => remote.login('a@b.com', 'x'))
+        .thenAnswer((_) async => (access: 'A', refresh: 'R'));
+    when(() => remote.me()).thenAnswer((_) async => MeResponse(
+        id: '1', email: 'a@b.com', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a',
+        acciones: const [], metaVersion: 'v1', metaSyncedAt: '2026-06-10T12:00:00Z'));
+
+    final repo = AuthRepositoryImpl(remote: remote, tokens: tokens, cache: cache);
+    final sesion = await repo.login('a@b.com', 'x', recordarme: false);
+
+    expect(sesion.usuario.nombre, 'Ana');
+    expect(await tokens.access(), 'A'); // sigue funcionando en memoria
+    expect(cache.guardada, isNull, reason: 'no se persiste la sesión efímera');
+    expect(cache.limpiado, true, reason: 'limpia la sesión previa de la caché');
+  });
+
   test('register: guarda tokens, trae /me y devuelve Sesion', () async {
     final remote = _MockRemote();
     final tokens = TokenStorage(backend: InMemoryKeyValueStore());
@@ -170,5 +190,23 @@ void main() {
 
     await expectLater(repo.login('a@b.com', 'x'), throwsA(isA<UnknownFailure>()));
     expect(await tokens.access(), isNull); // rollback: sin tokens huérfanos
+  });
+
+  test('solicitarResetPassword delega en el remote', () async {
+    final remote = _MockRemote();
+    when(() => remote.solicitarResetPassword('a@b.com')).thenAnswer((_) async {});
+    final repo = AuthRepositoryImpl(remote: remote, tokens: TokenStorage(backend: InMemoryKeyValueStore()), cache: _FakeCache());
+    await repo.solicitarResetPassword('a@b.com');
+    verify(() => remote.solicitarResetPassword('a@b.com')).called(1);
+  });
+
+  test('confirmarResetPassword delega en el remote', () async {
+    final remote = _MockRemote();
+    when(() => remote.confirmarResetPassword('a@b.com', '123456', 'nueva1'))
+        .thenAnswer((_) async {});
+    final repo = AuthRepositoryImpl(remote: remote, tokens: TokenStorage(backend: InMemoryKeyValueStore()), cache: _FakeCache());
+    await repo.confirmarResetPassword('a@b.com', '123456', 'nueva1');
+    verify(() => remote.confirmarResetPassword('a@b.com', '123456', 'nueva1'))
+        .called(1);
   });
 }

@@ -156,6 +156,79 @@ void main() {
   });
 
   // -----------------------------------------------------------------------
+  // (c2) RefreshInterceptor: rota el refresh nuevo si el backend lo devuelve
+  // -----------------------------------------------------------------------
+  test('RefreshInterceptor persiste el refresh rotado devuelto por el backend', () async {
+    final tokens = await _store(a: 'OLD_ACCESS', r: 'OLD_REFRESH');
+
+    final refreshDio = Dio(BaseOptions(baseUrl: 'http://test'));
+    final refreshAdapter = DioAdapter(dio: refreshDio);
+    refreshAdapter.onPost(
+      '/token/refresh/',
+      (server) => server.reply(200, {'access': 'NEW_ACCESS', 'refresh': 'NEW_REFRESH'}),
+      data: {'refresh': 'OLD_REFRESH'},
+    );
+
+    final retryDio = Dio(BaseOptions(baseUrl: 'http://test'));
+    final retryAdapter = DioAdapter(dio: retryDio);
+    retryAdapter.onGet('/recurso', (server) => server.reply(200, {'ok': true}));
+
+    final interceptor = RefreshInterceptor(
+      tokens: tokens,
+      retryDio: retryDio,
+      refreshDio: refreshDio,
+    );
+
+    final requestOptions = RequestOptions(path: '/recurso', baseUrl: 'http://test');
+    final err401 = DioException(
+      requestOptions: requestOptions,
+      response: Response(requestOptions: requestOptions, statusCode: 401),
+      type: DioExceptionType.badResponse,
+    );
+
+    final completer = Completer<Response>();
+    await interceptor.onError(err401, _OnError(completer));
+
+    expect(await tokens.access(), 'NEW_ACCESS');
+    expect(await tokens.refresh(), 'NEW_REFRESH', reason: 'el refresh rotado se persiste');
+  });
+
+  test('RefreshInterceptor conserva el refresh actual si el backend no rota', () async {
+    final tokens = await _store(a: 'OLD_ACCESS', r: 'OLD_REFRESH');
+
+    final refreshDio = Dio(BaseOptions(baseUrl: 'http://test'));
+    final refreshAdapter = DioAdapter(dio: refreshDio);
+    refreshAdapter.onPost(
+      '/token/refresh/',
+      (server) => server.reply(200, {'access': 'NEW_ACCESS'}), // sin campo refresh
+      data: {'refresh': 'OLD_REFRESH'},
+    );
+
+    final retryDio = Dio(BaseOptions(baseUrl: 'http://test'));
+    final retryAdapter = DioAdapter(dio: retryDio);
+    retryAdapter.onGet('/recurso', (server) => server.reply(200, {'ok': true}));
+
+    final interceptor = RefreshInterceptor(
+      tokens: tokens,
+      retryDio: retryDio,
+      refreshDio: refreshDio,
+    );
+
+    final requestOptions = RequestOptions(path: '/recurso', baseUrl: 'http://test');
+    final err401 = DioException(
+      requestOptions: requestOptions,
+      response: Response(requestOptions: requestOptions, statusCode: 401),
+      type: DioExceptionType.badResponse,
+    );
+
+    final completer = Completer<Response>();
+    await interceptor.onError(err401, _OnError(completer));
+
+    expect(await tokens.access(), 'NEW_ACCESS');
+    expect(await tokens.refresh(), 'OLD_REFRESH');
+  });
+
+  // -----------------------------------------------------------------------
   // (d) RefreshInterceptor: refresh falla → onLogout + error propaga
   // -----------------------------------------------------------------------
   test('RefreshInterceptor llama onLogout y propaga error cuando refresh falla', () async {

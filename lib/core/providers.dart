@@ -17,6 +17,10 @@ import 'sync/connectivity_service.dart';
 import 'sync/sync_scheduler.dart';
 import '../features/operativos/data/operativos_repository.dart';
 import '../features/escuelas/data/escuelas_repository.dart';
+import '../features/escuelas/data/alumnos_escuela_repository.dart';
+import '../features/usuarios_escuela/data/usuarios_escuela_repository.dart';
+import '../features/usuarios_ayudantes/data/usuarios_ayudantes_repository.dart';
+import '../features/profesionales/data/profesionales_repository.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -113,4 +117,20 @@ final operativosRepositoryProvider = Provider<OperativosRepository>(
 
 final escuelasRepositoryProvider = Provider<EscuelasRepository>(
   (ref) => EscuelasRepository(ref.watch(dioV1Provider)),
+);
+
+final alumnosEscuelaRepositoryProvider = Provider<AlumnosEscuelaRepository>(
+  (ref) => AlumnosEscuelaRepository(ref.watch(dioV1Provider)),
+);
+
+final usuariosEscuelaRepositoryProvider = Provider<UsuariosEscuelaRepository>(
+  (ref) => UsuariosEscuelaRepository(ref.watch(dioV1Provider)),
+);
+
+final usuariosAyudantesRepositoryProvider = Provider<UsuariosAyudantesRepository>(
+  (ref) => UsuariosAyudantesRepository(ref.watch(dioV1Provider)),
+);
+
+final profesionalesRepositoryProvider = Provider<ProfesionalesRepository>(
+  (ref) => ProfesionalesRepository(ref.watch(dioV1Provider)),
 );

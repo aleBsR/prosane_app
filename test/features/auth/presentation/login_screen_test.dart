@@ -33,7 +33,7 @@ void main() {
     // Completer nunca completa → no hay timers pendientes, el future queda vivo
     // solo mientras el widget está montado; autoDispose lo cancela al desmontar.
     final completer = Completer<Sesion>();
-    when(() => mockLogin.call(any(), any()))
+    when(() => mockLogin.call(any(), any(), recordarme: any(named: 'recordarme')))
         .thenAnswer((_) => completer.future);
 
     await tester.pumpWidget(_buildScreen(
@@ -45,14 +45,14 @@ void main() {
     await tester.tap(find.text('INICIAR SESIÓN'));
     await tester.pump();
 
-    verify(() => mockLogin.call(any(), any())).called(1);
+    verify(() => mockLogin.call(any(), any(), recordarme: any(named: 'recordarme'))).called(1);
   });
 
   testWidgets('(b) con isLoading: true el botón muestra el spinner', (tester) async {
     final mockLogin = _MockLogin();
     // login que nunca completa → el controller queda en isLoading: true
     final neverCompletes = Completer<Sesion>(); // dart:async Completer
-    when(() => mockLogin.call(any(), any()))
+    when(() => mockLogin.call(any(), any(), recordarme: any(named: 'recordarme')))
         .thenAnswer((_) => neverCompletes.future);
 
     await tester.pumpWidget(_buildScreen(
@@ -69,7 +69,7 @@ void main() {
 
   testWidgets('(c) con error no nulo se muestra el mensaje de error', (tester) async {
     final mockLogin = _MockLogin();
-    when(() => mockLogin.call(any(), any()))
+    when(() => mockLogin.call(any(), any(), recordarme: any(named: 'recordarme')))
         .thenThrow(const InvalidCredentialsFailure());
 
     await tester.pumpWidget(_buildScreen(

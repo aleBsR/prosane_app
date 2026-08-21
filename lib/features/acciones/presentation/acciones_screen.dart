@@ -72,7 +72,23 @@ class AccionesScreen extends ConsumerWidget {
                               case 'verOperativo':
                                 context.push('/operativos');
                               case 'verEscuelas':
-                                context.push('/operativos');
+                                context.push('/escuelas');
+                              case 'verMiEscuela':
+                                context.push('/escuelas/mi-escuela');
+                              case 'gestionarCursos':
+                                context.push('/escuelas/mi-escuela');
+                              case 'verAlumnosEscuela':
+                                context.push('/escuelas/alumnos');
+                              case 'registrarAlumnoEscuela':
+                                context.push('/escuelas/alumnos');
+                              case 'verGestionUsuarios':
+                                context.push('/gestion-usuarios');
+                              case 'gestionarUsuariosEscuela':
+                                context.push('/usuarios-escuela');
+                              case 'gestionarProfesionales':
+                                context.push('/profesionales');
+                              case 'gestionarAyudantes':
+                                context.push('/usuarios-ayudantes');
                               default:
                                 _placeholder(context, a.label);
                             }

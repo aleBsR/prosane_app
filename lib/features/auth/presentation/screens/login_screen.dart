@@ -88,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // ¿Olvidaste tu contraseña? — debajo, a todo el ancho
                 AppLink(
                   text: '¿Olvidaste tu contraseña?',
-                  onTap: () {}, // sin navegación por ahora
+                  onTap: () => context.push('/forgot-password'),
                   expand: true,
                   textAlign: TextAlign.center,
                 ),
@@ -116,6 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       : () => controller.enviar(
                             _emailCtrl.text.trim(),
                             _passwordCtrl.text,
+                            recordarme: _recordarme,
                           ),
                 ),
                 const SizedBox(height: AppSpacing.md),

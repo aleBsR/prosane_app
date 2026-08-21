@@ -26,6 +26,7 @@ class OperativoDetailScreen extends ConsumerStatefulWidget {
 
 class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
   bool _importandoCsv = false;
+  String _filtroCurso = 'Todos';
 
   @override
   Widget build(BuildContext context) {
@@ -306,13 +307,82 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           return Text('Aún no hay alumnos cargados.',
               style: AppTypography.texto.copyWith(color: AppColors.texto.withValues(alpha: 0.6)));
         }
+
+        final cursos = <String>{};
+        for (final a in alumnos) {
+          cursos.add(_labelCurso(a));
+        }
+        final listaCursos = cursos.toList()..sort(_compararCursos);
+
+        final filtrados = _filtroCurso == 'Todos'
+            ? alumnos
+            : alumnos.where((a) => _labelCurso(a) == _filtroCurso).toList();
+
+        final grupos = <String, List<Map<String, dynamic>>>{};
+        for (final a in filtrados) {
+          grupos.putIfAbsent(_labelCurso(a), () => []).add(a);
+        }
+        final claves = grupos.keys.toList()..sort(_compararCursos);
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final a in alumnos) _filaAlumno(a, permisos),
+            DropdownButton<String>(
+              value: _filtroCurso,
+              isExpanded: true,
+              items: [
+                DropdownMenuItem(value: 'Todos', child: Text('Todos los cursos')),
+                for (final c in listaCursos)
+                  DropdownMenuItem(value: c, child: Text(c)),
+              ],
+              onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final clave in claves) ...[
+              _encabezadoCurso(clave, grupos[clave]!.length),
+              for (final a in grupos[clave]!) _filaAlumno(a, permisos),
+            ],
           ],
         );
       },
+    );
+  }
+
+  String _labelCurso(Map<String, dynamic> a) {
+    final label = (a['curso_display'] as String?)?.trim() ?? '';
+    return label.isEmpty ? 'Sin curso' : label;
+  }
+
+  int _numeroGrado(String label) {
+    final match = RegExp(r'\d+').firstMatch(label);
+    if (match == null) return 0;
+    return int.tryParse(match.group(0)!) ?? 0;
+  }
+
+  int _compararCursos(String a, String b) {
+    if (a == 'Sin curso') return 1;
+    if (b == 'Sin curso') return -1;
+    final diff = _numeroGrado(a).compareTo(_numeroGrado(b));
+    if (diff != 0) return diff;
+    return a.compareTo(b);
+  }
+
+  Widget _encabezadoCurso(String curso, int cantidad) {
+    return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.sm, bottom: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.gris.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.menu_book_outlined, size: 16, color: AppColors.texto),
+          const SizedBox(width: 6),
+          Text('$curso ($cantidad)',
+              style: AppTypography.subtitulo.copyWith(fontSize: 14)),
+        ],
+      ),
     );
   }
 

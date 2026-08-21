@@ -9,6 +9,8 @@ abstract class AuthRemoteDataSource {
   Future<Tokens> registerTutor(Map<String, dynamic> datos);
   Future<MeResponse> me();
   Future<void> logout(String refresh);
+  Future<void> solicitarResetPassword(String email);
+  Future<void> confirmarResetPassword(String email, String code, String newPassword);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -36,4 +38,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout(String refresh) => _dio.post('/logout/', data: {'refresh': refresh});
+
+  @override
+  Future<void> solicitarResetPassword(String email) =>
+      _dio.post('/auth/reset-password/', data: {'email': email});
+
+  @override
+  Future<void> confirmarResetPassword(String email, String code, String newPassword) =>
+      _dio.post('/auth/reset-password/confirm/', data: {
+        'email': email,
+        'code': code,
+        'new_password': newPassword,
+      });
 }

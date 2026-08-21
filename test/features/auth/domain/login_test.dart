@@ -14,12 +14,23 @@ void main() {
       usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
       acciones: const [],
     );
-    when(() => repo.login('a@b.com', 'x')).thenAnswer((_) async => sesion);
+    when(() => repo.login('a@b.com', 'x', recordarme: any(named: 'recordarme'))).thenAnswer((_) async => sesion);
     final r = await Login(repo)('a@b.com', 'x');
     expect(r.usuario.nombre, sesion.usuario.nombre);
     expect(r.usuario.rolName, sesion.usuario.rolName);
     expect(r.permisos, sesion.permisos);
-    verify(() => repo.login('a@b.com', 'x')).called(1);
+    verify(() => repo.login('a@b.com', 'x', recordarme: any(named: 'recordarme'))).called(1);
+  });
+
+  test('Login reenvía recordarme=false al repo', () async {
+    final repo = _MockRepo();
+    final sesion = Sesion(
+      usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
+      acciones: const [],
+    );
+    when(() => repo.login('a@b.com', 'x', recordarme: false)).thenAnswer((_) async => sesion);
+    await Login(repo)('a@b.com', 'x', recordarme: false);
+    verify(() => repo.login('a@b.com', 'x', recordarme: false)).called(1);
   });
 
   test('Register delega en el repo con el payload', () async {

@@ -31,9 +31,15 @@ void main() {
     await tester.tap(find.text('DNI').last);
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('signup_numero_documento')), '12345678');
-    await tester.tap(find.text('Acepto la política de privacidad y términos'));
+    final switchLabelFinder = find.text('Acepto la política de privacidad y términos');
+    await tester.ensureVisible(switchLabelFinder);
     await tester.pump();
-    await tester.tap(find.byKey(const Key('wizard_siguiente')));
+    await tester.tap(switchLabelFinder);
+    await tester.pump();
+    final siguiente0 = find.byKey(const Key('wizard_siguiente'));
+    await tester.ensureVisible(siguiente0);
+    await tester.pump();
+    await tester.tap(siguiente0);
     await tester.pumpAndSettle();
 
     // Etapa 1
@@ -48,7 +54,10 @@ void main() {
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('signup_lugar_nacimiento')), 'Salta');
-    await tester.tap(find.byKey(const Key('wizard_siguiente')));
+    final siguiente1 = find.byKey(const Key('wizard_siguiente'));
+    await tester.ensureVisible(siguiente1);
+    await tester.pump();
+    await tester.tap(siguiente1);
     await tester.pumpAndSettle();
 
     // Etapa 2
@@ -58,7 +67,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('signup_email')), 'juan@test.com');
     await tester.enterText(find.byKey(const Key('signup_confirm_email')), 'juan@test.com');
-    await tester.tap(find.byKey(const Key('wizard_siguiente')));
+    final siguiente2 = find.byKey(const Key('wizard_siguiente'));
+    await tester.ensureVisible(siguiente2);
+    await tester.pump();
+    await tester.tap(siguiente2);
     await tester.pumpAndSettle();
 
     // Etapa 3
@@ -67,8 +79,11 @@ void main() {
     await tester.pump();
 
     // Tocar REGISTRARSE
-    await tester.tap(find.byKey(const Key('wizard_registrarse')));
-    await tester.pump();
+    final registrarse = find.byKey(const Key('wizard_registrarse'));
+    await tester.ensureVisible(registrarse);
+    await tester.pumpAndSettle();
+    await tester.tap(registrarse);
+    await tester.pumpAndSettle();
 
     verify(() => reg.call(any())).called(1);
   });

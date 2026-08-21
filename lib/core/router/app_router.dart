@@ -5,6 +5,8 @@ import '../session/entities.dart';
 import '../session/session_controller.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_wizard_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/acciones/presentation/acciones_screen.dart';
 import '../../features/pendientes/presentation/pendientes_screen.dart';
 import '../../features/usuario/presentation/usuario_screen.dart';
@@ -21,6 +23,14 @@ import '../../features/operativos/presentation/screens/evaluacion_medica_screen.
 import '../../features/operativos/presentation/screens/evaluacion_odontologica_screen.dart';
 import '../../features/operativos/presentation/screens/seccion_escuela_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
+import '../../features/escuelas/presentation/screens/escuelas_list_screen.dart';
+import '../../features/escuelas/presentation/screens/cursos_screen.dart';
+import '../../features/escuelas/presentation/screens/mi_escuela_screen.dart';
+import '../../features/escuelas/presentation/screens/alumnos_escuela_screen.dart';
+import '../../features/usuarios/presentation/screens/gestion_usuarios_screen.dart';
+import '../../features/usuarios_escuela/presentation/screens/usuarios_escuela_screen.dart';
+import '../../features/usuarios_ayudantes/presentation/screens/usuarios_ayudantes_screen.dart';
+import '../../features/profesionales/presentation/screens/profesionales_screen.dart';
 import 'app_shell.dart';
 
 typedef Redirect = String? Function(String location);
@@ -28,7 +38,10 @@ typedef Redirect = String? Function(String location);
 /// Función PURA del guard: dada la sesión (autenticado o no), decide el redirect.
 /// Testeable sin Flutter ni Riverpod.
 Redirect construirRedirect(bool autenticado) => (location) {
-      final enAuth = location == '/login' || location == '/signup';
+      final enAuth = location == '/login' ||
+          location == '/signup' ||
+          location == '/forgot-password' ||
+          location.startsWith('/reset-password');
       if (!autenticado && !enAuth) return '/login';
       if (autenticado && enAuth) return '/inicio';
       return null;
@@ -52,6 +65,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (c, s) => const SignupWizardScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (c, s) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (c, s) => ResetPasswordScreen(email: s.extra as String?),
+      ),
       GoRoute(path: '/hijos', builder: (c, s) => const HijosListScreen()),
       GoRoute(path: '/hijos/nuevo', builder: (c, s) => const PlanillaScreen()),
       GoRoute(
@@ -87,7 +108,39 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           alumnoId: s.pathParameters['alumnoId']!,
         ),
       ),
+      GoRoute(path: '/escuelas', builder: (c, s) => const EscuelasListScreen()),
       GoRoute(path: '/escuelas/nuevo', builder: (c, s) => const EscuelaCreateScreen()),
+      GoRoute(
+        path: '/escuelas/:escuelaId/cursos',
+        builder: (c, s) => CursosScreen(
+          escuelaId: s.pathParameters['escuelaId']!,
+          escuelaNombre: s.uri.queryParameters['nombre'],
+        ),
+      ),
+      GoRoute(
+        path: '/escuelas/mi-escuela',
+        builder: (c, s) => const MiEscuelaScreen(),
+      ),
+      GoRoute(
+        path: '/escuelas/alumnos',
+        builder: (c, s) => const AlumnosEscuelaScreen(),
+      ),
+      GoRoute(
+        path: '/gestion-usuarios',
+        builder: (c, s) => const GestionUsuariosScreen(),
+      ),
+      GoRoute(
+        path: '/usuarios-escuela',
+        builder: (c, s) => const UsuariosEscuelaScreen(),
+      ),
+      GoRoute(
+        path: '/usuarios-ayudantes',
+        builder: (c, s) => const UsuariosAyudantesScreen(),
+      ),
+      GoRoute(
+        path: '/profesionales',
+        builder: (c, s) => const ProfesionalesScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Consumer(
           builder: (c, ref, _) {

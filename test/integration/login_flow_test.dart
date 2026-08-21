@@ -25,7 +25,7 @@ Future<void> _desmontarYDrenar(WidgetTester tester) async {
 void main() {
   testWidgets('login exitoso navega de /login a /inicio (AccionesScreen)', (tester) async {
     final repo = _FakeAuthRepo();
-    when(() => repo.login(any(), any())).thenAnswer((_) async => Sesion(
+    when(() => repo.login(any(), any(), recordarme: any(named: 'recordarme'))).thenAnswer((_) async => Sesion(
           usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
           acciones: const [],
         ));
@@ -60,7 +60,7 @@ void main() {
 
   testWidgets('logout navega de /inicio a /login', (tester) async {
     final repo = _FakeAuthRepo();
-    when(() => repo.login(any(), any())).thenAnswer((_) async => Sesion(
+    when(() => repo.login(any(), any(), recordarme: any(named: 'recordarme'))).thenAnswer((_) async => Sesion(
           usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'profesional', rolLabel: 'Profesional'),
           acciones: const [],
         ));

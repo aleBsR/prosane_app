@@ -195,4 +195,62 @@ void main() {
 
     expect(router.state.uri.path, '/antecedentes-familiares');
   });
+
+  testWidgets('verGestionUsuarios navega a /gestion-usuarios', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/gestion-usuarios', builder: (c, s) => const Scaffold(body: Text('Gestión de usuarios'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Admin', rolName: 'superadmin', rolLabel: 'Superadmin'),
+          acciones: [_a('verGestionUsuarios', 'Gestión de usuarios', 'usuarios')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('USUARIOS'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Gestión de usuarios'));
+    await t.pumpAndSettle();
+
+    expect(router.state.uri.path, '/gestion-usuarios');
+  });
+
+  testWidgets('verEscuelas navega a /escuelas y no a /operativos', (t) async {
+    final router = GoRouter(
+      initialLocation: '/inicio',
+      routes: [
+        GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
+        GoRoute(path: '/escuelas', builder: (c, s) => const Scaffold(body: Text('Lista de escuelas'))),
+      ],
+    );
+
+    final c = SessionController()
+      ..setSesion(Sesion(
+          usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'superadmin', rolLabel: 'Superadmin'),
+          acciones: [_a('verEscuelas', 'Ver escuelas', 'escuelas')]));
+
+    await t.pumpWidget(ProviderScope(
+      overrides: [sessionControllerProvider.overrideWith((ref) => c)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('ESCUELAS'));
+    await t.pumpAndSettle();
+
+    await t.tap(find.text('Ver escuelas'));
+    await t.pumpAndSettle();
+
+    expect(router.state.uri.path, '/escuelas');
+  });
 }

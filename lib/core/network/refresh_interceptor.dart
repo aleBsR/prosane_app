@@ -72,7 +72,11 @@ class RefreshInterceptor extends Interceptor {
         data: {'refresh': refresh},
       );
       final access = r.data['access'] as String;
-      await _tokens.guardar(access: access, refresh: refresh);
+      // El backend rota el refresh (ROTATE_REFRESH_TOKENS=True): persistir el
+      // nuevo si viene. Si no viene, conservar el actual. `guardar` sin
+      // `persistente` preserva el modo de la sesión (efímera/persistente).
+      final refreshNuevo = r.data['refresh'] as String? ?? refresh;
+      await _tokens.guardar(access: access, refresh: refreshNuevo);
       return access;
     } catch (e) {
       // Falla el refresh (sin red, 401 del refresh, o cambió el contrato de la

@@ -11,7 +11,7 @@ void main() {
   test('éxito: llama onAutenticado con la sesión y limpia el estado', () async {
     final login = _MockLogin();
     final sesion = Sesion(usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'p', rolLabel: ''), acciones: const []);
-    when(() => login.call(any(), any())).thenAnswer((_) async => sesion);
+    when(() => login.call(any(), any(), recordarme: any(named: 'recordarme'))).thenAnswer((_) async => sesion);
     Sesion? capturada;
     final c = LoginController(login: login, onAutenticado: (s) => capturada = s);
     await c.enviar('a@b.com', 'x');
@@ -20,9 +20,18 @@ void main() {
     expect(c.state.error, isNull);
   });
 
+  test('reenvía recordarme=false al usecase', () async {
+    final login = _MockLogin();
+    when(() => login.call(any(), any(), recordarme: false)).thenAnswer((_) async =>
+        Sesion(usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'p', rolLabel: ''), acciones: const []));
+    final c = LoginController(login: login, onAutenticado: (_) {});
+    await c.enviar('a@b.com', 'x', recordarme: false);
+    verify(() => login.call('a@b.com', 'x', recordarme: false)).called(1);
+  });
+
   test('401 (InvalidCredentialsFailure) muestra "Credenciales incorrectas"', () async {
     final login = _MockLogin();
-    when(() => login.call(any(), any())).thenThrow(const InvalidCredentialsFailure());
+    when(() => login.call(any(), any(), recordarme: any(named: 'recordarme'))).thenThrow(const InvalidCredentialsFailure());
     final c = LoginController(login: login, onAutenticado: (_) {});
     await c.enviar('a@b.com', 'x');
     expect(c.state.error, 'Credenciales incorrectas');
@@ -30,7 +39,7 @@ void main() {
 
   test('500 (ServerFailure) NO muestra credenciales', () async {
     final login = _MockLogin();
-    when(() => login.call(any(), any())).thenThrow(const ServerFailure());
+    when(() => login.call(any(), any(), recordarme: any(named: 'recordarme'))).thenThrow(const ServerFailure());
     final c = LoginController(login: login, onAutenticado: (_) {});
     await c.enviar('a@b.com', 'x');
     expect(c.state.error, 'Hubo un problema, probá de nuevo');
@@ -39,7 +48,7 @@ void main() {
 
   test('error inesperado (no Failure) cae al mensaje genérico', () async {
     final login = _MockLogin();
-    when(() => login.call(any(), any())).thenThrow(Exception('raro'));
+    when(() => login.call(any(), any(), recordarme: any(named: 'recordarme'))).thenThrow(Exception('raro'));
     final c = LoginController(login: login, onAutenticado: (_) {});
     await c.enviar('a@b.com', 'x');
     expect(c.state.error, 'Hubo un problema, probá de nuevo');

@@ -15,7 +15,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenStorage tokens;
   final SessionCache cache;
 
-  Future<Sesion> _sesionDesdeMe() async {
+  Future<Sesion> _sesionDesdeMe({bool persistirEnCache = true}) async {
     final me = await remote.me();
     final sesion = Sesion(
       usuario: Usuario(
@@ -27,18 +27,25 @@ class AuthRepositoryImpl implements AuthRepository {
       ),
       acciones: me.acciones,
     );
-    await cache.guardarSesion(sesion,
-        email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+    if (persistirEnCache) {
+      await cache.guardarSesion(sesion,
+          email: me.email, version: me.metaVersion, syncedAtIso: me.metaSyncedAt);
+    } else {
+      // Sesión efímera: no deja sesión vieja en disco (si no, hidratar() al
+      // reabrir la app re-autenticaría desde la caché previa).
+      await cache.limpiarSesion();
+    }
     return sesion;
   }
 
   @override
-  Future<Sesion> login(String email, String password) async {
+  Future<Sesion> login(String email, String password, {bool recordarme = true}) async {
     try {
       final t = await remote.login(email, password);
-      await tokens.guardar(access: t.access, refresh: t.refresh); // PRIMERO los tokens
+      // PRIMERO los tokens; persistente solo si el usuario pidió recordar la sesión.
+      await tokens.guardar(access: t.access, refresh: t.refresh, persistente: recordarme);
       try {
-        final sesion = await _sesionDesdeMe(); // /me usa el access recién guardado
+        final sesion = await _sesionDesdeMe(persistirEnCache: recordarme); // /me usa el access recién guardado
         return sesion;
       } catch (_) {
         // Login atómico: si /me O el guardado en cache fallan, no dejamos tokens
@@ -77,6 +84,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Sesion?> sesionCacheada() => cache.leerSesion();
+
+  @override
+  Future<void> solicitarResetPassword(String email) =>
+      remote.solicitarResetPassword(email);
+
+  @override
+  Future<void> confirmarResetPassword(String email, String code, String newPassword) =>
+      remote.confirmarResetPassword(email, code, newPassword);
 
   @override
   Future<void> logout() async {

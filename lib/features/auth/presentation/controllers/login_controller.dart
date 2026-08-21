@@ -19,10 +19,10 @@ class LoginController extends StateNotifier<LoginState> {
   final Login _login;
   final void Function(Sesion) onAutenticado;
 
-  Future<void> enviar(String email, String password) async {
+  Future<void> enviar(String email, String password, {bool recordarme = true}) async {
     state = const LoginState(isLoading: true);
     try {
-      final sesion = await _login(email, password);
+      final sesion = await _login(email, password, recordarme: recordarme);
       onAutenticado(sesion);
       state = const LoginState();
     } on Failure catch (f) {
