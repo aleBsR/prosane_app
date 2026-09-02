@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_date_field.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_text_field.dart';
@@ -79,12 +80,6 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               ),
             ),
           ),
-          if (state.error != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(state.error!,
-                  style: AppTypography.texto.copyWith(color: AppColors.error)),
-            ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: AppButton(
@@ -121,7 +116,7 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
     final nombre = TextEditingController();
     final apellido = TextEditingController();
     final dni = TextEditingController();
-    final fecha = TextEditingController();
+    DateTime? fechaNacimiento;
     final sexo = TextEditingController();
     final edad = TextEditingController();
     final localidad = TextEditingController();
@@ -155,7 +150,12 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               AppTextField(label: 'DNI *', controller: dni,
                   keyboardType: TextInputType.number),
               const SizedBox(height: AppSpacing.sm),
-              AppTextField(label: 'Fecha de nacimiento (AAAA-MM-DD) *', controller: fecha),
+              AppDateField(
+                label: 'Fecha de nacimiento *',
+                value: fechaNacimiento,
+                hint: 'dd/mm/aaaa',
+                onChanged: (v) => setDialogState(() => fechaNacimiento = v),
+              ),
               const SizedBox(height: AppSpacing.sm),
               AppDropdownField(
                 label: 'Sexo *',
@@ -266,8 +266,7 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               child: const Text('Cancelar')),
           TextButton(
             onPressed: () async {
-              if ([nombre, apellido, dni, fecha, sexo, edad]
-                  .any((c) => c.text.trim().isEmpty)) {
+              if ([nombre, apellido, dni, sexo, edad].any((c) => c.text.trim().isEmpty) || fechaNacimiento == null) {
                 setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
                 return;
               }
@@ -279,6 +278,9 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                 setDialogState(() => dialogError = 'Elegí un operativo');
                 return;
               }
+              final fechaIso = fechaNacimiento != null
+                  ? '${fechaNacimiento!.year.toString().padLeft(4, '0')}-${fechaNacimiento!.month.toString().padLeft(2, '0')}-${fechaNacimiento!.day.toString().padLeft(2, '0')}'
+                  : '';
               final payload = {
                 'persona': {
                   'nombre': nombre.text.trim(),
@@ -286,7 +288,7 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                   'dni': dni.text.trim(),
                   'tipo_dni': 'DNI',
                   'sexo': sexo.text.trim(),
-                  'fecha_nacimiento': fecha.text.trim(),
+                  'fecha_nacimiento': fechaIso,
                 },
                 'edad': int.tryParse(edad.text.trim()) ?? 0,
                 'domicilio': {'localidad': localidad.text.trim()},
@@ -308,10 +310,14 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               final ok = await ctrl.crear(payload);
               if (!ok) {
                 final err = ref.read(alumnosEscuelaControllerProvider).error ?? 'Error al registrar alumno';
-                // Mensaje amigable para DNI duplicado
-                final friendly = err.contains('persona.dni') && err.contains('Ya existe')
-                    ? 'Ya existe una persona con este DNI. Verificá el DNI o usá otro.'
-                    : err;
+                String friendly = err;
+                if (err.contains('persona.dni') && err.contains('Ya existe')) {
+                  friendly = 'Ya existe una persona con este DNI. Verificá el DNI o usá otro.';
+                } else if (err.contains('fecha_nacimiento') || err.contains('Fecha con formato')) {
+                  friendly = 'Fecha de nacimiento inválida. Usá el calendario (dd/mm/aaaa) y revisá el año.';
+                } else if (err.contains('persona.')) {
+                  friendly = err.replaceAll('persona.', '').replaceAll('_', ' ');
+                }
                 setDialogState(() => dialogError = friendly);
                 return;
               }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
+import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/providers.dart';
 import '../../../../core/session/entities.dart';
@@ -28,6 +29,14 @@ class OperativoDetailScreen extends ConsumerStatefulWidget {
 class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
   bool _importandoCsv = false;
   String _filtroCurso = 'Todos';
+  String _busqueda = '';
+  final _busquedaCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _busquedaCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,19 +324,86 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         }
         final listaCursos = cursos.toList()..sort(_compararCursos);
 
-        final filtrados = _filtroCurso == 'Todos'
+        final filtradosPorCurso = _filtroCurso == 'Todos'
             ? alumnos
             : alumnos.where((a) => _labelCurso(a) == _filtroCurso).toList();
+        final query = _busqueda.trim().toLowerCase();
+        final filtrados = query.isEmpty
+            ? filtradosPorCurso
+            : filtradosPorCurso.where((a) {
+                final nombre = ('${a['nombre'] ?? ''}').toLowerCase();
+                final apellido = ('${a['apellido'] ?? ''}').toLowerCase();
+                final dni = ('${a['dni'] ?? ''}').toLowerCase();
+                final completo = '$nombre $apellido $dni ${apellido} ${nombre}';
+                return completo.contains(query);
+              }).toList();
+
+        if (filtrados.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                label: 'Buscar alumno',
+                hint: 'Nombre, apellido o DNI',
+                controller: _busquedaCtrl,
+                onChanged: (v) => setState(() => _busqueda = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              DropdownButton<String>(
+                value: _filtroCurso,
+                isExpanded: true,
+                items: [
+                  DropdownMenuItem(value: 'Todos', child: Text('Todos los cursos')),
+                  for (final c in listaCursos)
+                    DropdownMenuItem(value: c, child: Text(c)),
+                ],
+                onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                query.isNotEmpty ? 'Sin resultados para "$_busqueda"' : 'Sin alumnos en este filtro',
+                style: AppTypography.texto.copyWith(color: AppColors.texto.withValues(alpha: 0.6)),
+                textAlign: TextAlign.center,
+              ),
+              if (query.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                TextButton(
+                    onPressed: () {
+                      _busquedaCtrl.clear();
+                      setState(() => _busqueda = '');
+                    },
+                    child: const Text('Limpiar búsqueda')),
+              ],
+            ],
+          );
+        }
 
         final grupos = <String, List<Map<String, dynamic>>>{};
         for (final a in filtrados) {
           grupos.putIfAbsent(_labelCurso(a), () => []).add(a);
+        }
+        // Orden estable dentro de cada curso para que un cambio de estado no mueva al alumno al final
+        for (final lista in grupos.values) {
+          lista.sort((a, b) {
+            final cmpApellido = ('${a['apellido'] ?? ''}').compareTo('${b['apellido'] ?? ''}');
+            if (cmpApellido != 0) return cmpApellido;
+            final cmpNombre = ('${a['nombre'] ?? ''}').compareTo('${b['nombre'] ?? ''}');
+            if (cmpNombre != 0) return cmpNombre;
+            return ('${a['dni'] ?? ''}').compareTo('${b['dni'] ?? ''}');
+          });
         }
         final claves = grupos.keys.toList()..sort(_compararCursos);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            AppTextField(
+              label: 'Buscar alumno',
+              hint: 'Nombre, apellido o DNI',
+              controller: _busquedaCtrl,
+              onChanged: (v) => setState(() => _busqueda = v),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             DropdownButton<String>(
               value: _filtroCurso,
               isExpanded: true,
@@ -338,6 +414,10 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
               ],
               onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
             ),
+            if (query.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text('${filtrados.length} resultado(s) para "$_busqueda"', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6))),
+            ],
             const SizedBox(height: AppSpacing.sm),
             for (final clave in claves) ...[
               _encabezadoCurso(clave, grupos[clave]!.length),
@@ -404,28 +484,36 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         operativoEstado != 'cancelado';
     final estadoActual = (a['estado'] as String?) ?? 'pendiente';
 
+    final esAusente = estadoActual == 'ausente';
+    final esEvaluado = estadoActual == 'evaluado';
+    final esPresente = estadoActual == 'presente';
     final acciones = <Widget>[];
-    if (permisos.contains('cargarEvaluacionMedica')) {
-      acciones.add(_botonAccion(
-          'Evaluación médica', () => context.push('/operativos/$opId/alumnos/$id/medica')));
-    }
-    if (permisos.contains('cargarEvaluacionOdontologica')) {
-      acciones.add(_botonAccion(
-          'Eval. odontológica', () => context.push('/operativos/$opId/alumnos/$id/odontologica')));
-    }
-    if (permisos.contains('cargarSeccionEscuela')) {
-      acciones.add(_botonAccion(
-          'Sección escuela', () => context.push('/operativos/$opId/alumnos/$id/escuela')));
-    }
-    // A = Datos personales y familia (escuela carga todos los datos del alumno)
-    // Permiso data-driven: cargarAntecedentesNino (solo rol escuela + superadmin)
-    // Fallback rolName para superadmin si aún no se reseedió la DB
-    if (permisos.contains('cargarAntecedentesNino') || rolName == 'superadmin') {
-      acciones.add(_botonAccion(
-          'Datos personales y familia', () => context.push('/operativos/$opId/alumnos/$id/datos')));
+    // Solo si está presente se muestran botones de carga.
+    // Pendiente y ausente no permiten carga; ausente queda completo automático.
+    // Evaluado es estado automático (no seleccionable) cuando E+A+M+O están completos.
+    if (esPresente) {
+      if (permisos.contains('cargarEvaluacionMedica')) {
+        acciones.add(_botonAccion(
+            'Evaluación médica', () => context.push('/operativos/$opId/alumnos/$id/medica')));
+      }
+      if (permisos.contains('cargarEvaluacionOdontologica')) {
+        acciones.add(_botonAccion(
+            'Eval. odontológica', () => context.push('/operativos/$opId/alumnos/$id/odontologica')));
+      }
+      if (permisos.contains('cargarSeccionEscuela')) {
+        acciones.add(_botonAccion(
+            'Sección escuela', () => context.push('/operativos/$opId/alumnos/$id/escuela')));
+      }
+      // A = Datos personales y familia (escuela carga todos los datos del alumno)
+      // Permiso data-driven: cargarAntecedentesNino (solo rol escuela + superadmin)
+      if (permisos.contains('cargarAntecedentesNino') || rolName == 'superadmin') {
+        acciones.add(_botonAccion(
+            'Datos personales y familia', () => context.push('/operativos/$opId/alumnos/$id/datos')));
+      }
     }
 
     return Container(
+      key: ValueKey('alumno-$id'),
       margin: const EdgeInsets.only(top: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
@@ -454,33 +542,38 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          // Selector de asistencia (presente/ausente) — marca requerida para finalización
-          if (puedeEditarEstado)
+          // Selector de asistencia compacto — evaluado es automático, no seleccionable
+          if (puedeEditarEstado && !esEvaluado)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  const Icon(Icons.how_to_reg_outlined, size: 16, color: AppColors.texto),
-                  const SizedBox(width: 6),
-                  Text('Asistencia:', style: AppTypography.texto.copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const Icon(Icons.how_to_reg_outlined, size: 14, color: AppColors.texto),
+                  const SizedBox(width: 4),
+                  Text('Asistencia:', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.texto.withValues(alpha: 0.8))),
                   const SizedBox(width: 8),
-                  Expanded(
+                  SizedBox(
+                    height: 32,
+                    width: 140,
                     child: DropdownButtonFormField<String>(
-                      initialValue: ['pendiente', 'presente', 'ausente', 'evaluado'].contains(estadoActual) ? estadoActual : 'pendiente',
+                      initialValue: ['pendiente', 'presente', 'ausente'].contains(estadoActual) ? estadoActual : 'pendiente',
                       isExpanded: true,
+                      isDense: true,
                       decoration: InputDecoration(
                         isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual), width: 1.2)),
                         filled: true,
                         fillColor: _colorFondoEstado(estadoActual),
                       ),
-                      style: AppTypography.texto.copyWith(fontSize: 12, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual)),
+                      style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual)),
+                      icon: Icon(Icons.keyboard_arrow_down, size: 16, color: _colorTextoEstado(estadoActual)),
                       items: const [
-                        DropdownMenuItem(value: 'pendiente', child: Text('Pendiente')),
-                        DropdownMenuItem(value: 'presente', child: Text('Presente')),
-                        DropdownMenuItem(value: 'ausente', child: Text('Ausente')),
-                        DropdownMenuItem(value: 'evaluado', child: Text('Evaluado')),
+                        DropdownMenuItem(value: 'pendiente', child: Text('Pendiente', style: TextStyle(fontSize: 11))),
+                        DropdownMenuItem(value: 'presente', child: Text('Presente', style: TextStyle(fontSize: 11))),
+                        DropdownMenuItem(value: 'ausente', child: Text('Ausente', style: TextStyle(fontSize: 11))),
                       ],
                       onChanged: (v) {
                         if (v != null && v != estadoActual) _cambiarEstadoAlumno(id, v);
@@ -495,26 +588,41 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
-                  const Icon(Icons.how_to_reg_outlined, size: 14, color: AppColors.texto),
+                  Icon(Icons.how_to_reg_outlined, size: 12, color: _colorTextoEstado(estadoActual)),
                   const SizedBox(width: 4),
-                  Text('Estado: ${_labelEstadoAlumno(estadoActual)}',
-                      style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.7))),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: _colorFondoEstado(estadoActual), borderRadius: BorderRadius.circular(6), border: Border.all(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                    child: Text(_labelEstadoAlumno(estadoActual), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual))),
+                  ),
                 ],
               ),
             ),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
-              if (a['antecedentes_completado'] as bool? ?? false) _chip('A ✓'),
-              if (a['medica_completada'] as bool? ?? false) _chip('M ✓'),
-              if (a['odontologica_completada'] as bool? ?? false) _chip('O ✓'),
-            ],
-          ),
+          if (esPresente || esEvaluado)
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
+                if (a['antecedentes_completado'] as bool? ?? false) _chip('A ✓'),
+                if (a['medica_completada'] as bool? ?? false) _chip('M ✓'),
+                if (a['odontologica_completada'] as bool? ?? false) _chip('O ✓'),
+              ],
+            )
+          else if (esAusente)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text('Ausente — no requiere evaluaciones', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6), fontStyle: FontStyle.italic)),
+            ),
           if (acciones.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sm),
             Wrap(spacing: 8, runSpacing: 8, children: acciones),
+          ] else if (esEvaluado) ...[
+            const SizedBox(height: 4),
+            Text('Evaluado — completo', style: AppTypography.texto.copyWith(fontSize: 10, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+          ] else if (!esPresente) ...[
+            const SizedBox(height: 4),
+            Text('Marcá como Presente para habilitar la carga', style: AppTypography.texto.copyWith(fontSize: 10, color: AppColors.texto.withValues(alpha: 0.5))),
           ],
         ],
       ),

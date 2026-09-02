@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_date_field.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_text_field.dart';
@@ -28,7 +29,7 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
   final _nombre = TextEditingController();
   final _apellido = TextEditingController();
   final _dni = TextEditingController();
-  final _fecha = TextEditingController();
+  DateTime? _fechaNacimiento;
   final _sexo = TextEditingController();
   final _edad = TextEditingController();
   final _localidad = TextEditingController();
@@ -70,7 +71,6 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
     _nombre.dispose();
     _apellido.dispose();
     _dni.dispose();
-    _fecha.dispose();
     _sexo.dispose();
     _edad.dispose();
     _localidad.dispose();
@@ -121,7 +121,8 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
         _nombre.text = (persona?['nombre'] ?? opAl['nombre'] ?? '').toString();
         _apellido.text = (persona?['apellido'] ?? opAl['apellido'] ?? '').toString();
         _dni.text = (persona?['dni'] ?? opAl['dni'] ?? '').toString();
-        _fecha.text = (persona?['fecha_nacimiento'] ?? opAl['fecha_nacimiento'] ?? '').toString();
+        final fechaStr = (persona?['fecha_nacimiento'] ?? opAl['fecha_nacimiento'] ?? '').toString();
+        _fechaNacimiento = fechaStr.isNotEmpty ? DateTime.tryParse(fechaStr) : null;
         _sexo.text = (persona?['sexo'] ?? opAl['sexo'] ?? '').toString();
         _edad.text = (paciente?['edad'] ?? '').toString();
         _localidad.text = (domicilio?['localidad'] ?? '').toString();
@@ -173,11 +174,21 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
     });
     try {
       final repo = ref.read(operativosRepositoryProvider);
+      final fechaIso = _fechaNacimiento != null
+          ? '${_fechaNacimiento!.year.toString().padLeft(4, '0')}-${_fechaNacimiento!.month.toString().padLeft(2, '0')}-${_fechaNacimiento!.day.toString().padLeft(2, '0')}'
+          : '';
+      if (fechaIso.isEmpty) {
+        setState(() {
+          _error = 'Seleccioná la fecha de nacimiento';
+          _guardando = false;
+        });
+        return;
+      }
       final payload = {
         'nombre': _nombre.text.trim(),
         'apellido': _apellido.text.trim(),
         'dni': _dni.text.trim(),
-        'fecha_nacimiento': _fecha.text.trim(),
+        'fecha_nacimiento': fechaIso,
         'sexo': _sexo.text.trim(),
         'edad': int.tryParse(_edad.text.trim()) ?? 0,
         'localidad': _localidad.text.trim(),
@@ -277,7 +288,12 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
                                     const SizedBox(height: AppSpacing.sm),
                                     AppTextField(label: 'DNI *', controller: _dni, keyboardType: TextInputType.number),
                                     const SizedBox(height: AppSpacing.sm),
-                                    AppTextField(label: 'Fecha nacimiento (AAAA-MM-DD)', controller: _fecha),
+                                    AppDateField(
+                                      label: 'Fecha de nacimiento *',
+                                      value: _fechaNacimiento,
+                                      hint: 'dd/mm/aaaa',
+                                      onChanged: (v) => setState(() => _fechaNacimiento = v),
+                                    ),
                                     const SizedBox(height: AppSpacing.sm),
                                     AppDropdownField(
                                       label: 'Sexo',
