@@ -93,8 +93,8 @@ class EscuelasListScreen extends ConsumerWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      [
+                                     Text(
+                                       [
                                         if (e.cue != null && e.cue!.isNotEmpty)
                                           'CUE ${e.cue}',
                                         if (e.localidad != null &&
@@ -108,9 +108,39 @@ class EscuelasListScreen extends ConsumerWidget {
                                           fontSize: 12,
                                           color: AppColors.texto
                                               .withValues(alpha: 0.6)),
-                                    ),
-                                  ],
-                                ),
+                                     ),
+                                    if (e.usuariosAsociados.isNotEmpty) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      const Divider(height: 1),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Text('Usuarios asociados',
+                                          style: AppTypography.texto.copyWith(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      for (final usuario in e.usuariosAsociados)
+                                        Padding(
+                                          padding: const EdgeInsets.only(bottom: 3),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.person_outline,
+                                                  size: 16, color: AppColors.primario),
+                                              const SizedBox(width: 5),
+                                              Expanded(
+                                                child: Text(
+                                                  _usuarioLabel(usuario),
+                                                  style: AppTypography.texto.copyWith(fontSize: 12),
+                                                ),
+                                              ),
+                                              if (usuario['is_active'] == false)
+                                                const Text('Inactivo',
+                                                    style: TextStyle(fontSize: 10, color: AppColors.error)),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                   ],
+                                 ),
                               ),
                             ),
                             IconButton(
@@ -138,6 +168,14 @@ class EscuelasListScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _usuarioLabel(Map<String, dynamic> usuario) {
+    final nombre = (usuario['nombre'] as String?)?.trim() ?? '';
+    final email = (usuario['email'] as String?)?.trim() ?? '';
+    final roles = (usuario['roles'] as List?)?.join(', ') ?? '';
+    final identidad = nombre.isEmpty ? email : '$nombre ($email)';
+    return roles.isEmpty ? identidad : '$identidad • $roles';
   }
 
   Future<void> _editarEscuelaDialog(
@@ -186,8 +224,10 @@ class EscuelasListScreen extends ConsumerWidget {
                   label: 'Sector de gestión',
                   value: sectorGestion,
                   items: const [
-                    (value: 'publica', label: 'Pública'),
-                    (value: 'privada', label: 'Privada'),
+                    (value: 'obra_social', label: 'Obra Social'),
+                    (value: 'estatal', label: 'Estatal'),
+                    (value: 'privado', label: 'Privado'),
+                    (value: 'otro', label: 'Otro'),
                   ],
                   onChanged: (v) => setState(() => sectorGestion = v),
                 ),

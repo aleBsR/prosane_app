@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../controllers/escuela_create_controller.dart';
+import '../controllers/escuelas_list_controller.dart';
 
 class EscuelaCreateScreen extends ConsumerWidget {
   const EscuelaCreateScreen({super.key});
@@ -176,6 +177,7 @@ class EscuelaCreateScreen extends ConsumerWidget {
                               ? () async {
                                   final ok = await ctrl.guardar();
                                   if (ok && context.mounted) {
+                                    ref.invalidate(escuelasListControllerProvider);
                                     ref
                                         .read(notificacionProvider.notifier)
                                         .exito('¡Escuela creada!');

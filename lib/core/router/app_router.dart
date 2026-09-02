@@ -10,6 +10,7 @@ import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/acciones/presentation/acciones_screen.dart';
 import '../../features/pendientes/presentation/pendientes_screen.dart';
 import '../../features/usuario/presentation/usuario_screen.dart';
+import '../../features/usuario/presentation/configuracion_screen.dart';
 import '../../features/pendientes/pendientes_count_provider.dart';
 import '../../features/hijos/presentation/screens/hijos_list_screen.dart';
 import '../../features/hijos/presentation/screens/planilla_screen.dart';
@@ -22,6 +23,8 @@ import '../../features/operativos/presentation/screens/operativo_detail_screen.d
 import '../../features/operativos/presentation/screens/evaluacion_medica_screen.dart';
 import '../../features/operativos/presentation/screens/evaluacion_odontologica_screen.dart';
 import '../../features/operativos/presentation/screens/seccion_escuela_screen.dart';
+import '../../features/operativos/presentation/screens/constancia_screen.dart';
+import '../../features/operativos/presentation/screens/escuela_datos_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
 import '../../features/escuelas/presentation/screens/escuelas_list_screen.dart';
 import '../../features/escuelas/presentation/screens/cursos_screen.dart';
@@ -108,6 +111,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           alumnoId: s.pathParameters['alumnoId']!,
         ),
       ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/constancia',
+        builder: (c, s) => ConstanciaScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/datos',
+        builder: (c, s) => EscuelaDatosScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
+      ),
       GoRoute(path: '/escuelas', builder: (c, s) => const EscuelasListScreen()),
       GoRoute(path: '/escuelas/nuevo', builder: (c, s) => const EscuelaCreateScreen()),
       GoRoute(
@@ -141,6 +158,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/profesionales',
         builder: (c, s) => const ProfesionalesScreen(),
       ),
+      GoRoute(path: '/usuario/configuracion', builder: (c, s) => const ConfiguracionScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Consumer(
           builder: (c, ref, _) {

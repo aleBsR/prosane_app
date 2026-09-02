@@ -3,10 +3,12 @@ class Accion {
     required this.name, required this.label, required this.icon,
     required this.color, required this.type, required this.category,
     required this.isSensitive, required this.sortOrder,
+    this.showInMenu = true,
   });
   final String name, label, icon, color, type, category;
   final bool isSensitive;
   final int sortOrder;
+  final bool showInMenu;
 
   factory Accion.fromJson(Map<String, dynamic> j) => Accion(
         name: j['name'] as String? ?? '',
@@ -17,12 +19,14 @@ class Accion {
         category: j['category'] as String? ?? '',
         isSensitive: j['is_sensitive'] as bool? ?? false,
         sortOrder: j['sort_order'] as int? ?? 0,
+        showInMenu: j['show_in_menu'] as bool? ?? true,
       );
 
   Map<String, dynamic> toJson() => {
         'name': name, 'label': label, 'icon': icon, 'color': color,
         'type': type, 'category': category,
         'is_sensitive': isSensitive, 'sort_order': sortOrder,
+        'show_in_menu': showInMenu,
       };
 }
 

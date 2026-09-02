@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../controllers/seccion_escuela_controller.dart';
+import '../controllers/operativo_detail_controller.dart';
 
 class SeccionEscuelaScreen extends ConsumerWidget {
   const SeccionEscuelaScreen({
@@ -25,6 +26,11 @@ class SeccionEscuelaScreen extends ConsumerWidget {
     final args = (opId: operativoId, alumnoId: alumnoId);
     final state = ref.watch(seccionEscuelaControllerProvider(args));
     final ctrl = ref.read(seccionEscuelaControllerProvider(args).notifier);
+    final operativoAsync = ref.watch(operativoDetailProvider(operativoId));
+    final esNoEditable = operativoAsync.maybeWhen(
+      data: (op) => op['estado'] == 'finalizado' || op['estado'] == 'cancelado',
+      orElse: () => false,
+    );
 
     return AppGradientScaffold(
       child: Column(
@@ -43,7 +49,7 @@ class SeccionEscuelaScreen extends ConsumerWidget {
                   }
                 },
               ),
-              Text('Sección escuela',
+              Text(esNoEditable ? 'Sección escuela — solo lectura' : 'Sección escuela',
                   style: AppTypography.titulo
                       .copyWith(color: AppColors.blanco, fontSize: 22)),
             ]),
@@ -57,67 +63,111 @@ class SeccionEscuelaScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        AppCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text('Sección escuela',
-                                  style: AppTypography.subtitulo),
-                              const SizedBox(height: AppSpacing.sm),
-                              _CheckRow(
-                                label:
-                                    'La escuela manifiesta preocupación por la salud',
-                                value: state.preocupaSalud,
-                                onChanged: ctrl.setPreocupaSalud,
-                              ),
-                              if (state.preocupaSalud) ...[
-                                const SizedBox(height: AppSpacing.sm),
-                                AppTextField(
-                                  label: 'Detalle de la preocupación',
-                                  onChanged: ctrl.setPreocupaDetalle,
+                        if (esNoEditable) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.lock_outline, size: 16, color: Colors.green),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text('Operativo finalizado — solo lectura',
+                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.green)),
                                 ),
-                                const SizedBox(height: AppSpacing.sm),
                               ],
-                              _CheckRow(
-                                label: 'Dificultad en el lenguaje',
-                                value: state.dificultadLenguaje,
-                                onChanged: ctrl.setDificultadLenguaje,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        AbsorbPointer(
+                          absorbing: esNoEditable,
+                          child: Opacity(
+                            opacity: esNoEditable ? 0.85 : 1,
+                            child: AppCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text('Sección escuela',
+                                      style: AppTypography.subtitulo),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _CheckRow(
+                                    label:
+                                        'La escuela manifiesta preocupación por la salud',
+                                    value: state.preocupaSalud,
+                                    onChanged: ctrl.setPreocupaSalud,
+                                  ),
+                                  if (state.preocupaSalud) ...[
+                                    const SizedBox(height: AppSpacing.sm),
+                                    AppTextField(
+                                      label: 'Detalle de la preocupación',
+                                      controller: TextEditingController(text: state.preocupaDetalle)
+                                        ..selection = TextSelection.collapsed(offset: state.preocupaDetalle.length),
+                                      onChanged: ctrl.setPreocupaDetalle,
+                                      readOnly: esNoEditable,
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                  ],
+                                  _CheckRow(
+                                    label: 'Dificultad en el lenguaje',
+                                    value: state.dificultadLenguaje,
+                                    onChanged: ctrl.setDificultadLenguaje,
+                                  ),
+                                  _CheckRow(
+                                    label: 'Bajo tratamiento',
+                                    value: state.bajoTratamiento,
+                                    onChanged: ctrl.setBajoTratamiento,
+                                  ),
+                                ],
                               ),
-                              _CheckRow(
-                                label: 'Bajo tratamiento',
-                                value: state.bajoTratamiento,
-                                onChanged: ctrl.setBajoTratamiento,
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        AppCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (state.error != null) ...[
-                                Text(state.error!,
-                                    style: AppTypography.texto
-                                        .copyWith(color: AppColors.error),
-                                    textAlign: TextAlign.center),
-                                const SizedBox(height: AppSpacing.md),
+                        if (!esNoEditable)
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (state.error != null) ...[
+                                  Text(state.error!,
+                                      style: AppTypography.texto
+                                          .copyWith(color: AppColors.error),
+                                      textAlign: TextAlign.center),
+                                  const SizedBox(height: AppSpacing.md),
+                                ],
+                                AppButton(
+                                  label: 'Guardar',
+                                  isLoading: state.guardando,
+                                  onPressed: state.guardando
+                                      ? null
+                                      : () async {
+                                          final ok = await ctrl.guardar();
+                                          if (ok && context.mounted) {
+                                            ref.invalidate(
+                                                alumnosProvider(operativoId));
+                                            ref.invalidate(
+                                                completitudProvider(operativoId));
+                                            ref.invalidate(
+                                                operativoDetailProvider(operativoId));
+                                            context.pop();
+                                          }
+                                        },
+                                ),
                               ],
-                              AppButton(
-                                label: 'Guardar',
-                                isLoading: state.guardando,
-                                onPressed: state.guardando
-                                    ? null
-                                    : () async {
-                                        final ok = await ctrl.guardar();
-                                        if (ok && context.mounted) {
-                                          context.pop();
-                                        }
-                                      },
-                              ),
-                            ],
+                            ),
+                          )
+                        else if (state.error != null)
+                          AppCard(
+                            child: Text(state.error!,
+                                style: AppTypography.texto
+                                    .copyWith(color: AppColors.error),
+                                textAlign: TextAlign.center),
                           ),
-                        ),
                         const SizedBox(height: AppSpacing.lg),
                       ],
                     ),

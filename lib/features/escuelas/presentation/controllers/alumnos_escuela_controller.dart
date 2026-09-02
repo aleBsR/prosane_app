@@ -28,6 +28,19 @@ class AlumnosEscuelaController extends StateNotifier<AlumnosEscuelaState> {
       return false;
     }
   }
+
+  Future<bool> actualizarAntecedentes(String alumnoId, Map<String, dynamic> payload) async {
+    if (state.guardando) return false;
+    state = const AlumnosEscuelaState(guardando: true);
+    try {
+      await _repo.patchAntecedentes(alumnoId, payload);
+      state = const AlumnosEscuelaState();
+      return true;
+    } catch (e) {
+      state = AlumnosEscuelaState(error: e.toString());
+      return false;
+    }
+  }
 }
 
 final alumnosEscuelaControllerProvider =

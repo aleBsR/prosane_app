@@ -114,11 +114,15 @@ class AntecedentesNinoScreen extends ConsumerWidget {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   Text('Internación, tratamiento y otros', style: AppTypography.subtitulo),
                   const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                      label: 'Causa de internación (si alguna vez estuvo internado)',
-                      onChanged: ctrl.setCausaHospitalizacion),
+                  snns('internacion_previa', '¿Alguna vez estuvo internado?'),
+                  if (state.tieneInternacionPrevia) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    AppTextField(
+                        label: '¿Cuál fue la causa de la internación?',
+                        onChanged: ctrl.setCausaHospitalizacion),
+                  ],
                   const SizedBox(height: AppSpacing.md),
-                  snns('rabia_tratamiento', '¿Recibe algún tratamiento (médico, psicológico, fonoaudiológico…)?'),
+                  snns('tratamiento_actual', '¿Recibe algún tratamiento (médico, psicológico, fonoaudiológico…)?'),
                   if (state.recibeTratamiento) ...[
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(label: '¿Cuál?', onChanged: ctrl.setDescripcionTratamiento),

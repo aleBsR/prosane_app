@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
@@ -54,13 +55,22 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                           Text('${alumno.apellido}, ${alumno.nombre}',
                               style: AppTypography.subtitulo),
                           const SizedBox(height: 4),
-                          Text('DNI ${alumno.dni} • ${alumno.edad} años',
+                          Text('DNI ${alumno.dni} • ${alumno.edad} años • ${alumno.sexo}',
                               style: AppTypography.texto.copyWith(fontSize: 12)),
                           if (alumno.localidad.isNotEmpty)
                             Text(alumno.localidad,
                                 style: AppTypography.texto.copyWith(
                                     fontSize: 12,
                                     color: AppColors.texto.withValues(alpha: 0.6))),
+                          if (alumno.celular.isNotEmpty || alumno.telefonoFijo.isNotEmpty)
+                            Text([if (alumno.celular.isNotEmpty) 'Cel: ${alumno.celular}', if (alumno.telefonoFijo.isNotEmpty) 'Tel: ${alumno.telefonoFijo}'].join(' • '),
+                                style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6))),
+                          if (alumno.operativos.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text('Operativos: ${alumno.operativos.map((o) => o['nombre'] ?? o['id']).join(', ')}',
+                                  style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.primario)),
+                            ),
                         ],
                       ),
                     ),
@@ -116,8 +126,18 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
     final edad = TextEditingController();
     final localidad = TextEditingController();
     final telefono = TextEditingController();
+    final telefonoFijo = TextEditingController();
+    final tieneCud = TextEditingController();
+    final tipoCobertura = TextEditingController();
+    final nombreCobertura = TextEditingController();
     String? cursoId;
     String? operativoId;
+    // antecedentes básicos
+    final nacioPrematuro = TextEditingController(text: 'NO');
+    final pesoNacimiento = TextEditingController(text: '0');
+    final asma = TextEditingController(text: 'NO');
+    final otrosProblemas = TextEditingController(text: 'NINGUNO');
+    String? dialogError;
 
     await showDialog<void>(
       context: context,
@@ -137,7 +157,16 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Fecha de nacimiento (AAAA-MM-DD) *', controller: fecha),
               const SizedBox(height: AppSpacing.sm),
-              AppTextField(label: 'Sexo *', controller: sexo),
+              AppDropdownField(
+                label: 'Sexo *',
+                value: sexo.text.isEmpty ? null : sexo.text,
+                items: const [
+                  (value: 'masculino', label: 'Masculino'),
+                  (value: 'femenino', label: 'Femenino'),
+                  (value: 'otro', label: 'Otro'),
+                ],
+                onChanged: (v) => setDialogState(() => sexo.text = v),
+              ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Edad *', controller: edad,
                   keyboardType: TextInputType.number),
@@ -180,6 +209,54 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Celular', controller: telefono,
                   keyboardType: TextInputType.phone),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Teléfono fijo', controller: telefonoFijo,
+                  keyboardType: TextInputType.phone),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: '¿Tiene CUD?',
+                value: tieneCud.text.isEmpty ? null : tieneCud.text,
+                items: const [(value: 'SI', label: 'Sí'), (value: 'NO', label: 'No')],
+                onChanged: (v) => setDialogState(() => tieneCud.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Tipo cobertura',
+                value: tipoCobertura.text.isEmpty ? null : tipoCobertura.text,
+                items: const [
+                  (value: 'obra_social', label: 'Obra Social (incluye PAMI)'),
+                  (value: 'estatal', label: 'Programas o planes estatales'),
+                  (value: 'prepaga', label: 'Plan privado o Prepaga'),
+                  (value: 'sin_cobertura', label: 'No tiene'),
+                ],
+                onChanged: (v) => setDialogState(() => tipoCobertura.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Nombre cobertura', controller: nombreCobertura),
+              const SizedBox(height: AppSpacing.md),
+              Text('Antecedentes (opcional)', style: AppTypography.subtitulo.copyWith(fontSize: 14)),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Nació prematuro',
+                value: nacioPrematuro.text.isEmpty ? null : nacioPrematuro.text,
+                items: const [(value: 'SI', label: 'Sí'), (value: 'NO', label: 'No'), (value: 'NO_SABE', label: 'No sabe')],
+                onChanged: (v) => setDialogState(() => nacioPrematuro.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Peso al nacer', controller: pesoNacimiento),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Asma/Espasmos',
+                value: asma.text.isEmpty ? null : asma.text,
+                items: const [(value: 'SI', label: 'Sí'), (value: 'NO', label: 'No'), (value: 'NO_SABE', label: 'No sabe')],
+                onChanged: (v) => setDialogState(() => asma.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Otros problemas de salud', controller: otrosProblemas),
+              if (dialogError != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(dialogError!, style: AppTypography.texto.copyWith(color: AppColors.error), textAlign: TextAlign.center),
+              ],
             ],
           ),
         ),
@@ -191,6 +268,15 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
             onPressed: () async {
               if ([nombre, apellido, dni, fecha, sexo, edad]
                   .any((c) => c.text.trim().isEmpty)) {
+                setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
+                return;
+              }
+              if (cursoId == null) {
+                setDialogState(() => dialogError = 'Elegí un curso');
+                return;
+              }
+              if (operativoId == null) {
+                setDialogState(() => dialogError = 'Elegí un operativo');
                 return;
               }
               final payload = {
@@ -204,19 +290,35 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                 },
                 'edad': int.tryParse(edad.text.trim()) ?? 0,
                 'domicilio': {'localidad': localidad.text.trim()},
-                'curso_id': ?cursoId,
-                'operativo_id': ?operativoId,
-                if (telefono.text.trim().isNotEmpty)
-                  'celular': telefono.text.trim(),
+                if (cursoId != null) 'curso_id': cursoId,
+                if (operativoId != null) 'operativo_id': operativoId,
+                if (telefono.text.trim().isNotEmpty) 'celular': telefono.text.trim(),
+                if (telefonoFijo.text.trim().isNotEmpty) 'telefono_fijo': telefonoFijo.text.trim(),
+                if (tieneCud.text.trim().isNotEmpty) 'tiene_cud': tieneCud.text.trim(),
+                if (tipoCobertura.text.trim().isNotEmpty) 'tipo_cobertura': tipoCobertura.text.trim(),
+                if (nombreCobertura.text.trim().isNotEmpty) 'nombre_cobertura': nombreCobertura.text.trim(),
+                'antecedentes': {
+                  if (nacioPrematuro.text.trim().isNotEmpty) 'nacio_prematuro': nacioPrematuro.text.trim(),
+                  if (pesoNacimiento.text.trim().isNotEmpty) 'peso_nacimiento': pesoNacimiento.text.trim(),
+                  if (asma.text.trim().isNotEmpty) 'asma_espasmos': asma.text.trim(),
+                  if (otrosProblemas.text.trim().isNotEmpty) 'otros_problemas_salud': otrosProblemas.text.trim(),
+                },
               };
               final ctrl = ref.read(alumnosEscuelaControllerProvider.notifier);
               final ok = await ctrl.crear(payload);
+              if (!ok) {
+                final err = ref.read(alumnosEscuelaControllerProvider).error ?? 'Error al registrar alumno';
+                // Mensaje amigable para DNI duplicado
+                final friendly = err.contains('persona.dni') && err.contains('Ya existe')
+                    ? 'Ya existe una persona con este DNI. Verificá el DNI o usá otro.'
+                    : err;
+                setDialogState(() => dialogError = friendly);
+                return;
+              }
               if (dialogContext.mounted) Navigator.pop(dialogContext);
-              if (ok) {
-                ref.invalidate(alumnosEscuelaProvider);
-                if (context.mounted) {
-                  ref.read(notificacionProvider.notifier).exito('¡Alumno registrado!');
-                }
+              ref.invalidate(alumnosEscuelaProvider);
+              if (context.mounted) {
+                ref.read(notificacionProvider.notifier).exito('¡Alumno registrado!');
               }
             },
             child: const Text('Guardar'),
@@ -227,3 +329,4 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
     );
   }
 }
+

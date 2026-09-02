@@ -12,16 +12,18 @@ class AppDropdownField extends StatelessWidget {
     super.key,
     required this.label,
     required this.items,
-    required this.onChanged,
+    this.onChanged,
     this.value,
     this.hint = 'Seleccioná',
+    this.enabled = true,
   });
 
   final String label;
   final List<({String value, String label})> items;
-  final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onChanged;
   final String? value;
   final String hint;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +54,11 @@ class AppDropdownField extends StatelessWidget {
             for (final it in items)
               DropdownMenuItem(value: it.value, child: Text(it.label)),
           ],
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
+          onChanged: enabled && onChanged != null
+              ? (v) {
+                  if (v != null) onChanged!(v);
+                }
+              : null,
         ),
       ],
     );

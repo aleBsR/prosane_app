@@ -116,4 +116,47 @@ class OperativosRepository {
     final resp = await _dio.get('/operativos/$operativoId/completitud/');
     return resp.data as Map<String, dynamic>;
   }
+
+  Future<List<int>> getConstanciaPdf(String opId, String alumnoId) async {
+    final resp = await _dio.get(
+      '/operativos/$opId/alumnos/$alumnoId/constancia/',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return (resp.data as List<int>);
+  }
+
+  Future<List<int>> exportOperativo(String opId, String formato) async {
+    final resp = await _dio.get(
+      '/operativos/$opId/export/',
+      queryParameters: {'formato': formato},
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return (resp.data as List<int>);
+  }
+
+  Future<Map<String, dynamic>> getDatosAlumno(String opId, String alumnoId) async {
+    final resp = await _dio.get('/operativos/$opId/alumnos/$alumnoId/datos/');
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> patchDatosAlumno(String opId, String alumnoId, Map<String, dynamic> data) async {
+    final resp = await _dio.patch('/operativos/$opId/alumnos/$alumnoId/datos/', data: data);
+    return resp.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> patchEstadoAlumno(
+    String opId,
+    String alumnoId,
+    String estado, {
+    String? observaciones,
+  }) async {
+    final resp = await _dio.patch(
+      '/operativos/$opId/alumnos/$alumnoId/',
+      data: {
+        'estado': estado,
+        if (observaciones != null) 'observaciones': observaciones,
+      },
+    );
+    return resp.data as Map<String, dynamic>;
+  }
 }

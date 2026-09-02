@@ -25,6 +25,90 @@ const List<String> kPiezasTemporarias = [
   '71', '72', '73', '74', '75',
 ];
 
+const List<({String value, String label})> kEstadosGeneralesPieza = [
+  (value: '', label: 'Normal'),
+  (value: 'ausente', label: 'Ausente'),
+  (value: 'perdido', label: 'Perdido'),
+  (value: 'extraido', label: 'Extraído'),
+  (value: 'corona', label: 'Corona'),
+  (value: 'protesis', label: 'Prótesis'),
+  (value: 'implante', label: 'Implante'),
+  (value: 'a_extraer', label: 'Para extraer'),
+  (value: 'fractura_total', label: 'Fractura total'),
+];
+
+const List<({String value, String label})> kEstadosCara = [
+  (value: '', label: 'Sana'),
+  (value: 'caries', label: 'Caries'),
+  (value: 'restauracion', label: 'Restauración'),
+  (value: 'sellador', label: 'Sellador'),
+  (value: 'fractura', label: 'Fractura'),
+  (value: 'a_tratar', label: 'A tratar'),
+  (value: 'tratada', label: 'Tratada'),
+];
+
+const List<({String value, String label})> kEstadosRaiz = [
+  (value: '', label: 'Normal'),
+  (value: 'conducto_realizado', label: 'Conducto realizado'),
+  (value: 'conducto_pendiente', label: 'Conducto pendiente'),
+];
+
+const List<String> kCarasPieza = [
+  'oclusal', 'mesial', 'distal', 'vestibular', 'lingual',
+];
+
+class PiezaOdontograma {
+  const PiezaOdontograma({
+    this.estadoGeneral = '',
+    this.caras = const {},
+    this.raiz = '',
+    this.notas = '',
+  });
+
+  final String estadoGeneral;
+  final Map<String, String> caras;
+  final String raiz;
+  final String notas;
+
+  PiezaOdontograma copyWith({
+    String? estadoGeneral,
+    Map<String, String>? caras,
+    String? raiz,
+    String? notas,
+  }) => PiezaOdontograma(
+        estadoGeneral: estadoGeneral ?? this.estadoGeneral,
+        caras: caras ?? this.caras,
+        raiz: raiz ?? this.raiz,
+        notas: notas ?? this.notas,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'estado_general': estadoGeneral.isEmpty ? null : estadoGeneral,
+        'caras': {
+          for (final entry in caras.entries)
+            if (entry.value.isNotEmpty) entry.key: entry.value,
+        },
+        'raiz': raiz.isEmpty ? null : raiz,
+        'notas': notas,
+      };
+
+  factory PiezaOdontograma.fromJson(dynamic raw) {
+    if (raw is! Map) return const PiezaOdontograma();
+    final rawCaras = raw['caras'];
+    return PiezaOdontograma(
+      estadoGeneral: raw['estado_general']?.toString() ?? '',
+      caras: rawCaras is Map
+          ? {
+              for (final entry in rawCaras.entries)
+                entry.key.toString(): entry.value?.toString() ?? '',
+            }
+          : const {},
+      raiz: raw['raiz']?.toString() ?? '',
+      notas: raw['notas']?.toString() ?? '',
+    );
+  }
+}
+
 const _sentinel = Object();
 
 class EvaluacionOdontologicaState {
@@ -72,8 +156,8 @@ class EvaluacionOdontologicaState {
   final String ceoE;
   final String ceoO;
 
-  /// pieza -> estado
-  final Map<String, String> odontograma;
+  /// pieza -> estado general, caras, raíz y notas.
+  final Map<String, PiezaOdontograma> odontograma;
 
   EvaluacionOdontologicaState copyWith({
     bool? cargando,
@@ -94,7 +178,7 @@ class EvaluacionOdontologicaState {
     String? ceoC,
     String? ceoE,
     String? ceoO,
-    Map<String, String>? odontograma,
+    Map<String, PiezaOdontograma>? odontograma,
   }) {
     return EvaluacionOdontologicaState(
       cargando: cargando ?? this.cargando,
@@ -196,9 +280,45 @@ class EvaluacionOdontologicaController
   void setCeoO(String v) => state = state.copyWith(ceoO: v, error: null);
 
   // --- Setter de odontograma ---
-  void setPieza(String pieza, String estado) {
-    final nuevo = Map<String, String>.from(state.odontograma);
-    nuevo[pieza] = estado;
+  PiezaOdontograma _pieza(String pieza) =>
+      state.odontograma[pieza] ?? const PiezaOdontograma();
+
+  PiezaOdontograma piezaActual(String pieza) => _pieza(pieza);
+
+  void setEstadoGeneral(String pieza, String estado) {
+    final actual = _pieza(pieza);
+    final nuevo = Map<String, PiezaOdontograma>.from(state.odontograma);
+    final esAusente = {'ausente', 'perdido', 'extraido'}.contains(estado);
+    nuevo[pieza] = actual.copyWith(
+      estadoGeneral: estado,
+      caras: esAusente ? const {} : actual.caras,
+      raiz: esAusente ? '' : actual.raiz,
+    );
+    state = state.copyWith(odontograma: nuevo, error: null);
+  }
+
+  void setCara(String pieza, String cara, String estado) {
+    final actual = _pieza(pieza);
+    if ({'ausente', 'perdido', 'extraido'}.contains(actual.estadoGeneral)) return;
+    final caras = Map<String, String>.from(actual.caras);
+    caras[cara] = estado;
+    final nuevo = Map<String, PiezaOdontograma>.from(state.odontograma);
+    nuevo[pieza] = actual.copyWith(caras: caras);
+    state = state.copyWith(odontograma: nuevo, error: null);
+  }
+
+  void setRaiz(String pieza, String estado) {
+    final actual = _pieza(pieza);
+    if ({'ausente', 'perdido', 'extraido'}.contains(actual.estadoGeneral)) return;
+    final nuevo = Map<String, PiezaOdontograma>.from(state.odontograma);
+    nuevo[pieza] = actual.copyWith(raiz: estado);
+    state = state.copyWith(odontograma: nuevo, error: null);
+  }
+
+  void setNotasPieza(String pieza, String notas) {
+    final actual = _pieza(pieza);
+    final nuevo = Map<String, PiezaOdontograma>.from(state.odontograma);
+    nuevo[pieza] = actual.copyWith(notas: notas);
     state = state.copyWith(odontograma: nuevo, error: null);
   }
 
@@ -221,7 +341,10 @@ class EvaluacionOdontologicaController
         'ceo_c': _intOrNull(state.ceoC),
         'ceo_e': _intOrNull(state.ceoE),
         'ceo_o': _intOrNull(state.ceoO),
-        'odontograma': state.odontograma,
+        'odontograma': {
+          for (final entry in state.odontograma.entries)
+            entry.key: entry.value.toJson(),
+        },
       };
 
       await repo.putEvaluacionOdontologica(args.opId, args.alumnoId, payload);
@@ -253,11 +376,11 @@ class EvaluacionOdontologicaController
 
   static String _asStr(dynamic v) => v == null ? '' : v.toString();
 
-  static Map<String, String> _parseOdontograma(dynamic raw) {
+  static Map<String, PiezaOdontograma> _parseOdontograma(dynamic raw) {
     final map = raw is Map ? raw : const {};
-    final result = <String, String>{};
+    final result = <String, PiezaOdontograma>{};
     for (final entry in map.entries) {
-      result[entry.key.toString()] = entry.value?.toString() ?? '';
+      result[entry.key.toString()] = PiezaOdontograma.fromJson(entry.value);
     }
     return result;
   }

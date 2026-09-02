@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../core/session/entities.dart';
@@ -67,10 +68,8 @@ class UsuarioScreen extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.settings_outlined, color: AppColors.primario),
                 title: const Text('Configuración', style: TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w600, color: AppColors.texto)),
-                trailing: const Icon(Icons.keyboard_arrow_right, color: Color(0xFFC4BBE8)), // lavanda claro (sin token aún)
-                onTap: () => showDialog<void>(context: context, builder: (_) => AlertDialog(
-                  content: const Text('Editar perfil — próximamente'),
-                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))])),
+                trailing: const Icon(Icons.keyboard_arrow_right, color: Color(0xFFC4BBE8)),
+                onTap: () => context.push('/usuario/configuracion'),
               ),
             ]),
           ),

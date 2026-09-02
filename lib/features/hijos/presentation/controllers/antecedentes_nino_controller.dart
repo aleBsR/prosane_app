@@ -18,7 +18,8 @@ const camposSiNoNoSabe = <String>[
   'traumatismo_internacion',
   'diarrea_frecuente',
   'infecciones_oido',
-  'rabia_tratamiento',
+  'internacion_previa',
+  'tratamiento_actual',
   'primera_menstruacion',
 ];
 
@@ -45,7 +46,8 @@ class AntecedentesNinoState {
   final String? error;
 
   String respuesta(String campo) => respuestas[campo] ?? '';
-  bool get recibeTratamiento => respuesta('rabia_tratamiento') == 'si';
+  bool get tieneInternacionPrevia => respuesta('internacion_previa') == 'si';
+  bool get recibeTratamiento => respuesta('tratamiento_actual') == 'si';
   bool get tuvoMenstruacion => respuesta('primera_menstruacion') == 'si';
 
   AntecedentesNinoState copyWith({
@@ -149,7 +151,7 @@ class AntecedentesNinoController extends StateNotifier<AntecedentesNinoState> {
     return {
       for (final c in camposSiNoNoSabe) c: resp(c),
       'peso_nacimiento': s.pesoNacimiento,
-      'causa_hospitalizacion': s.causaHospitalizacion,
+      'causa_hospitalizacion': s.tieneInternacionPrevia ? s.causaHospitalizacion : '',
       'descripcion_tratamiento': s.recibeTratamiento ? s.descripcionTratamiento : '',
       'ultima_consulta_medica': s.ultimaConsultaMedica,
       'otros_problemas_salud': s.otrosProblemasSalud,

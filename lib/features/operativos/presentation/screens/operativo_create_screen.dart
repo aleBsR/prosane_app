@@ -13,6 +13,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../pendientes/pendientes_count_provider.dart';
 import '../controllers/operativo_create_controller.dart';
+import '../controllers/operativos_list_controller.dart';
 
 class OperativoCreateScreen extends ConsumerWidget {
   const OperativoCreateScreen({super.key});
@@ -26,6 +27,7 @@ class OperativoCreateScreen extends ConsumerWidget {
       if (next.exito && !(prev?.exito ?? false)) {
         ref.read(notificacionProvider.notifier).exito('¡Operativo creado!');
         ref.invalidate(operativosPendientesProvider);
+        ref.invalidate(operativosListControllerProvider);
         context.go('/operativos/${next.operativoId}');
       }
       if (next.error != null && next.error != prev?.error) {

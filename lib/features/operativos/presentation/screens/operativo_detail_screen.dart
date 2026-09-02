@@ -7,6 +7,7 @@ import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
+import '../../../../core/providers.dart';
 import '../../../../core/session/entities.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -392,6 +393,16 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     final dni = '${a['dni'] ?? ''}';
     final completo = a['completo'] as bool? ?? false;
     final opId = widget.operativoId;
+    final sesion = ref.watch(sessionControllerProvider);
+    final rolName = sesion is SesionAutenticada ? sesion.sesion.usuario.rolName : '';
+    final operativoEstado = ref.watch(operativoDetailProvider(widget.operativoId)).maybeWhen(
+          data: (op) => (op['estado'] as String?) ?? '',
+          orElse: () => '',
+        );
+    final puedeEditarEstado = (permisos.contains('gestionarEstadoAlumnoEnOperativo') || rolName == 'superadmin') &&
+        operativoEstado != 'finalizado' &&
+        operativoEstado != 'cancelado';
+    final estadoActual = (a['estado'] as String?) ?? 'pendiente';
 
     final acciones = <Widget>[];
     if (permisos.contains('cargarEvaluacionMedica')) {
@@ -405,6 +416,13 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     if (permisos.contains('cargarSeccionEscuela')) {
       acciones.add(_botonAccion(
           'Sección escuela', () => context.push('/operativos/$opId/alumnos/$id/escuela')));
+    }
+    // A = Datos personales y familia (escuela carga todos los datos del alumno)
+    // Permiso data-driven: cargarAntecedentesNino (solo rol escuela + superadmin)
+    // Fallback rolName para superadmin si aún no se reseedió la DB
+    if (permisos.contains('cargarAntecedentesNino') || rolName == 'superadmin') {
+      acciones.add(_botonAccion(
+          'Datos personales y familia', () => context.push('/operativos/$opId/alumnos/$id/datos')));
     }
 
     return Container(
@@ -436,13 +454,62 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
             ],
           ),
           const SizedBox(height: 6),
+          // Selector de asistencia (presente/ausente) — marca requerida para finalización
+          if (puedeEditarEstado)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.how_to_reg_outlined, size: 16, color: AppColors.texto),
+                  const SizedBox(width: 6),
+                  Text('Asistencia:', style: AppTypography.texto.copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: ['pendiente', 'presente', 'ausente', 'evaluado'].contains(estadoActual) ? estadoActual : 'pendiente',
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                        filled: true,
+                        fillColor: _colorFondoEstado(estadoActual),
+                      ),
+                      style: AppTypography.texto.copyWith(fontSize: 12, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual)),
+                      items: const [
+                        DropdownMenuItem(value: 'pendiente', child: Text('Pendiente')),
+                        DropdownMenuItem(value: 'presente', child: Text('Presente')),
+                        DropdownMenuItem(value: 'ausente', child: Text('Ausente')),
+                        DropdownMenuItem(value: 'evaluado', child: Text('Evaluado')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null && v != estadoActual) _cambiarEstadoAlumno(id, v);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.how_to_reg_outlined, size: 14, color: AppColors.texto),
+                  const SizedBox(width: 4),
+                  Text('Estado: ${_labelEstadoAlumno(estadoActual)}',
+                      style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.7))),
+                ],
+              ),
+            ),
           Wrap(
             spacing: 6,
             runSpacing: 4,
             children: [
+              if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
+              if (a['antecedentes_completado'] as bool? ?? false) _chip('A ✓'),
               if (a['medica_completada'] as bool? ?? false) _chip('M ✓'),
               if (a['odontologica_completada'] as bool? ?? false) _chip('O ✓'),
-              if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
             ],
           ),
           if (acciones.isNotEmpty) ...[
@@ -452,6 +519,57 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _cambiarEstadoAlumno(String alumnoId, String nuevoEstado) async {
+    try {
+      await ref.read(operativosRepositoryProvider).patchEstadoAlumno(widget.operativoId, alumnoId, nuevoEstado);
+      ref.invalidate(alumnosProvider(widget.operativoId));
+      ref.invalidate(completitudProvider(widget.operativoId));
+      ref.invalidate(operativoDetailProvider(widget.operativoId));
+      if (mounted) ref.read(notificacionProvider.notifier).exito('Asistencia: ${_labelEstadoAlumno(nuevoEstado)}');
+    } catch (e) {
+      if (mounted) ref.read(notificacionProvider.notifier).error('No se pudo actualizar asistencia: $e');
+    }
+  }
+
+  Color _colorFondoEstado(String estado) {
+    switch (estado) {
+      case 'presente':
+        return Colors.green.withValues(alpha: 0.12);
+      case 'ausente':
+        return Colors.red.withValues(alpha: 0.10);
+      case 'evaluado':
+        return Colors.blue.withValues(alpha: 0.10);
+      default:
+        return AppColors.gris.withValues(alpha: 0.10);
+    }
+  }
+
+  Color _colorTextoEstado(String estado) {
+    switch (estado) {
+      case 'presente':
+        return Colors.green.shade700;
+      case 'ausente':
+        return Colors.red.shade700;
+      case 'evaluado':
+        return Colors.blue.shade700;
+      default:
+        return AppColors.texto;
+    }
+  }
+
+  String _labelEstadoAlumno(String estado) {
+    switch (estado) {
+      case 'presente':
+        return 'Presente';
+      case 'ausente':
+        return 'Ausente';
+      case 'evaluado':
+        return 'Evaluado';
+      default:
+        return 'Pendiente';
+    }
   }
 
   Widget _botonAccion(String label, VoidCallback onTap) {

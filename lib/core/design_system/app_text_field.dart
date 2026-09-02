@@ -16,6 +16,7 @@ class AppTextField extends StatefulWidget {
     this.isValid = false,
     this.keyboardType,
     this.onChanged,
+    this.readOnly = false,
   });
 
   final String label;
@@ -27,6 +28,7 @@ class AppTextField extends StatefulWidget {
   final bool isValid;
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -67,6 +69,7 @@ class _AppTextFieldState extends State<AppTextField> {
           obscureText: _obscure,
           keyboardType: widget.keyboardType,
           onChanged: widget.onChanged,
+          readOnly: widget.readOnly,
           style: AppTypography.campo,
           decoration: InputDecoration(
             hintText: widget.hint,

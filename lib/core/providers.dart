@@ -21,6 +21,7 @@ import '../features/escuelas/data/alumnos_escuela_repository.dart';
 import '../features/usuarios_escuela/data/usuarios_escuela_repository.dart';
 import '../features/usuarios_ayudantes/data/usuarios_ayudantes_repository.dart';
 import '../features/profesionales/data/profesionales_repository.dart';
+import '../features/usuario/data/usuario_repository.dart';
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage());
 
@@ -133,4 +134,8 @@ final usuariosAyudantesRepositoryProvider = Provider<UsuariosAyudantesRepository
 
 final profesionalesRepositoryProvider = Provider<ProfesionalesRepository>(
   (ref) => ProfesionalesRepository(ref.watch(dioV1Provider)),
+);
+
+final usuarioRepositoryProvider = Provider<UsuarioRepository>(
+  (ref) => UsuarioRepository(ref.watch(dioV1Provider)),
 );

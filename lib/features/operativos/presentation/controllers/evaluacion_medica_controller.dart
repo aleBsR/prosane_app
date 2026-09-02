@@ -233,9 +233,19 @@ class EvaluacionMedicaController extends StateNotifier<EvaluacionMedicaState> {
   void setVacunasIndicadas(String v) =>
       state = state.copyWith(vacunasIndicadas: v, error: null);
 
-  void setPeso(String v) => state = state.copyWith(peso: v, error: null);
-  void setTalla(String v) => state = state.copyWith(talla: v, error: null);
-  void setImc(String v) => state = state.copyWith(imc: v, error: null);
+  void setPeso(String v) => _actualizarAntropometria(peso: v);
+  void setTalla(String v) => _actualizarAntropometria(talla: v);
+
+  void _actualizarAntropometria({String? peso, String? talla}) {
+    final nuevoPeso = peso ?? state.peso;
+    final nuevaTalla = talla ?? state.talla;
+    final pesoKg = double.tryParse(nuevoPeso.replaceAll(',', '.'));
+    final tallaCm = double.tryParse(nuevaTalla.replaceAll(',', '.'));
+    final imc = pesoKg != null && tallaCm != null && pesoKg > 0 && tallaCm > 0
+        ? (pesoKg / ((tallaCm / 100) * (tallaCm / 100))).toStringAsFixed(2)
+        : '';
+    state = state.copyWith(peso: nuevoPeso, talla: nuevaTalla, imc: imc, error: null);
+  }
   void setPercentilTalla(String v) =>
       state = state.copyWith(percentilTalla: v, error: null);
   void setPercentilImc(String v) =>

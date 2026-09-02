@@ -18,7 +18,9 @@ class AccionesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(sessionControllerProvider);
-    final acciones = estado is SesionAutenticada ? estado.sesion.acciones : const <Accion>[];
+    final acciones = estado is SesionAutenticada
+        ? estado.sesion.acciones.where((a) => a.showInMenu).toList()
+        : const <Accion>[];
 
     return AppGradientScaffold(
       child: acciones.isEmpty

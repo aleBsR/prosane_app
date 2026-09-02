@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../controllers/evaluacion_medica_controller.dart';
+import '../controllers/operativo_detail_controller.dart';
 
 /// Etiquetas legibles en español para los 11 sistemas de hallazgos.
 const Map<String, String> _hallazgoLabels = {
@@ -59,6 +60,16 @@ class EvaluacionMedicaScreen extends ConsumerWidget {
     final args = (opId: operativoId, alumnoId: alumnoId);
     final state = ref.watch(evaluacionMedicaControllerProvider(args));
     final ctrl = ref.read(evaluacionMedicaControllerProvider(args).notifier);
+    final operativoAsync = ref.watch(operativoDetailProvider(operativoId));
+    final esNoEditable = operativoAsync.maybeWhen(
+      data: (op) => op['estado'] == 'finalizado' || op['estado'] == 'cancelado',
+      orElse: () => false,
+    );
+    final esEnCurso = operativoAsync.maybeWhen(
+      data: (op) => op['estado'] == 'en_curso',
+      orElse: () => false,
+    );
+    final esBloqueadoPrevio = !esEnCurso && !esNoEditable;
 
     return AppGradientScaffold(
       child: Column(
@@ -77,7 +88,7 @@ class EvaluacionMedicaScreen extends ConsumerWidget {
                   }
                 },
               ),
-              Text('Evaluación médica',
+              Text(esNoEditable ? 'Evaluación médica — solo lectura' : esBloqueadoPrevio ? 'Evaluación médica — no disponible' : 'Evaluación médica',
                   style: AppTypography.titulo
                       .copyWith(color: AppColors.blanco, fontSize: 22)),
             ]),
@@ -92,46 +103,112 @@ class EvaluacionMedicaScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _cardExamenClinico(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardAntropometria(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardPresion(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardAgudezaAudiometria(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardHallazgos(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardVacunacion(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        _cardDerivaciones(state, ctrl),
-                        const SizedBox(height: AppSpacing.md),
-                        AppCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (state.error != null) ...[
-                                Text(state.error!,
-                                    style: AppTypography.texto
-                                        .copyWith(color: AppColors.error),
-                                    textAlign: TextAlign.center),
-                                const SizedBox(height: AppSpacing.md),
+                        if (esNoEditable) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.lock_outline, size: 16, color: Colors.green),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text('Operativo finalizado — solo lectura',
+                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.green)),
+                                ),
                               ],
-                              AppButton(
-                                label: 'Guardar',
-                                isLoading: state.guardando,
-                                onPressed: state.guardando
-                                    ? null
-                                    : () async {
-                                        final ok = await ctrl.guardar();
-                                        if (ok && context.mounted) {
-                                          context.pop();
-                                        }
-                                      },
-                              ),
-                            ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ] else if (esBloqueadoPrevio) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text('Solo se puede cargar cuando el operativo está en curso',
+                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.orange.shade800)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        AbsorbPointer(
+                          absorbing: !esEnCurso,
+                          child: Opacity(
+                            opacity: esEnCurso ? 1 : 0.85,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _cardExamenClinico(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardAntropometria(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardPresion(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardAgudezaAudiometria(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardHallazgos(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardVacunacion(state, ctrl),
+                                const SizedBox(height: AppSpacing.md),
+                                _cardDerivaciones(state, ctrl),
+                              ],
+                            ),
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.md),
+                        if (esEnCurso)
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (state.error != null) ...[
+                                  Text(state.error!,
+                                      style: AppTypography.texto
+                                          .copyWith(color: AppColors.error),
+                                      textAlign: TextAlign.center),
+                                  const SizedBox(height: AppSpacing.md),
+                                ],
+                                AppButton(
+                                  label: 'Guardar',
+                                  isLoading: state.guardando,
+                                  onPressed: state.guardando
+                                      ? null
+                                      : () async {
+                                          final ok = await ctrl.guardar();
+                                          if (ok && context.mounted) {
+                                            ref.invalidate(
+                                                alumnosProvider(operativoId));
+                                            ref.invalidate(
+                                                completitudProvider(operativoId));
+                                            ref.invalidate(
+                                                operativoDetailProvider(operativoId));
+                                            context.pop();
+                                          }
+                                        },
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (state.error != null)
+                          AppCard(
+                            child: Text(state.error!,
+                                style: AppTypography.texto
+                                    .copyWith(color: AppColors.error),
+                                textAlign: TextAlign.center),
+                          ),
                         const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
@@ -218,7 +295,8 @@ class EvaluacionMedicaScreen extends ConsumerWidget {
               ..selection = TextSelection.collapsed(offset: state.imc.length),
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
-            onChanged: ctrl.setImc,
+            readOnly: true,
+            helperText: 'Se calcula automáticamente con peso y talla',
           ),
           const SizedBox(height: AppSpacing.md),
           AppDropdownField(

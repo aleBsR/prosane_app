@@ -12,6 +12,7 @@ class Escuela {
   final bool activa;
   final bool interculturalBilingue;
   final bool plurigradoRural;
+  final List<Map<String, dynamic>> usuariosAsociados;
 
   Escuela({
     required this.id,
@@ -25,6 +26,7 @@ class Escuela {
     this.activa = true,
     this.interculturalBilingue = false,
     this.plurigradoRural = false,
+    this.usuariosAsociados = const [],
   });
 
   factory Escuela.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,10 @@ class Escuela {
       activa: json['activa'] ?? true,
       interculturalBilingue: json['intercultural_bilingue'] ?? false,
       plurigradoRural: json['plurigrado_rural'] ?? false,
+      usuariosAsociados: (json['usuarios_asociados'] as List?)
+              ?.map((e) => Map<String, dynamic>.from(e as Map))
+              .toList() ??
+          const [],
     );
   }
 
