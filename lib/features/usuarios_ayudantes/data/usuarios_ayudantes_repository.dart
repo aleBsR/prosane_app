@@ -42,17 +42,24 @@ class UsuariosAyudantesRepository {
 
   Future<UsuarioAyudante> crear({
     required String email,
-    required String password,
   }) async {
     try {
       final res = await _dio.post('/usuarios/ayudantes/', data: {
         'email': email,
-        'password': password,
       });
       if (res.statusCode == 201) {
         return UsuarioAyudante.fromJson(res.data as Map<String, dynamic>);
       }
       throw Exception('Error ${res.statusCode}');
+    } on DioException catch (e) {
+      throw Exception(_mensajeError(e));
+    }
+  }
+
+  Future<void> reenviarTemporal(String id) async {
+    try {
+      final res = await _dio.post('/usuarios/ayudantes/$id/resend-temp/');
+      if (res.statusCode != 200) throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
       throw Exception(_mensajeError(e));
     }

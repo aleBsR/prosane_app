@@ -11,6 +11,7 @@ import '../../features/acciones/presentation/acciones_screen.dart';
 import '../../features/pendientes/presentation/pendientes_screen.dart';
 import '../../features/usuario/presentation/usuario_screen.dart';
 import '../../features/usuario/presentation/configuracion_screen.dart';
+import '../../features/auth/presentation/screens/force_change_password_screen.dart';
 import '../../features/pendientes/pendientes_count_provider.dart';
 import '../../features/hijos/presentation/screens/hijos_list_screen.dart';
 import '../../features/hijos/presentation/screens/planilla_screen.dart';
@@ -61,11 +62,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final autenticado =
-          ref.read(sessionControllerProvider) is SesionAutenticada;
+      final sessionState = ref.read(sessionControllerProvider);
+      final autenticado = sessionState is SesionAutenticada;
+      // Bloqueo por contraseña temporal: debe cambiar antes de cualquier otra pantalla
+      if (autenticado) {
+        final mustChange = (sessionState as SesionAutenticada).sesion.usuario.mustChangePassword;
+        final loc = state.matchedLocation;
+        if (mustChange && loc != '/change-password') return '/change-password';
+        if (!mustChange && loc == '/change-password') return '/inicio';
+      }
       return construirRedirect(autenticado)(state.matchedLocation);
     },
     routes: [
+      GoRoute(path: '/change-password', builder: (c, s) => const ForceChangePasswordScreen()),
       GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (c, s) => const SignupWizardScreen()),
       GoRoute(

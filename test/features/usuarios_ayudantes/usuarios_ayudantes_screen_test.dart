@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:prosane_app/core/design_system/app_button.dart';
 import 'package:prosane_app/core/providers.dart';
 import 'package:prosane_app/core/theme/app_theme.dart';
 import 'package:prosane_app/features/usuarios_ayudantes/data/usuarios_ayudantes_repository.dart';
@@ -49,7 +48,7 @@ void main() {
 
   testWidgets('crear: el diálogo valida y llama al repositorio', (tester) async {
     final repo = _MockRepo();
-    when(() => repo.crear(email: any(named: 'email'), password: any(named: 'password')))
+    when(() => repo.crear(email: any(named: 'email')))
         .thenAnswer((_) async =>
             UsuarioAyudante(id: '9', email: 'nuevo@mail.com', isActive: true));
 
@@ -61,21 +60,12 @@ void main() {
 
     expect(find.text('Nuevo usuario ayudante'), findsOneWidget);
 
-    // Guardar deshabilitado sin completar
     await tester.enterText(find.byType(TextField).at(0), 'nuevo@mail.com');
-    await tester.pump();
-    expect(
-        tester
-            .widget<AppButton>(find.widgetWithText(AppButton, 'Guardar'))
-            .onPressed,
-        isNull);
-
-    await tester.enterText(find.byType(TextField).at(1), 'clave12');
     await tester.pump();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
 
-    verify(() => repo.crear(email: 'nuevo@mail.com', password: 'clave12'))
+    verify(() => repo.crear(email: 'nuevo@mail.com'))
         .called(1);
     expect(find.text('Nuevo usuario ayudante'), findsNothing);
   });

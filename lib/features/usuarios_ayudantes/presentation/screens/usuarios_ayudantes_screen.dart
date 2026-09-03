@@ -171,10 +171,10 @@ class UsuarioAyudanteFormDialog extends ConsumerStatefulWidget {
 class _UsuarioAyudanteFormDialogState
     extends ConsumerState<UsuarioAyudanteFormDialog> {
   late final TextEditingController _emailCtrl;
-  late final TextEditingController _passwordCtrl;
   late bool _isActive;
   String? _error;
   bool _guardando = false;
+  bool _reenvizando = false;
 
   bool get _esEdicion => widget.usuario != null;
 
@@ -182,22 +182,18 @@ class _UsuarioAyudanteFormDialogState
   void initState() {
     super.initState();
     _emailCtrl = TextEditingController(text: widget.usuario?.email ?? '');
-    _passwordCtrl = TextEditingController();
     _isActive = widget.usuario?.isActive ?? true;
   }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
-    _passwordCtrl.dispose();
     super.dispose();
   }
 
   bool get _puedeGuardar {
     final emailOk = _emailCtrl.text.trim().contains('@');
-    final passwordOk =
-        _esEdicion ? true : _passwordCtrl.text.trim().length >= 6;
-    return emailOk && passwordOk && !_guardando;
+    return emailOk && !_guardando;
   }
 
   Future<void> _guardar() async {
@@ -212,23 +208,15 @@ class _UsuarioAyudanteFormDialogState
           'email': _emailCtrl.text.trim(),
           'is_active': _isActive,
         };
-        final password = _passwordCtrl.text.trim();
-        if (password.isNotEmpty) {
-          if (password.length < 6) {
-            throw Exception('La contraseña debe tener al menos 6 caracteres.');
-          }
-          cambios['password'] = password;
-        }
         await repo.editar(widget.usuario!.id, cambios);
       } else {
         await repo.crear(
           email: _emailCtrl.text.trim(),
-          password: _passwordCtrl.text.trim(),
         );
       }
       if (!mounted) return;
       ref.read(notificacionProvider.notifier).exito(
-          _esEdicion ? '¡Usuario actualizado!' : '¡Usuario creado!');
+          _esEdicion ? '¡Usuario actualizado!' : '¡Usuario creado! Se envió temporal por mail (72h).');
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
@@ -236,6 +224,21 @@ class _UsuarioAyudanteFormDialogState
         _guardando = false;
         _error = e.toString().replaceFirst('Exception: ', '');
       });
+    }
+  }
+
+  Future<void> _reenviar() async {
+    if (!_esEdicion) return;
+    setState(() => _reenvizando = true);
+    try {
+      await ref.read(usuariosAyudantesRepositoryProvider).reenviarTemporal(widget.usuario!.id);
+      if (!mounted) return;
+      ref.read(notificacionProvider.notifier).exito('Temporal reenviada (72h).');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _reenvizando = false);
     }
   }
 
@@ -259,13 +262,49 @@ class _UsuarioAyudanteFormDialogState
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                label: _esEdicion ? 'Nueva contraseña' : 'Contraseña *',
-                hint: _esEdicion ? 'Dejar vacío para no cambiar' : null,
-                controller: _passwordCtrl,
-                isPassword: true,
-                onChanged: (_) => setState(() {}),
-              ),
+              if (!_esEdicion)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF66BB6A)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.mail_outline, size: 16, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Se enviará contraseña temporal por mail (72h).',
+                            style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF66BB6A)),
+                      ),
+                      child: Text('La contraseña solo la cambia el usuario. No es visible.',
+                          style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: _reenvizando ? null : _reenviar,
+                      icon: _reenvizando
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.refresh, size: 16),
+                      label: Text(_reenvizando ? 'Reenviando...' : 'Reenviar temporal (72h)'),
+                    ),
+                  ],
+                ),
               if (_esEdicion) ...[
                 const SizedBox(height: AppSpacing.sm),
                 AppSwitch(

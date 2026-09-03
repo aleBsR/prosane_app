@@ -24,6 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
         tipoDni: me.tipoDni, dni: me.dni,
         consentimientoAceptado: me.consentimientoAceptado,
         antecedentesFamiliaresCompletos: me.antecedentesFamiliaresCompletos,
+        mustChangePassword: me.mustChangePassword,
       ),
       acciones: me.acciones,
     );

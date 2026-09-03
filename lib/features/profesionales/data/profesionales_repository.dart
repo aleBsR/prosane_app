@@ -68,7 +68,6 @@ class ProfesionalesRepository {
 
   Future<Profesional> crear({
     required String email,
-    required String password,
     required String rol,
     required String matricula,
     String? nombre,
@@ -77,7 +76,6 @@ class ProfesionalesRepository {
     try {
       final res = await _dio.post('/profesionales/', data: {
         'email': email,
-        'password': password,
         'rol': rol,
         'matricula': matricula,
         if (nombre != null && nombre.isNotEmpty) 'nombre': nombre,

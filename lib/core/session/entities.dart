@@ -43,6 +43,7 @@ class Usuario {
     this.dni,
     this.consentimientoAceptado = false,
     this.antecedentesFamiliaresCompletos = false,
+    this.mustChangePassword = false,
   });
   final String id, nombre, rolName, rolLabel;
   final String? tutorId;
@@ -53,10 +54,12 @@ class Usuario {
   final String? dni;
   final bool consentimientoAceptado;
   final bool antecedentesFamiliaresCompletos;
+  final bool mustChangePassword;
 
   Usuario copyWith({
     bool? consentimientoAceptado,
     bool? antecedentesFamiliaresCompletos,
+    bool? mustChangePassword,
   }) =>
       Usuario(
         id: id, nombre: nombre, rolName: rolName, rolLabel: rolLabel,
@@ -65,6 +68,7 @@ class Usuario {
         consentimientoAceptado: consentimientoAceptado ?? this.consentimientoAceptado,
         antecedentesFamiliaresCompletos:
             antecedentesFamiliaresCompletos ?? this.antecedentesFamiliaresCompletos,
+        mustChangePassword: mustChangePassword ?? this.mustChangePassword,
       );
 }
 
