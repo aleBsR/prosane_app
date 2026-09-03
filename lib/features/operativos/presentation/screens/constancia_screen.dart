@@ -182,22 +182,26 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.verified_outlined, size: 16, color: Colors.green),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text('Documento generado desde operativo finalizado — PROSANE Salta',
-                                        style: AppTypography.texto.copyWith(fontSize: 11, color: Colors.green)),
-                                  ),
-                                ],
+                            Center(
+                              child: Container(
+                                constraints: const BoxConstraints(maxWidth: 320),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: const Color(0xFF66BB6A)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.verified_outlined, size: 14, color: Color(0xFF2E7D32)),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text('Documento generado desde operativo finalizado — PROSANE Salta',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],

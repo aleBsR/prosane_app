@@ -64,22 +64,26 @@ class SeccionEscuelaScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (esNoEditable) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.lock_outline, size: 16, color: Colors.green),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text('Operativo finalizado — solo lectura',
-                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.green)),
-                                ),
-                              ],
+                          Center(
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 300),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.green.withValues(alpha: 0.35)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.lock_outline, size: 14, color: Color(0xFF2E7D32)),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text('Operativo finalizado — solo lectura',
+                                        style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),

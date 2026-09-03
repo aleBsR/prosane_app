@@ -1,8 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
@@ -15,7 +19,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../pendientes/pendientes_count_provider.dart';
-import '../../escuelas/presentation/controllers/alumnos_escuela_controller.dart';
+import '../../../escuelas/presentation/controllers/alumnos_escuela_controller.dart';
 import '../controllers/operativo_detail_controller.dart';
 import '../controllers/operativos_list_controller.dart';
 
@@ -29,6 +33,7 @@ class OperativoDetailScreen extends ConsumerStatefulWidget {
 
 class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
   bool _importandoCsv = false;
+  bool _exportando = false;
   String _filtroCurso = 'Todos';
   String _busqueda = '';
   final _busquedaCtrl = TextEditingController();
@@ -235,8 +240,68 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         return [
           _gatingFinalizacion(ctrl),
         ];
+      case 'finalizado':
+        return [
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Operativo finalizado — Descargas', style: AppTypography.subtitulo),
+                const SizedBox(height: 4),
+                Text('Constancias y resúmenes disponibles', style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _botonDescarga('Exportar PDF', Icons.picture_as_pdf_outlined, () => _exportar('pdf')),
+                    _botonDescarga('Exportar Excel', Icons.table_chart_outlined, () => _exportar('excel')),
+                    _botonDescarga('Exportar CSV', Icons.description_outlined, () => _exportar('csv')),
+                  ],
+                ),
+                if (_exportando) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  const LinearProgressIndicator(),
+                ],
+              ],
+            ),
+          ),
+        ];
       default:
         return [];
+    }
+  }
+
+  Widget _botonDescarga(String label, IconData icon, VoidCallback onTap) {
+    return ElevatedButton.icon(
+      onPressed: _exportando ? null : onTap,
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+    );
+  }
+
+  Future<void> _exportar(String formato) async {
+    setState(() => _exportando = true);
+    try {
+      final bytes = await ref.read(operativosRepositoryProvider).exportOperativo(widget.operativoId, formato);
+      final dir = await getTemporaryDirectory();
+      final ext = formato == 'pdf' ? 'pdf' : formato == 'csv' ? 'csv' : 'xlsx';
+      final file = File('${dir.path}/operativo-${widget.operativoId}.$ext');
+      await file.writeAsBytes(Uint8List.fromList(bytes), flush: true);
+      if (formato == 'pdf') {
+        await OpenFilex.open(file.path);
+      } else {
+        await Share.shareXFiles([XFile(file.path)], text: 'Resumen operativo $formato');
+      }
+      if (mounted) ref.read(notificacionProvider.notifier).exito('Exportado $formato');
+    } catch (e) {
+      if (mounted) ref.read(notificacionProvider.notifier).error('No se pudo exportar: $e');
+    } finally {
+      if (mounted) setState(() => _exportando = false);
     }
   }
 
@@ -621,9 +686,20 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           ] else if (esEvaluado) ...[
             const SizedBox(height: 4),
             Text('Evaluado — completo', style: AppTypography.texto.copyWith(fontSize: 10, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
-          ] else if (!esPresente) ...[
+          ] else if (operativoEstado != 'finalizado' && !esPresente) ...[
             const SizedBox(height: 4),
             Text('Marcá como Presente para habilitar la carga', style: AppTypography.texto.copyWith(fontSize: 10, color: AppColors.texto.withValues(alpha: 0.5))),
+          ],
+          if (operativoEstado == 'finalizado' && (completo || esAusente || esEvaluado)) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _botonAccion('Constancia PDF', () => context.push('/operativos/$opId/alumnos/$id/constancia')),
+                _botonAccion('Ver datos', () => context.push('/operativos/$opId/alumnos/$id/datos')),
+              ],
+            ),
           ],
         ],
       ),

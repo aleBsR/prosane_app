@@ -97,26 +97,30 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                         if (sinCursos)
                           Padding(
                             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.info_outline, size: 16, color: Colors.orange),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      esPlurigrado
-                                          ? 'Escuela plurigrado sin cursos. Podés registrar alumnos sin curso (se usará "Plurigrado" por defecto) o crear el curso.'
-                                          : 'Aún no hay cursos. Creá al menos uno antes de registrar alumnos.',
-                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.orange.shade800),
+                            child: Center(
+                              child: Container(
+                                constraints: const BoxConstraints(maxWidth: 320),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: const Color(0xFFFFB74D)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.info_outline, size: 14, color: Color(0xFFE65100)),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        esPlurigrado
+                                            ? 'Escuela plurigrado sin cursos. Podés registrar sin curso (Plurigrado por defecto).'
+                                            : 'Aún no hay cursos. Creá uno antes de registrar.',
+                                        style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFE65100)),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
