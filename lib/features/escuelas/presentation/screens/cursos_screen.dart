@@ -159,6 +159,7 @@ class CursosScreen extends ConsumerWidget {
               AppTextField(
                 label: 'Grado / Sala (ej: 1°) *',
                 controller: gradoCtrl,
+                hint: 'Para plurigrado escribí "Plurigrado"',
               ),
               const SizedBox(height: AppSpacing.md),
               AppTextField(
@@ -171,6 +172,11 @@ class CursosScreen extends ConsumerWidget {
                 controller: cicloCtrl,
                 keyboardType: TextInputType.number,
                 hint: 'Ej: 2026',
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Escuelas plurigrado: usá "Plurigrado" como grado para agrupar varios años en un mismo curso.',
+                style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
               ),
             ],
           ),
@@ -225,6 +231,7 @@ class CursosScreen extends ConsumerWidget {
             AppTextField(
               label: 'Grado / Sala',
               controller: gradoCtrl,
+              hint: 'Para plurigrado escribí "Plurigrado"',
             ),
             const SizedBox(height: AppSpacing.md),
             AppTextField(
@@ -236,6 +243,11 @@ class CursosScreen extends ConsumerWidget {
               label: 'Ciclo lectivo',
               controller: cicloCtrl,
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Escuelas plurigrado: usá "Plurigrado" como grado.',
+              style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
             ),
           ],
         ),

@@ -80,15 +80,76 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: AppButton(
-              label: 'Registrar alumno',
-              isLoading: state.guardando,
-              onPressed: state.guardando
-                  ? null
-                  : () => _mostrarFormulario(context, ref),
-            ),
+          Consumer(
+            builder: (context, ref2, _) {
+              final escuelaAsync = ref.watch(miEscuelaProvider);
+              return escuelaAsync.when(
+                data: (escuela) {
+                  final cursos = (escuela['cursos'] as List?) ?? [];
+                  final esPlurigrado = escuela['plurigrado_rural'] == true;
+                  final sinCursos = cursos.isEmpty;
+                  final bloqueaPorCursos = sinCursos && !esPlurigrado;
+                  return Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (sinCursos)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      esPlurigrado
+                                          ? 'Escuela plurigrado sin cursos. Podés registrar alumnos sin curso (se usará "Plurigrado" por defecto) o crear el curso.'
+                                          : 'Aún no hay cursos. Creá al menos uno antes de registrar alumnos.',
+                                      style: AppTypography.texto.copyWith(fontSize: 12, color: Colors.orange.shade800),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        AppButton(
+                          label: bloqueaPorCursos ? 'Crear curso' : 'Registrar alumno',
+                          isLoading: state.guardando,
+                          onPressed: state.guardando
+                              ? null
+                              : bloqueaPorCursos
+                                  ? () {
+                                      final escuelaId = (escuela['id'] ?? '').toString();
+                                      if (escuelaId.isNotEmpty) context.push('/escuelas/$escuelaId/cursos');
+                                    }
+                                  : () => _mostrarFormulario(context, ref),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loading: () => Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: AppButton(label: 'Registrar alumno', isLoading: true, onPressed: null),
+                ),
+                error: (_, __) => Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: AppButton(
+                    label: 'Registrar alumno',
+                    isLoading: state.guardando,
+                    onPressed: state.guardando ? null : () => _mostrarFormulario(context, ref),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -113,6 +174,36 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
             .map((e) => e.cast<String, dynamic>())
             .toList() ??
         <Map<String, dynamic>>[];
+    final esPlurigrado = escuela['plurigrado_rural'] == true;
+    final permiteSinCurso = esPlurigrado;
+    if (cursos.isEmpty && !permiteSinCurso) {
+      final escuelaId = (escuela['id'] ?? '').toString();
+      if (context.mounted) {
+        ref.read(notificacionProvider.notifier).error(
+          'Debes crear al menos un curso antes de registrar alumnos.',
+        );
+      }
+      if (escuelaId.isNotEmpty && context.mounted) {
+        final irACursos = await showDialog<bool>(
+          context: context,
+          builder: (dCtx) => AlertDialog(
+            title: const Text('Sin cursos'),
+            content: const Text('Aún no hay cursos cargados. Debes crear al menos uno antes de registrar alumnos. ¿Ir a crear curso?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Cancelar')),
+              TextButton(onPressed: () => Navigator.pop(dCtx, true), child: const Text('Crear curso')),
+            ],
+          ),
+        );
+        if (irACursos == true && context.mounted) {
+          context.push('/escuelas/$escuelaId/cursos');
+        }
+      }
+      return;
+    }
+    if (cursos.isEmpty && permiteSinCurso && context.mounted) {
+      ref.read(notificacionProvider.notifier).exito('Escuela plurigrado sin cursos: podés registrar sin curso (se usará "Plurigrado" por defecto).');
+    }
     final nombre = TextEditingController();
     final apellido = TextEditingController();
     final dni = TextEditingController();
@@ -171,21 +262,41 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               AppTextField(label: 'Edad *', controller: edad,
                   keyboardType: TextInputType.number),
               const SizedBox(height: AppSpacing.sm),
-              DropdownButtonFormField<String>(
-                key: ValueKey('curso-$cursoId'),
-                initialValue: cursoId,
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Curso'),
-                hint: const Text('Seleccioná un curso'),
-                items: cursos.map((curso) {
-                  final id = '${curso['id']}';
-                  return DropdownMenuItem<String>(
-                    value: id,
-                    child: Text('${curso['sala_grado_anio'] ?? ''} ${curso['division'] ?? ''}'),
-                  );
-                }).toList(),
-                onChanged: (value) => setDialogState(() => cursoId = value),
-              ),
+              if (esPlurigrado && cursos.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.campo,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primario.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: AppColors.primario),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Curso: Plurigrado (por defecto) — no hace falta seleccionar',
+                            style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.primario)),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                DropdownButtonFormField<String>(
+                  key: ValueKey('curso-$cursoId'),
+                  initialValue: cursoId,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: esPlurigrado ? 'Curso (opcional - plurigrado)' : 'Curso *'),
+                  hint: Text(esPlurigrado ? 'Seleccioná o dejá vacío para "Plurigrado"' : 'Seleccioná un curso'),
+                  items: cursos.map((curso) {
+                    final id = '${curso['id']}';
+                    return DropdownMenuItem<String>(
+                      value: id,
+                      child: Text('${curso['sala_grado_anio'] ?? ''} ${curso['division'] ?? ''}'),
+                    );
+                  }).toList(),
+                  onChanged: (value) => setDialogState(() => cursoId = value),
+                ),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
                 key: ValueKey('operativo-$operativoId'),
@@ -270,13 +381,19 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                 setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
                 return;
               }
-              if (cursoId == null) {
+              if (cursoId == null && !esPlurigrado) {
                 setDialogState(() => dialogError = 'Elegí un curso');
                 return;
               }
               if (operativoId == null) {
                 setDialogState(() => dialogError = 'Elegí un operativo');
                 return;
+              }
+              // Plurigrado sin curso: usar curso por defecto (null → backend lo trata como Plurigrado)
+              String? cursoIdFinal = cursoId;
+              if (esPlurigrado && cursoId == null && cursos.isEmpty) {
+                // No hay curso creado: se enviará sin curso_id y el backend lo dejará como plurigrado por defecto
+                cursoIdFinal = null;
               }
               final fechaIso = fechaNacimiento != null
                   ? '${fechaNacimiento!.year.toString().padLeft(4, '0')}-${fechaNacimiento!.month.toString().padLeft(2, '0')}-${fechaNacimiento!.day.toString().padLeft(2, '0')}'
@@ -292,7 +409,7 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                 },
                 'edad': int.tryParse(edad.text.trim()) ?? 0,
                 'domicilio': {'localidad': localidad.text.trim()},
-                if (cursoId != null) 'curso_id': cursoId,
+                if (cursoIdFinal != null) 'curso_id': cursoIdFinal,
                 if (operativoId != null) 'operativo_id': operativoId,
                 if (telefono.text.trim().isNotEmpty) 'celular': telefono.text.trim(),
                 if (telefonoFijo.text.trim().isNotEmpty) 'telefono_fijo': telefonoFijo.text.trim(),

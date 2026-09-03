@@ -11,6 +11,7 @@ import '../../../core/session/agrupar_acciones.dart';
 import '../../../core/session/entities.dart';
 import '../../../core/session/session_controller.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../escuelas/presentation/controllers/mi_escuela_controller.dart';
 
 class AccionesScreen extends ConsumerWidget {
   const AccionesScreen({super.key});
@@ -78,7 +79,21 @@ class AccionesScreen extends ConsumerWidget {
                               case 'verMiEscuela':
                                 context.push('/escuelas/mi-escuela');
                               case 'gestionarCursos':
-                                context.push('/escuelas/mi-escuela');
+                                // Ir directo a gestión de cursos de mi escuela
+                                () async {
+                                  try {
+                                    final escuela = await ref.read(miEscuelaProvider.future);
+                                    final id = (escuela['id'] ?? '').toString();
+                                    final nombre = (escuela['nombre'] ?? '').toString();
+                                    if (id.isNotEmpty && context.mounted) {
+                                      context.push('/escuelas/$id/cursos?nombre=${Uri.encodeComponent(nombre)}');
+                                    } else if (context.mounted) {
+                                      context.push('/escuelas/mi-escuela');
+                                    }
+                                  } catch (_) {
+                                    if (context.mounted) context.push('/escuelas/mi-escuela');
+                                  }
+                                }();
                               case 'verAlumnosEscuela':
                                 context.push('/escuelas/alumnos');
                               case 'registrarAlumnoEscuela':

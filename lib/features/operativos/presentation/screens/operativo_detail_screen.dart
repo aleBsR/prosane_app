@@ -15,6 +15,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../pendientes/pendientes_count_provider.dart';
+import '../../escuelas/presentation/controllers/alumnos_escuela_controller.dart';
 import '../controllers/operativo_detail_controller.dart';
 import '../controllers/operativos_list_controller.dart';
 
@@ -748,6 +749,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     ref.invalidate(alumnosProvider(widget.operativoId));
     ref.invalidate(completitudProvider(widget.operativoId));
     ref.invalidate(operativosListControllerProvider);
+    ref.invalidate(alumnosEscuelaProvider);
   }
 
   Future<void> _asignarProfesionalDialog(BuildContext context) async {
