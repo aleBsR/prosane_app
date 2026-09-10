@@ -1,5 +1,18 @@
 import 'package:dio/dio.dart';
 
+/// Modalidades educativas seleccionables (valores como los guarda el backend).
+const modalidadesEducativas = [
+  (value: 'comun', label: 'Común'),
+  (value: 'especial', label: 'Especial'),
+];
+
+/// Sectores de gestión seleccionables (valores como los guarda el backend).
+const sectoresGestion = [
+  (value: 'estatal', label: 'Estatal'),
+  (value: 'privado', label: 'Privado'),
+  (value: 'social_cooperativa', label: 'Social/cooperativa'),
+];
+
 class Escuela {
   final String id;
   final String nombre;
@@ -124,6 +137,26 @@ class EscuelasRepository {
     }
   }
 
+  /// Extrae el mensaje del servidor (ej. 'non_field_errors' o el error
+  /// del campo en un 400) para mostrarlo en la UI en vez de un error genérico.
+  String _mensajeServidor(DioException e, {String? duplicado}) {
+    if (e.response?.statusCode == 409 && duplicado != null) return duplicado;
+    final data = e.response?.data;
+    if (data is Map) {
+      final nfe = data['non_field_errors'];
+      if (nfe is List && nfe.isNotEmpty) return nfe.first.toString();
+      final detail = data['detail'];
+      if (detail is String && detail.isNotEmpty) return detail;
+      for (final entry in data.entries) {
+        final v = entry.value;
+        final campo = entry.key.toString();
+        if (v is List && v.isNotEmpty) return '$campo: ${v.first}';
+        if (v is String && v.isNotEmpty) return '$campo: $v';
+      }
+    }
+    return e.message ?? 'Error de red';
+  }
+
   Future<Escuela> crear(Map<String, dynamic> payload) async {
     try {
       final res = await _dio.post('/escuelas/', data: payload);
@@ -132,10 +165,7 @@ class EscuelasRepository {
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        throw Exception('CUE duplicado');
-      }
-      throw Exception(e.message);
+      throw Exception(_mensajeServidor(e, duplicado: 'CUE duplicado'));
     }
   }
 
@@ -159,10 +189,7 @@ class EscuelasRepository {
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        throw Exception('CUE duplicado');
-      }
-      throw Exception(e.message);
+      throw Exception(_mensajeServidor(e, duplicado: 'CUE duplicado'));
     }
   }
 
@@ -173,7 +200,8 @@ class EscuelasRepository {
         throw Exception('Error ${res.statusCode}');
       }
     } on DioException catch (e) {
-      throw Exception(e.message);
+      // El 409 trae el motivo (ej. tiene usuarios/operativos asociados).
+      throw Exception(_mensajeServidor(e));
     }
   }
 
@@ -198,7 +226,7 @@ class EscuelasRepository {
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
-      throw Exception(e.message);
+      throw Exception(_mensajeServidor(e));
     }
   }
 
@@ -214,7 +242,7 @@ class EscuelasRepository {
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
-      throw Exception(e.message);
+      throw Exception(_mensajeServidor(e));
     }
   }
 

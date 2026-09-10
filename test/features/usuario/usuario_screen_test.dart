@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:prosane_app/core/providers.dart';
 import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/core/session/session_controller.dart';
@@ -33,11 +34,31 @@ void main() {
     expect(find.text('medico@prosane.test'), findsOneWidget);
   });
 
-  testWidgets('Configuración es un placeholder "próximamente"', (t) async {
-    await pump(t, nombre: 'Ana');
+  testWidgets('Configuración navega a /usuario/configuracion', (t) async {
+    final c = SessionController()..setSesion(Sesion(
+        usuario: const Usuario(id: '1', nombre: 'Ana', rolName: 'medico', rolLabel: 'Médico/a'),
+        acciones: const []));
+    final router = GoRouter(
+      initialLocation: '/usuario',
+      routes: [
+        GoRoute(path: '/usuario', builder: (c, s) => const UsuarioScreen()),
+        GoRoute(
+            path: '/usuario/configuracion',
+            builder: (c, s) => const Scaffold(body: Text('Pantalla de configuración'))),
+      ],
+    );
+    await t.pumpWidget(ProviderScope(
+      overrides: [
+        sessionControllerProvider.overrideWith((ref) => c),
+        logoutProvider.overrideWithValue(() async => c.cerrar()),
+      ],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await t.pumpAndSettle();
     await t.tap(find.text('Configuración'));
     await t.pumpAndSettle();
-    expect(find.textContaining('próximamente'), findsOneWidget);
+    expect(router.state.uri.path, '/usuario/configuracion');
+    expect(find.text('Pantalla de configuración'), findsOneWidget);
   });
 
   testWidgets('logout pide confirmación; al Confirmar cierra la sesión', (t) async {

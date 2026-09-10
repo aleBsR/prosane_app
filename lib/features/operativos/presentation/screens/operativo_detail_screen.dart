@@ -10,12 +10,15 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
+import '../../../../core/design_system/detail_post_card.dart';
 import '../../../../core/design_system/app_text_field.dart';
+import '../../../../core/design_system/post_chip_custom.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/providers.dart';
 import '../../../../core/session/entities.dart';
 import '../../../../core/session/session_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../pendientes/pendientes_count_provider.dart';
@@ -48,6 +51,10 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
   Widget build(BuildContext context) {
     final operativoAsync = ref.watch(operativoDetailProvider(widget.operativoId));
     final ctrl = ref.read(operativoDetailControllerProvider(widget.operativoId).notifier);
+    // Importar nómina CSV: solo quien tenga el permiso (rol escuela + superadmin).
+    final sesion = ref.watch(sessionControllerProvider);
+    final puedeImportarCsv = sesion is SesionAutenticada &&
+        sesion.sesion.permisos.contains('importarNominaOperativo');
 
     ref.listen(operativoDetailControllerProvider(widget.operativoId), (prev, next) {
       if (next.operativoActualizado && !(prev?.operativoActualizado ?? false)) {
@@ -90,35 +97,28 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           Expanded(
             child: operativoAsync.when(
               data: (op) => SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${op['nombre'] ?? op['escuela']['nombre'] ?? 'Operativo'}',
-                              style: AppTypography.subtitulo),
-                          const SizedBox(height: 8),
-                          Text('${op['fecha']} • ${op['lugar_realizacion']}',
-                              style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
-                          const SizedBox(height: AppSpacing.md),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _colorEstado(op['estado']),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(_labelEstado(op['estado']),
-                                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.blanco)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                    DetailPostCard(
+                      avatarLetter:
+                          '${op['nombre'] ?? op['escuela']['nombre'] ?? 'Operativo'}',
+                      title:
+                          '${op['nombre'] ?? op['escuela']['nombre'] ?? 'Operativo'}',
+                      subtitle:
+                          '${op['fecha']} • ${op['lugar_realizacion']}',
+                      bannerIcon: Icons.event_note_outlined,
+                      bannerChips: [
+                        _labelEstado(op['estado']),
+                        _contar(op['alumnos_count'], 'alumno'),
+                        _contar(
+                            (op['profesionales_asignados'] as List?)
+                                    ?.length ??
+                                0,
+                            'profesional',
+                            'profesionales'),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Botones de acción según estado
@@ -149,9 +149,26 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                             }),
                           if (op['estado'] == 'borrador') ...[
                             const SizedBox(height: AppSpacing.md),
-                            AppButton(
-                              label: 'Asignar profesional',
-                              onPressed: () => _asignarProfesionalDialog(context),
+                            Wrap(
+                              spacing: AppSpacing.sm,
+                              runSpacing: AppSpacing.sm,
+                              children: [
+                                PostActionButton(
+                                  icono: Icons.check_circle_outline,
+                                  texto: 'Confirmar operativo',
+                                  colorFondo: AppColors.primario,
+                                  colorTexto: AppColors.blanco,
+                                  onPressed: () => _accionEstado(ctrl.confirmar),
+                                ),
+                                PostActionButton(
+                                  icono: Icons.person_add_outlined,
+                                  texto: 'Asignar profesional',
+                                  colorFondo: AppColors.campo,
+                                  colorTexto: AppColors.primario,
+                                  onPressed: () =>
+                                      _asignarProfesionalDialog(context),
+                                ),
+                              ],
                             ),
                           ],
                         ],
@@ -165,36 +182,38 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                         children: [
                           Text('Alumnos (${op['alumnos_count'] ?? 0})',
                               style: AppTypography.subtitulo),
-                          const SizedBox(height: AppSpacing.md),
-                          Text('Importar nómina desde CSV', style: AppTypography.texto),
-                          const SizedBox(height: AppSpacing.md),
-                          Stack(
-                            children: [
-                              AppButton(
-                                label: 'Seleccionar archivo CSV',
-                                onPressed: _importandoCsv ? null : () => _importarCsv(context),
-                              ),
-                              if (_importandoCsv)
-                                Positioned.fill(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: AppColors.gris.withValues(alpha: 0.5),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.blanco),
+                          if (puedeImportarCsv) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            Text('Importar nómina desde CSV', style: AppTypography.texto),
+                            const SizedBox(height: AppSpacing.md),
+                            Stack(
+                              children: [
+                                AppButton(
+                                  label: 'Seleccionar archivo CSV',
+                                  onPressed: _importandoCsv ? null : () => _importarCsv(context),
+                                ),
+                                if (_importandoCsv)
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.gris.withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(AppRadii.campo),
+                                      ),
+                                      child: const Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.blanco),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: AppSpacing.md),
                           _listaAlumnos(),
                         ],
@@ -212,6 +231,10 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     );
   }
 
+  /// `'3 alumnos'`, `'1 profesional'` (plural configurable).
+  String _contar(int n, String singular, [String? plural]) =>
+      '$n ${n == 1 ? singular : (plural ?? '${singular}s')}';
+
   Future<void> _accionEstado(Future<void> Function() accion) async {
     await accion();
     ref.invalidate(operativoDetailProvider(widget.operativoId));
@@ -222,10 +245,10 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
 
   List<Widget> _botonesPorEstado(String estado, OperativoDetailController ctrl) {
     switch (estado) {
+      // En borrador, Confirmar va junto a Asignar dentro de la tarjeta
+      // de profesionales (compactos, uno al lado del otro).
       case 'borrador':
-        return [
-          AppCard(child: AppButton(label: 'Confirmar operativo', onPressed: () => _accionEstado(ctrl.confirmar))),
-        ];
+        return [];
       case 'confirmado':
         return [
           Row(
@@ -279,7 +302,8 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
       label: Text(label, style: const TextStyle(fontSize: 12)),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.boton)),
       ),
     );
   }
@@ -400,7 +424,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                 final nombre = ('${a['nombre'] ?? ''}').toLowerCase();
                 final apellido = ('${a['apellido'] ?? ''}').toLowerCase();
                 final dni = ('${a['dni'] ?? ''}').toLowerCase();
-                final completo = '$nombre $apellido $dni ${apellido} ${nombre}';
+                final completo = '$nombre $apellido $dni $apellido $nombre';
                 return completo.contains(query);
               }).toList();
 
@@ -520,7 +544,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.gris.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppRadii.campo),
       ),
       child: Row(
         children: [
@@ -559,60 +583,107 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     // Evaluado es estado automático (no seleccionable) cuando E+A+M+O están completos.
     if (esPresente) {
       if (permisos.contains('cargarEvaluacionMedica')) {
-        acciones.add(_botonAccion(
-            'Evaluación médica', () => context.push('/operativos/$opId/alumnos/$id/medica')));
+        acciones.add(PostActionButton(
+          icono: Icons.medical_services_outlined,
+          texto: 'Evaluación médica',
+          colorFondo: AppColors.primario,
+          colorTexto: AppColors.blanco,
+          onPressed: () =>
+              context.push('/operativos/$opId/alumnos/$id/medica'),
+        ));
       }
       if (permisos.contains('cargarEvaluacionOdontologica')) {
-        acciones.add(_botonAccion(
-            'Eval. odontológica', () => context.push('/operativos/$opId/alumnos/$id/odontologica')));
+        acciones.add(PostActionButton(
+          icono: Icons.health_and_safety_outlined,
+          texto: 'Eval. odontológica',
+          colorFondo: AppColors.primario,
+          colorTexto: AppColors.blanco,
+          onPressed: () => context
+              .push('/operativos/$opId/alumnos/$id/odontologica'),
+        ));
       }
       if (permisos.contains('cargarSeccionEscuela')) {
-        acciones.add(_botonAccion(
-            'Sección escuela', () => context.push('/operativos/$opId/alumnos/$id/escuela')));
+        acciones.add(PostActionButton(
+          icono: Icons.school_outlined,
+          texto: 'Sección escuela',
+          colorFondo: AppColors.primario,
+          colorTexto: AppColors.blanco,
+          onPressed: () =>
+              context.push('/operativos/$opId/alumnos/$id/escuela'),
+        ));
       }
       // A = Datos personales y familia (escuela carga todos los datos del alumno)
       // Permiso data-driven: cargarAntecedentesNino (solo rol escuela + superadmin)
       if (permisos.contains('cargarAntecedentesNino') || rolName == 'superadmin') {
-        acciones.add(_botonAccion(
-            'Datos personales y familia', () => context.push('/operativos/$opId/alumnos/$id/datos')));
+        acciones.add(PostActionButton(
+          icono: Icons.family_restroom_outlined,
+          texto: 'Datos personales y familia',
+          colorFondo: AppColors.primario,
+          colorTexto: AppColors.blanco,
+          onPressed: () =>
+              context.push('/operativos/$opId/alumnos/$id/datos'),
+        ));
       }
     }
 
-    return Container(
-      key: ValueKey('alumno-$id'),
-      margin: const EdgeInsets.only(top: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.gris.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(nombre.isEmpty ? 'Alumno' : nombre,
-                        style: AppTypography.texto.copyWith(fontWeight: FontWeight.bold)),
-                    if (dni.isNotEmpty)
-                      Text('DNI $dni',
-                          style: AppTypography.texto.copyWith(
-                              fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
-                  ],
-                ),
-              ),
-              _badgeEstado(completo),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // Selector de asistencia compacto — evaluado es automático, no seleccionable
-          if (puedeEditarEstado && !esEvaluado)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
+    final tildes = <Widget>[
+      if (a['escuela_completado'] as bool? ?? false)
+        const PostChipCustom(texto: 'E ✓', completado: true)
+      else
+        const PostChipCustom(texto: 'E', completado: false),
+      if (a['antecedentes_completado'] as bool? ?? false)
+        const PostChipCustom(texto: 'A ✓', completado: true)
+      else
+        const PostChipCustom(texto: 'A', completado: false),
+      if (a['medica_completada'] as bool? ?? false)
+        const PostChipCustom(texto: 'M ✓', completado: true)
+      else
+        const PostChipCustom(texto: 'M', completado: false),
+      if (a['odontologica_completada'] as bool? ?? false)
+        const PostChipCustom(texto: 'O ✓', completado: true)
+      else
+        const PostChipCustom(texto: 'O', completado: false),
+    ];
+    // Constancia y datos van en el menú ⋯ (solo en finalizado).
+    final conMenuFinal =
+        operativoEstado == 'finalizado' && (completo || esAusente || esEvaluado);
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: DetailPostCard(
+        key: ValueKey('alumno-$id'),
+        showAvatar: false,
+        title: nombre.isEmpty ? 'Alumno' : nombre,
+        subtitle: dni.isNotEmpty ? 'DNI $dni' : '',
+        trailing: _badgeEstado(completo),
+        menuEntries: [
+          if (conMenuFinal)
+            const PostMenuEntry(
+              value: 'constancia',
+              label: 'Constancia PDF',
+              icon: Icons.picture_as_pdf_outlined,
+              color: AppColors.primario,
+            ),
+          if (conMenuFinal)
+            const PostMenuEntry(
+              value: 'datos',
+              label: 'Ver datos',
+              icon: Icons.visibility_outlined,
+              color: AppColors.primario,
+            ),
+        ],
+        onMenuSelected: (valor) {
+          if (valor == 'constancia') {
+            context.push('/operativos/$opId/alumnos/$id/constancia');
+          } else if (valor == 'datos') {
+            context.push('/operativos/$opId/alumnos/$id/datos');
+          }
+        },
+        bannerTop: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Selector de asistencia compacto — evaluado es automático, no seleccionable
+            if (puedeEditarEstado && !esEvaluado)
+              Row(
                 children: [
                   const Icon(Icons.how_to_reg_outlined, size: 14, color: AppColors.texto),
                   const SizedBox(width: 4),
@@ -628,9 +699,9 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                       decoration: InputDecoration(
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide(color: _colorTextoEstado(estadoActual), width: 1.2)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual), width: 1.2)),
                         filled: true,
                         fillColor: _colorFondoEstado(estadoActual),
                       ),
@@ -647,61 +718,34 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                     ),
                   ),
                 ],
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
+              )
+            else
+              Row(
                 children: [
                   Icon(Icons.how_to_reg_outlined, size: 12, color: _colorTextoEstado(estadoActual)),
                   const SizedBox(width: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: _colorFondoEstado(estadoActual), borderRadius: BorderRadius.circular(6), border: Border.all(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
+                    decoration: BoxDecoration(color: _colorFondoEstado(estadoActual), borderRadius: BorderRadius.circular(AppRadii.boton), border: Border.all(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
                     child: Text(_labelEstadoAlumno(estadoActual), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual))),
                   ),
                 ],
               ),
-            ),
-          if (esPresente || esEvaluado)
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                if (a['escuela_completado'] as bool? ?? false) _chip('E ✓'),
-                if (a['antecedentes_completado'] as bool? ?? false) _chip('A ✓'),
-                if (a['medica_completada'] as bool? ?? false) _chip('M ✓'),
-                if (a['odontologica_completada'] as bool? ?? false) _chip('O ✓'),
-              ],
-            )
-          else if (esAusente)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text('Ausente — no requiere evaluaciones', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6), fontStyle: FontStyle.italic)),
-            ),
-          if (acciones.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(spacing: 8, runSpacing: 8, children: acciones),
-          ] else if (esEvaluado) ...[
-            const SizedBox(height: 4),
-            Text('Evaluado — completo', style: AppTypography.texto.copyWith(fontSize: 10, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
-          ] else if (operativoEstado != 'finalizado' && !esPresente) ...[
-            const SizedBox(height: 4),
-            Text('Marcá como Presente para habilitar la carga', style: AppTypography.texto.copyWith(fontSize: 10, color: AppColors.texto.withValues(alpha: 0.5))),
+            if (esAusente)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text('Ausente — no requiere evaluaciones', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6), fontStyle: FontStyle.italic)),
+              ),
+            if (operativoEstado != 'finalizado' && !esPresente && !esAusente) ...[
+              const SizedBox(height: 4),
+              Text('Marcá como Presente para habilitar la carga', style: AppTypography.texto.copyWith(fontSize: 10, color: AppColors.texto.withValues(alpha: 0.5))),
+            ],
           ],
-          if (operativoEstado == 'finalizado' && (completo || esAusente || esEvaluado)) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _botonAccion('Constancia PDF', () => context.push('/operativos/$opId/alumnos/$id/constancia')),
-                _botonAccion('Ver datos', () => context.push('/operativos/$opId/alumnos/$id/datos')),
-              ],
-            ),
-          ],
-        ],
+        ),
+        bannerChips: (esPresente || esEvaluado) ? tildes : const <String>[],
+        bannerBottom: acciones.isNotEmpty
+            ? Wrap(spacing: 8, runSpacing: 8, children: acciones)
+            : null,
       ),
     );
   }
@@ -757,42 +801,16 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     }
   }
 
-  Widget _botonAccion(String label, VoidCallback onTap) {
-    return TextButton(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        backgroundColor: AppColors.gris.withValues(alpha: 0.15),
-        foregroundColor: AppColors.texto,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-      child: Text(label, style: AppTypography.texto.copyWith(fontSize: 12)),
-    );
-  }
-
   Widget _badgeEstado(bool completo) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: completo ? Colors.green : AppColors.gris,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppRadii.campo),
       ),
       child: Text(completo ? 'Completo' : 'Pendiente',
           style: const TextStyle(
               color: AppColors.blanco, fontSize: 11, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _chip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(label,
-          style: const TextStyle(
-              color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -904,23 +922,6 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         ],
       ),
     );
-  }
-
-  Color _colorEstado(String estado) {
-    switch (estado) {
-      case 'borrador':
-        return AppColors.gris;
-      case 'confirmado':
-        return Colors.blue;
-      case 'en_curso':
-        return Colors.orange;
-      case 'finalizado':
-        return Colors.green;
-      case 'cancelado':
-        return Colors.red;
-      default:
-        return AppColors.gris;
-    }
   }
 
   String _labelEstado(String estado) {

@@ -39,10 +39,11 @@ class EscuelasAccionesController extends StateNotifier<EscuelasAccionesState> {
       state = EscuelasAccionesState();
       return true;
     } catch (e) {
+      final crudo = e.toString().replaceFirst('Exception: ', '');
       state = EscuelasAccionesState(
-        error: e.toString().contains('409')
+        error: crudo.contains('409') && crudo.contains('CUE')
             ? 'CUE duplicado'
-            : 'Error: ${e.toString()}',
+            : crudo,
       );
       return false;
     }

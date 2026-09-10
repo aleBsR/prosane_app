@@ -40,7 +40,7 @@ class OperativoDetailController extends StateNotifier<OperativoDetailState> {
   final String operativoId;
   final NotificacionController notificacionController;
 
-  Future<void> asignarProfesional(String profesionalId, String rol) async {
+  Future<void> asignarProfesional(String profesionalId, [String? rol]) async {
     state = state.copyWith(procesando: true, error: null);
     try {
       await repo.asignarProfesional(operativoId, profesionalId, rol);

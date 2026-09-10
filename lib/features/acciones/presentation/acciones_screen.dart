@@ -97,7 +97,8 @@ class AccionesScreen extends ConsumerWidget {
                               case 'verAlumnosEscuela':
                                 context.push('/escuelas/alumnos');
                               case 'registrarAlumnoEscuela':
-                                context.push('/escuelas/alumnos');
+                                // Va directo al formulario de alta.
+                                context.push('/escuelas/alumnos?registrar=1');
                               case 'verGestionUsuarios':
                                 context.push('/gestion-usuarios');
                               case 'gestionarUsuariosEscuela':

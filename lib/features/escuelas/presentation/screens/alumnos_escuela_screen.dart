@@ -15,12 +15,44 @@ import '../controllers/alumnos_escuela_controller.dart';
 import '../controllers/mi_escuela_controller.dart';
 import '../../../operativos/presentation/controllers/operativos_list_controller.dart';
 
-class AlumnosEscuelaScreen extends ConsumerWidget {
-  const AlumnosEscuelaScreen({super.key});
+class AlumnosEscuelaScreen extends ConsumerStatefulWidget {
+  const AlumnosEscuelaScreen(
+      {super.key, this.escuelaId, this.escuelaNombre, this.abrirRegistro = false});
+
+  /// Si viene [escuelaId], muestra los alumnos de esa escuela en modo solo
+  /// lectura (detalle de escuela). Si no, funciona como "mi escuela" con
+  /// registro incluido.
+  final String? escuelaId;
+  final String? escuelaNombre;
+
+  /// Si es true (tile "Registrar alumno" del inicio), abre el formulario
+  /// de alta automáticamente al entrar.
+  final bool abrirRegistro;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final alumnosAsync = ref.watch(alumnosEscuelaProvider);
+  ConsumerState<AlumnosEscuelaScreen> createState() =>
+      _AlumnosEscuelaScreenState();
+}
+
+class _AlumnosEscuelaScreenState
+    extends ConsumerState<AlumnosEscuelaScreen> {
+  bool _autoAbierto = false;
+
+  bool get _soloLectura =>
+      widget.escuelaId != null && widget.escuelaId!.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    // Apertura automática una sola vez (no se reabre al volver del formulario).
+    if (widget.abrirRegistro && !_soloLectura && !_autoAbierto) {
+      _autoAbierto = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _mostrarFormulario(context, ref);
+      });
+    }
+    final alumnosAsync = _soloLectura
+        ? ref.watch(alumnosPorEscuelaProvider(widget.escuelaId!))
+        : ref.watch(alumnosEscuelaProvider);
     final state = ref.watch(alumnosEscuelaControllerProvider);
     return AppGradientScaffold(
       child: Column(
@@ -31,11 +63,24 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
             child: Row(children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () => context.go('/inicio'),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/inicio');
+                  }
+                },
               ),
-              Text('Alumnos de mi escuela',
-                  style: AppTypography.titulo.copyWith(
-                      color: AppColors.blanco, fontSize: 22)),
+              Expanded(
+                child: Text(
+                    _soloLectura
+                        ? 'Alumnos de ${widget.escuelaNombre ?? 'la escuela'}'
+                        : 'Alumnos de mi escuela',
+                    style: AppTypography.titulo.copyWith(
+                        color: AppColors.blanco, fontSize: 22),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              ),
             ]),
           ),
           Expanded(
@@ -80,80 +125,18 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               ),
             ),
           ),
-          Consumer(
-            builder: (context, ref2, _) {
-              final escuelaAsync = ref.watch(miEscuelaProvider);
-              return escuelaAsync.when(
-                data: (escuela) {
-                  final cursos = (escuela['cursos'] as List?) ?? [];
-                  final esPlurigrado = escuela['plurigrado_rural'] == true;
-                  final sinCursos = cursos.isEmpty;
-                  final bloqueaPorCursos = sinCursos && !esPlurigrado;
-                  return Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (sinCursos)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: Center(
-                              child: Container(
-                                constraints: const BoxConstraints(maxWidth: 320),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF3E0),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: const Color(0xFFFFB74D)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.info_outline, size: 14, color: Color(0xFFE65100)),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        esPlurigrado
-                                            ? 'Escuela plurigrado sin cursos. Podés registrar sin curso (Plurigrado por defecto).'
-                                            : 'Aún no hay cursos. Creá uno antes de registrar.',
-                                        style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFE65100)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        AppButton(
-                          label: bloqueaPorCursos ? 'Crear curso' : 'Registrar alumno',
-                          isLoading: state.guardando,
-                          onPressed: state.guardando
-                              ? null
-                              : bloqueaPorCursos
-                                  ? () {
-                                      final escuelaId = (escuela['id'] ?? '').toString();
-                                      if (escuelaId.isNotEmpty) context.push('/escuelas/$escuelaId/cursos');
-                                    }
-                                  : () => _mostrarFormulario(context, ref),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loading: () => Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: AppButton(label: 'Registrar alumno', isLoading: true, onPressed: null),
-                ),
-                error: (_, __) => Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: AppButton(
-                    label: 'Registrar alumno',
-                    isLoading: state.guardando,
-                    onPressed: state.guardando ? null : () => _mostrarFormulario(context, ref),
-                  ),
-                ),
-              );
-            },
+          if (_soloLectura)
+            const SizedBox(height: AppSpacing.md)
+          else
+            Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: AppButton(
+              label: 'Registrar alumno',
+              isLoading: state.guardando,
+              onPressed: state.guardando
+                  ? null
+                  : () => _mostrarFormulario(context, ref),
+            ),
           ),
         ],
       ),
@@ -173,6 +156,7 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
+    final escuelaId = (escuela['id'] ?? '').toString();
     final cursos = (escuela['cursos'] as List?)
             ?.whereType<Map>()
             .map((e) => e.cast<String, dynamic>())
@@ -180,31 +164,8 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
         <Map<String, dynamic>>[];
     final esPlurigrado = escuela['plurigrado_rural'] == true;
     final permiteSinCurso = esPlurigrado;
-    if (cursos.isEmpty && !permiteSinCurso) {
-      final escuelaId = (escuela['id'] ?? '').toString();
-      if (context.mounted) {
-        ref.read(notificacionProvider.notifier).error(
-          'Debes crear al menos un curso antes de registrar alumnos.',
-        );
-      }
-      if (escuelaId.isNotEmpty && context.mounted) {
-        final irACursos = await showDialog<bool>(
-          context: context,
-          builder: (dCtx) => AlertDialog(
-            title: const Text('Sin cursos'),
-            content: const Text('Aún no hay cursos cargados. Debes crear al menos uno antes de registrar alumnos. ¿Ir a crear curso?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Cancelar')),
-              TextButton(onPressed: () => Navigator.pop(dCtx, true), child: const Text('Crear curso')),
-            ],
-          ),
-        );
-        if (irACursos == true && context.mounted) {
-          context.push('/escuelas/$escuelaId/cursos');
-        }
-      }
-      return;
-    }
+    // El formulario abre directo: si faltan cursos, el aviso va adentro
+    // del propio formulario (sin diálogos intermedios).
     if (cursos.isEmpty && permiteSinCurso && context.mounted) {
       ref.read(notificacionProvider.notifier).exito('Escuela plurigrado sin cursos: podés registrar sin curso (se usará "Plurigrado" por defecto).');
     }
@@ -266,7 +227,35 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
               AppTextField(label: 'Edad *', controller: edad,
                   keyboardType: TextInputType.number),
               const SizedBox(height: AppSpacing.sm),
-              if (esPlurigrado && cursos.isEmpty)
+              if (cursos.isEmpty && !esPlurigrado)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFFB74D)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: Color(0xFFE65100)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Todavía no hay cursos. Creá uno para poder guardar.',
+                            style: AppTypography.texto.copyWith(fontSize: 12, color: Color(0xFFE65100))),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          if (escuelaId.isNotEmpty && context.mounted) {
+                            context.push('/escuelas/$escuelaId/cursos');
+                          }
+                        },
+                        child: const Text('Crear curso'),
+                      ),
+                    ],
+                  ),
+                )
+              else if (esPlurigrado && cursos.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
@@ -413,8 +402,8 @@ class AlumnosEscuelaScreen extends ConsumerWidget {
                 },
                 'edad': int.tryParse(edad.text.trim()) ?? 0,
                 'domicilio': {'localidad': localidad.text.trim()},
-                if (cursoIdFinal != null) 'curso_id': cursoIdFinal,
-                if (operativoId != null) 'operativo_id': operativoId,
+                'curso_id': ?cursoIdFinal,
+                'operativo_id': ?operativoId,
                 if (telefono.text.trim().isNotEmpty) 'celular': telefono.text.trim(),
                 if (telefonoFijo.text.trim().isNotEmpty) 'telefono_fijo': telefonoFijo.text.trim(),
                 if (tieneCud.text.trim().isNotEmpty) 'tiene_cud': tieneCud.text.trim(),

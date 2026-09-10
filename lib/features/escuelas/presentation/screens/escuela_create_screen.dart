@@ -10,6 +10,7 @@ import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../data/escuelas_repository.dart';
 import '../controllers/escuela_create_controller.dart';
 import '../controllers/escuelas_list_controller.dart';
 
@@ -75,17 +76,16 @@ class EscuelaCreateScreen extends ConsumerWidget {
                           value: state.sectorGestion.isEmpty
                               ? null
                               : state.sectorGestion,
-                          items: const [
-                            (value: 'obra_social', label: 'Obra Social'),
-                            (value: 'estatal', label: 'Estatal'),
-                            (value: 'privado', label: 'Privado'),
-                            (value: 'otro', label: 'Otro'),
-                          ],
+                          items: sectoresGestion,
                           onChanged: ctrl.setSectorGestion,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        AppTextField(
+                        AppDropdownField(
                           label: 'Modalidad educativa',
+                          value: state.modalidadEducativa.isEmpty
+                              ? null
+                              : state.modalidadEducativa,
+                          items: modalidadesEducativas,
                           onChanged: ctrl.setModalidadEducativa,
                         ),
                       ],

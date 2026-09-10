@@ -27,6 +27,7 @@ import '../../features/operativos/presentation/screens/seccion_escuela_screen.da
 import '../../features/operativos/presentation/screens/constancia_screen.dart';
 import '../../features/operativos/presentation/screens/escuela_datos_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
+import '../../features/escuelas/presentation/screens/escuela_detail_screen.dart';
 import '../../features/escuelas/presentation/screens/escuelas_list_screen.dart';
 import '../../features/escuelas/presentation/screens/cursos_screen.dart';
 import '../../features/escuelas/presentation/screens/mi_escuela_screen.dart';
@@ -66,7 +67,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final autenticado = sessionState is SesionAutenticada;
       // Bloqueo por contraseña temporal: debe cambiar antes de cualquier otra pantalla
       if (autenticado) {
-        final mustChange = (sessionState as SesionAutenticada).sesion.usuario.mustChangePassword;
+        final mustChange = (sessionState).sesion.usuario.mustChangePassword;
         final loc = state.matchedLocation;
         if (mustChange && loc != '/change-password') return '/change-password';
         if (!mustChange && loc == '/change-password') return '/inicio';
@@ -149,7 +150,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/escuelas/alumnos',
-        builder: (c, s) => const AlumnosEscuelaScreen(),
+        builder: (c, s) => AlumnosEscuelaScreen(
+          abrirRegistro: s.uri.queryParameters['registrar'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: '/escuelas/:escuelaId',
+        builder: (c, s) => EscuelaDetailScreen(
+          escuelaId: s.pathParameters['escuelaId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/escuelas/:escuelaId/alumnos',
+        builder: (c, s) => AlumnosEscuelaScreen(
+          escuelaId: s.pathParameters['escuelaId']!,
+          escuelaNombre: s.uri.queryParameters['nombre'],
+        ),
       ),
       GoRoute(
         path: '/gestion-usuarios',

@@ -110,8 +110,11 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
               IconButton(
                 icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
-                  if (context.canPop()) context.pop();
-                  else context.go('/operativos/${widget.operativoId}');
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/operativos/${widget.operativoId}');
+                  }
                 },
               ),
               Expanded(

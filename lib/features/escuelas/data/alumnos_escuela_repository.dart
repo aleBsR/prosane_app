@@ -70,6 +70,20 @@ class AlumnosEscuelaRepository {
         .toList();
   }
 
+  /// Alumnos de una escuela puntual (solo superadmin; el detalle de escuela).
+  Future<List<AlumnoEscuela>> listarPorEscuela(String escuelaId) async {
+    try {
+      final res = await _dio.get('/alumnos/',
+          queryParameters: {'escuela_id': escuelaId});
+      final data = res.data as List;
+      return data
+          .map((e) => AlumnoEscuela.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(e.message);
+    }
+  }
+
   Future<AlumnoEscuela> crear(Map<String, dynamic> payload) async {
     try {
       final res = await _dio.post('/alumnos/', data: payload);

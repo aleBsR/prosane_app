@@ -125,12 +125,28 @@ class UsuariosEscuelaScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined,
-                                  color: AppColors.primario),
-                              tooltip: 'Editar',
-                              onPressed: () =>
-                                  _abrirFormulario(context, ref, usuario: u),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert,
+                                  color: AppColors.texto),
+                              onSelected: (valor) {
+                                if (valor == 'editar') {
+                                  _abrirFormulario(context, ref, usuario: u);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'editar',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit_outlined,
+                                          size: 18,
+                                          color: AppColors.primario),
+                                      SizedBox(width: 8),
+                                      Text('Editar'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -176,6 +192,7 @@ class _UsuarioEscuelaFormDialogState
     extends ConsumerState<UsuarioEscuelaFormDialog> {
   late final TextEditingController _emailCtrl;
   String? _escuelaId;
+  bool _escuelaOriginalInvalida = false;
   late bool _isActive;
   String? _error;
   bool _guardando = false;
@@ -317,15 +334,58 @@ class _UsuarioEscuelaFormDialogState
                 ),
               const SizedBox(height: AppSpacing.md),
               escuelasAsync.when(
-                data: (escuelas) => AppDropdownField(
-                  label: 'Escuela *',
-                  value: _escuelaId,
-                  items: [
-                    for (final e in escuelas)
-                      (value: e.id, label: e.nombre),
-                  ],
-                  onChanged: (v) => setState(() => _escuelaId = v),
-                ),
+                data: (escuelas) {
+                  // Si la escuela asignada ya no está disponible (ej. fue
+                  // eliminada/desactivada), el valor no existe en la lista y
+                  // rompería el desplegable: se limpia y se pide elegir otra.
+                  final escuelaValida = _escuelaId == null ||
+                      escuelas.any((e) => e.id == _escuelaId);
+                  if (!escuelaValida) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _escuelaId = null;
+                          _escuelaOriginalInvalida = true;
+                        });
+                      }
+                    });
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_esEdicion &&
+                          _escuelaOriginalInvalida &&
+                          _escuelaId == null) ...[
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.warning_amber_outlined,
+                                color: AppColors.error, size: 18),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'La escuela asignada ya no está disponible: elegí una nueva.',
+                                style: AppTypography.texto.copyWith(
+                                    fontSize: 12, color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
+                      AppDropdownField(
+                        label: 'Escuela *',
+                        value: escuelaValida ? _escuelaId : null,
+                        items: [
+                          for (final e in escuelas)
+                            (value: e.id, label: e.nombre),
+                        ],
+                        onChanged: (v) => setState(() => _escuelaId = v),
+                      ),
+                    ],
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => Text('No se pudieron cargar las escuelas',
                     style: AppTypography.texto.copyWith(color: AppColors.error)),

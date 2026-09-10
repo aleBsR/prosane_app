@@ -39,17 +39,27 @@ class OperativoCreateScreen extends ConsumerWidget {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            child: Row(children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () => context.pop(),
-              ),
-              Expanded(
-                child: Text('Nuevo operativo',
-                    style: AppTypography.titulo.copyWith(color: AppColors.blanco, fontSize: 22)),
-              ),
-            ]),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  onPressed: () => context.pop(),
+                ),
+                Expanded(
+                  child: Text(
+                    'Nuevo operativo',
+                    style: AppTypography.titulo.copyWith(
+                      color: AppColors.blanco,
+                      fontSize: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -63,7 +73,7 @@ class OperativoCreateScreen extends ConsumerWidget {
                       children: [
                         AppTextField(
                           label: 'Nombre (opcional)',
-                          hint: 'Ej: Jornada de vacunación',
+                          hint: 'Ej: Operativo 2026',
                           onChanged: ctrl.setNombre,
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -81,7 +91,10 @@ class OperativoCreateScreen extends ConsumerWidget {
                           items: const [
                             (value: '', label: '-- Seleccionar --'),
                             (value: 'escuela', label: 'En la escuela'),
-                            (value: 'centro_salud', label: 'En el centro de salud'),
+                            (
+                              value: 'centro_salud',
+                              label: 'En el centro de salud',
+                            ),
                             (value: 'otros', label: 'Otros'),
                           ],
                           onChanged: ctrl.setLugar,
@@ -90,7 +103,10 @@ class OperativoCreateScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Notas (opcional)', style: AppTypography.subtitulo),
+                            Text(
+                              'Notas (opcional)',
+                              style: AppTypography.subtitulo,
+                            ),
                             const SizedBox(height: 6),
                             TextField(
                               maxLines: 3,
@@ -102,15 +118,22 @@ class OperativoCreateScreen extends ConsumerWidget {
                                 fillColor: AppColors.campo,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(color: Colors.transparent),
+                                  borderSide: const BorderSide(
+                                    color: Colors.transparent,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(color: Colors.transparent),
+                                  borderSide: const BorderSide(
+                                    color: Colors.transparent,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(color: AppColors.primario, width: 1.5),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primario,
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                             ),
@@ -124,7 +147,9 @@ class OperativoCreateScreen extends ConsumerWidget {
                     child: AppButton(
                       label: 'Crear operativo',
                       isLoading: state.guardando,
-                      onPressed: state.puedeGuardar && !state.guardando ? ctrl.guardar : null,
+                      onPressed: state.puedeGuardar && !state.guardando
+                          ? ctrl.guardar
+                          : null,
                     ),
                   ),
                 ],
@@ -138,10 +163,7 @@ class OperativoCreateScreen extends ConsumerWidget {
 }
 
 class _EscuelaDropdown extends ConsumerWidget {
-  const _EscuelaDropdown({
-    required this.state,
-    required this.ctrl,
-  });
+  const _EscuelaDropdown({required this.state, required this.ctrl});
 
   final OperativoCreateState state;
   final OperativoCreateController ctrl;
@@ -156,10 +178,7 @@ class _EscuelaDropdown extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                'Escuela *',
-                style: AppTypography.subtitulo,
-              ),
+              Text('Escuela *', style: AppTypography.subtitulo),
               const SizedBox(height: 6),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -182,7 +201,9 @@ class _EscuelaDropdown extends ConsumerWidget {
                         onPressed: () => context.push('/escuelas/nuevo'),
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.primario,
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
                         ),
                         child: const Text('Crear escuela'),
                       ),

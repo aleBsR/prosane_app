@@ -111,7 +111,7 @@ class EscuelaCreateController extends StateNotifier<EscuelaCreateState> {
 
     try {
       final payload = {
-        'nombre': state.nombre,
+        'nombre': state.nombre.trim(),
         if (state.cue.isNotEmpty) 'cue': state.cue,
         if (state.ambito.isNotEmpty) 'ambito': state.ambito,
         if (state.sectorGestion.isNotEmpty)

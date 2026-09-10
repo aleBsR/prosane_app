@@ -27,6 +27,11 @@ class AppDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Si el valor guardado no está en la lista (dato viejo o inválido),
+    // se muestra el hint en vez de reventar el desplegable.
+    final valido = value != null &&
+        value!.isNotEmpty &&
+        items.any((it) => it.value == value);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -34,7 +39,7 @@ class AppDropdownField extends StatelessWidget {
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
           isExpanded: true, // evita overflow horizontal en anchos fijos (ej: grilla del odontograma)
-          initialValue: (value == null || value!.isEmpty) ? null : value,
+          initialValue: valido ? value : null,
           hint: Text(hint),
           decoration: InputDecoration(
             filled: true,

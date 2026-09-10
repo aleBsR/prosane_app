@@ -14,6 +14,12 @@ class AppTheme {
         bodyMedium: AppTypography.texto,
       ),
       scaffoldBackgroundColor: AppColors.blanco,
+      // Diálogos del mismo blanco que las tarjetas: sin el gris-lavanda
+      // ni el tinte primario que Material 3 aplica por defecto.
+      dialogTheme: const DialogThemeData(
+        backgroundColor: AppColors.blanco,
+        surfaceTintColor: Colors.transparent,
+      ),
     );
   }
 }

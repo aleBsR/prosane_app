@@ -7,3 +7,10 @@ final escuelasListControllerProvider =
   final repo = ref.watch(escuelasRepositoryProvider);
   return repo.listar();
 });
+
+/// Detalle de una escuela puntual (pantalla de detalle).
+final escuelaDetalleProvider =
+    FutureProvider.family<Escuela, String>((ref, escuelaId) async {
+  final repo = ref.watch(escuelasRepositoryProvider);
+  return repo.obtener(escuelaId);
+});

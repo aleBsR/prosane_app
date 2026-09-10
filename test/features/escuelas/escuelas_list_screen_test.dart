@@ -17,7 +17,8 @@ Widget _buildScreen(_MockRepo repo, List<Escuela> escuelas) {
       escuelasListControllerProvider.overrideWith((ref) async => escuelas),
     ],
     child: MaterialApp(
-      theme: AppTheme.light(),
+      // Sin ripple: el shader ink_sparkle no carga en este entorno de test.
+      theme: AppTheme.light().copyWith(splashFactory: NoSplash.splashFactory),
       home: const Scaffold(body: EscuelasListScreen()),
     ),
   );
@@ -32,59 +33,35 @@ void main() {
     activa: true,
   );
 
-  testWidgets('lista las escuelas y muestra iconos de editar y eliminar',
-      (tester) async {
+  testWidgets('lista las escuelas sin acciones por tarjeta', (tester) async {
     final repo = _MockRepo();
     await tester.pumpWidget(_buildScreen(repo, [escuela]));
     await tester.pumpAndSettle();
 
     expect(find.text('Escuela 1'), findsOneWidget);
-    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+    // La tarjeta solo navega al detalle: sin editar/eliminar acá.
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byIcon(Icons.delete_outline), findsNothing);
   });
 
-  testWidgets('editar abre el diálogo y llama al repositorio', (tester) async {
-    final repo = _MockRepo();
-    when(() => repo.obtener('e1')).thenAnswer((_) async => escuela);
-    when(() => repo.editar(any(), any())).thenAnswer((_) async => escuela);
-
-    await tester.pumpWidget(_buildScreen(repo, [escuela]));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(Icons.edit_outlined));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Editar escuela'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField).at(0), 'Escuela 1 editada');
-    await tester.pump();
-    await tester.tap(find.text('Guardar'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.editar('e1', any(that: isA<Map<String, dynamic>>())))
-        .called(1);
-    expect(find.text('Editar escuela'), findsNothing);
-  });
-
-  testWidgets('eliminar muestra confirmación y llama al repositorio',
+  testWidgets('la tarjeta muestra solo nombre, CUE y localidad',
       (tester) async {
     final repo = _MockRepo();
-    when(() => repo.eliminar('e1')).thenAnswer((_) async {});
-
-    await tester.pumpWidget(_buildScreen(repo, [escuela]));
+    final completa = Escuela(
+      id: 'e2',
+      nombre: 'Rural',
+      cue: '66000002',
+      localidad: 'Cerrillos',
+      ambito: 'rural',
+      plurigradoRural: true,
+    );
+    await tester.pumpWidget(_buildScreen(repo, [completa]));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.delete_outline));
-    await tester.pumpAndSettle();
-
-    expect(find.text('¿Eliminar Escuela 1?'), findsOneWidget);
-
-    await tester.tap(find.text('Eliminar'));
-    await tester.pumpAndSettle();
-
-    verify(() => repo.eliminar('e1')).called(1);
-    expect(find.text('¿Eliminar Escuela 1?'), findsNothing);
+    expect(find.text('Rural'), findsOneWidget);
+    expect(find.text('CUE 66000002 • Cerrillos'), findsOneWidget);
+    // Nada más: ni ámbito, ni notas, ni usuarios en la lista.
+    expect(find.textContaining('rural'), findsNothing);
+    expect(find.text('Plurigrado rural: no usa cursos'), findsNothing);
   });
 }

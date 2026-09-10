@@ -142,12 +142,29 @@ class ProfesionalesScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined,
-                                  color: AppColors.primario),
-                              tooltip: 'Editar',
-                              onPressed: () => _abrirFormulario(context, ref,
-                                  profesional: p),
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert,
+                                  color: AppColors.texto),
+                              onSelected: (valor) {
+                                if (valor == 'editar') {
+                                  _abrirFormulario(context, ref,
+                                      profesional: p);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'editar',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit_outlined,
+                                          size: 18,
+                                          color: AppColors.primario),
+                                      SizedBox(width: 8),
+                                      Text('Editar'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

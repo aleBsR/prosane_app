@@ -6,6 +6,12 @@ final alumnosEscuelaProvider = FutureProvider<List<AlumnoEscuela>>((ref) async {
   return ref.watch(alumnosEscuelaRepositoryProvider).listar();
 });
 
+/// Alumnos de una escuela puntual (detalle de escuela, solo lectura).
+final alumnosPorEscuelaProvider =
+    FutureProvider.family<List<AlumnoEscuela>, String>((ref, escuelaId) async {
+  return ref.watch(alumnosEscuelaRepositoryProvider).listarPorEscuela(escuelaId);
+});
+
 class AlumnosEscuelaState {
   const AlumnosEscuelaState({this.guardando = false, this.error});
   final bool guardando;

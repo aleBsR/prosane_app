@@ -41,12 +41,15 @@ class OperativosRepository {
 
   Future<Map<String, dynamic>> asignarProfesional(
     String operativoId,
-    String profesionalId,
-    String rol,
-  ) async {
+    String profesionalId, [
+    String? rol,
+  ]) async {
+    // Si se omite el rol, el backend lo deriva del rol real del profesional.
+    final data = <String, dynamic>{'profesional': profesionalId};
+    if (rol != null) data['rol_en_operativo'] = rol;
     final resp = await _dio.post(
       '/operativos/$operativoId/profesionales/asignar/',
-      data: {'profesional': profesionalId, 'rol_en_operativo': rol},
+      data: data,
     );
     return resp.data as Map<String, dynamic>;
   }
@@ -154,7 +157,7 @@ class OperativosRepository {
       '/operativos/$opId/alumnos/$alumnoId/',
       data: {
         'estado': estado,
-        if (observaciones != null) 'observaciones': observaciones,
+        'observaciones': ?observaciones,
       },
     );
     return resp.data as Map<String, dynamic>;
