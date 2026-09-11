@@ -95,55 +95,17 @@ void main() {
     expect(find.text('Seleccionar archivo CSV'), findsNothing);
   });
 
-  testWidgets('fila de alumno minimalista sin avatar y con tildes',
+  testWidgets('fila de alumno compacta: solo apellido, nombre y DNI',
       (tester) async {
     await tester.pumpWidget(_buildScreen(_MockRepo(), conAlumno: true));
     await tester.pumpAndSettle();
 
-    expect(find.text('Lautaro Mamani'), findsOneWidget);
+    expect(find.text('Mamani, Lautaro'), findsOneWidget);
     expect(find.text('DNI 47000001'), findsOneWidget);
-    expect(find.text('E ✓'), findsOneWidget);
+    // Las tildes y botones ya no viven en la lista: van al detalle del alumno.
+    expect(find.text('E ✓'), findsNothing);
+    expect(find.text('Evaluación médica'), findsNothing);
     // Solo la cabecera del operativo lleva avatar con inicial.
     expect(find.byType(CircleAvatar), findsOneWidget);
   });
-
-  testWidgets('en finalizado el ⋯ del alumno ofrece constancia y datos',
-      (tester) async {
-    await tester.pumpWidget(_buildScreen(_MockRepo(),
-        conAlumno: true, alumnoCompleto: true, estado: 'finalizado'));
-    await tester.pumpAndSettle();
-
-    // Sin botones sueltos: todo va por el menú.
-    expect(find.text('Constancia PDF'), findsNothing);
-    expect(find.text('Ver datos'), findsNothing);
-
-    await tester.ensureVisible(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Constancia PDF'), findsOneWidget);
-    expect(find.text('Ver datos'), findsOneWidget);
-  });
-
-  testWidgets('botones de carga de seccion se muestran para alumno presente',
-      (tester) async {
-    await tester.pumpWidget(_buildScreen(
-      _MockRepo(),
-      conAlumno: true,
-      acciones: [
-        Accion.fromJson(const {'name': 'cargarEvaluacionMedica', 'label': 'Cargar Médica'}),
-        Accion.fromJson(const {'name': 'cargarEvaluacionOdontologica', 'label': 'Cargar Odonto'}),
-        Accion.fromJson(const {'name': 'cargarSeccionEscuela', 'label': 'Cargar Escuela'}),
-        Accion.fromJson(const {'name': 'cargarAntecedentesNino', 'label': 'Cargar Datos'}),
-      ],
-    ));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Evaluación médica'), findsOneWidget);
-    expect(find.text('Eval. odontológica'), findsOneWidget);
-    expect(find.text('Sección escuela'), findsOneWidget);
-    expect(find.text('Datos personales y familia'), findsOneWidget);
-  });
 }
-

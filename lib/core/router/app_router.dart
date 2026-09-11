@@ -26,6 +26,7 @@ import '../../features/operativos/presentation/screens/evaluacion_odontologica_s
 import '../../features/operativos/presentation/screens/seccion_escuela_screen.dart';
 import '../../features/operativos/presentation/screens/constancia_screen.dart';
 import '../../features/operativos/presentation/screens/escuela_datos_screen.dart';
+import '../../features/operativos/presentation/screens/alumno_detail_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_detail_screen.dart';
 import '../../features/escuelas/presentation/screens/escuelas_list_screen.dart';
@@ -99,6 +100,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/operativos/:operativoId',
         builder: (c, s) => OperativoDetailScreen(operativoId: s.pathParameters['operativoId']!),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId',
+        builder: (c, s) => AlumnoDetailScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
       ),
       GoRoute(
         path: '/operativos/:operativoId/alumnos/:alumnoId/medica',

@@ -12,7 +12,6 @@ import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/detail_post_card.dart';
 import '../../../../core/design_system/app_text_field.dart';
-import '../../../../core/design_system/post_chip_custom.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/providers.dart';
 import '../../../../core/session/entities.dart';
@@ -392,8 +391,6 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
 
   Widget _listaAlumnos() {
     final alumnosAsync = ref.watch(alumnosProvider(widget.operativoId));
-    final sesion = ref.watch(sessionControllerProvider);
-    final permisos = sesion is SesionAutenticada ? sesion.sesion.permisos : const <String>{};
 
     return alumnosAsync.when(
       loading: () => const Padding(
@@ -511,7 +508,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
             const SizedBox(height: AppSpacing.sm),
             for (final clave in claves) ...[
               _encabezadoCurso(clave, grupos[clave]!.length),
-              for (final a in grupos[clave]!) _filaAlumno(a, permisos),
+              for (final a in grupos[clave]!) _filaAlumno(a),
             ],
           ],
         );
@@ -557,248 +554,55 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     );
   }
 
-  Widget _filaAlumno(Map<String, dynamic> a, Set<String> permisos) {
+  Widget _filaAlumno(Map<String, dynamic> a) {
     final id = '${a['id']}';
-    final nombre = '${a['nombre'] ?? ''} ${a['apellido'] ?? ''}'.trim();
+    final apellido = '${a['apellido'] ?? ''}'.trim();
+    final nombre = '${a['nombre'] ?? ''}'.trim();
     final dni = '${a['dni'] ?? ''}';
     final completo = a['completo'] as bool? ?? false;
     final opId = widget.operativoId;
-    final sesion = ref.watch(sessionControllerProvider);
-    final rolName = sesion is SesionAutenticada ? sesion.sesion.usuario.rolName : '';
-    final operativoEstado = ref.watch(operativoDetailProvider(widget.operativoId)).maybeWhen(
-          data: (op) => (op['estado'] as String?) ?? '',
-          orElse: () => '',
-        );
-    final puedeEditarEstado = (permisos.contains('gestionarEstadoAlumnoEnOperativo') || rolName == 'superadmin') &&
-        operativoEstado != 'finalizado' &&
-        operativoEstado != 'cancelado';
-    final estadoActual = (a['estado'] as String?) ?? 'pendiente';
 
-    final esAusente = estadoActual == 'ausente';
-    final esEvaluado = estadoActual == 'evaluado';
-    final esPresente = estadoActual == 'presente';
-    final acciones = <Widget>[];
-    // Solo si está presente se muestran botones de carga.
-    // Pendiente y ausente no permiten carga; ausente queda completo automático.
-    // Evaluado es estado automático (no seleccionable) cuando E+A+M+O están completos.
-    if (esPresente) {
-      if (permisos.contains('cargarEvaluacionMedica')) {
-        acciones.add(PostActionButton(
-          icono: Icons.medical_services_outlined,
-          texto: 'Evaluación médica',
-          colorFondo: AppColors.primario,
-          colorTexto: AppColors.blanco,
-          onPressed: () =>
-              context.push('/operativos/$opId/alumnos/$id/medica'),
-        ));
-      }
-      if (permisos.contains('cargarEvaluacionOdontologica')) {
-        acciones.add(PostActionButton(
-          icono: Icons.health_and_safety_outlined,
-          texto: 'Eval. odontológica',
-          colorFondo: AppColors.primario,
-          colorTexto: AppColors.blanco,
-          onPressed: () => context
-              .push('/operativos/$opId/alumnos/$id/odontologica'),
-        ));
-      }
-      if (permisos.contains('cargarSeccionEscuela')) {
-        acciones.add(PostActionButton(
-          icono: Icons.school_outlined,
-          texto: 'Sección escuela',
-          colorFondo: AppColors.primario,
-          colorTexto: AppColors.blanco,
-          onPressed: () =>
-              context.push('/operativos/$opId/alumnos/$id/escuela'),
-        ));
-      }
-      // A = Datos personales y familia (escuela carga todos los datos del alumno)
-      // Permiso data-driven: cargarAntecedentesNino (solo rol escuela + superadmin)
-      if (permisos.contains('cargarAntecedentesNino') || rolName == 'superadmin') {
-        acciones.add(PostActionButton(
-          icono: Icons.family_restroom_outlined,
-          texto: 'Datos personales y familia',
-          colorFondo: AppColors.primario,
-          colorTexto: AppColors.blanco,
-          onPressed: () =>
-              context.push('/operativos/$opId/alumnos/$id/datos'),
-        ));
-      }
-    }
-
-    final tildes = <Widget>[
-      if (a['escuela_completado'] as bool? ?? false)
-        const PostChipCustom(texto: 'E ✓', completado: true)
-      else
-        const PostChipCustom(texto: 'E', completado: false),
-      if (a['antecedentes_completado'] as bool? ?? false)
-        const PostChipCustom(texto: 'A ✓', completado: true)
-      else
-        const PostChipCustom(texto: 'A', completado: false),
-      if (a['medica_completada'] as bool? ?? false)
-        const PostChipCustom(texto: 'M ✓', completado: true)
-      else
-        const PostChipCustom(texto: 'M', completado: false),
-      if (a['odontologica_completada'] as bool? ?? false)
-        const PostChipCustom(texto: 'O ✓', completado: true)
-      else
-        const PostChipCustom(texto: 'O', completado: false),
-    ];
-    // Constancia y datos van en el menú ⋯ (solo en finalizado).
-    final conMenuFinal =
-        operativoEstado == 'finalizado' && (completo || esAusente || esEvaluado);
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: DetailPostCard(
-        key: ValueKey('alumno-$id'),
-        showAvatar: false,
-        title: nombre.isEmpty ? 'Alumno' : nombre,
-        subtitle: dni.isNotEmpty ? 'DNI $dni' : '',
-        trailing: _badgeEstado(completo),
-        menuEntries: [
-          if (conMenuFinal)
-            const PostMenuEntry(
-              value: 'constancia',
-              label: 'Constancia PDF',
-              icon: Icons.picture_as_pdf_outlined,
-              color: AppColors.primario,
-            ),
-          if (conMenuFinal)
-            const PostMenuEntry(
-              value: 'datos',
-              label: 'Ver datos',
-              icon: Icons.visibility_outlined,
-              color: AppColors.primario,
-            ),
-        ],
-        onMenuSelected: (valor) {
-          if (valor == 'constancia') {
-            context.push('/operativos/$opId/alumnos/$id/constancia');
-          } else if (valor == 'datos') {
-            context.push('/operativos/$opId/alumnos/$id/datos');
-          }
-        },
-        bannerTop: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Selector de asistencia compacto — evaluado es automático, no seleccionable
-            if (puedeEditarEstado && !esEvaluado)
-              Row(
-                children: [
-                  const Icon(Icons.how_to_reg_outlined, size: 14, color: AppColors.texto),
-                  const SizedBox(width: 4),
-                  Text('Asistencia:', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.texto.withValues(alpha: 0.8))),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 32,
-                    width: 140,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: ['pendiente', 'presente', 'ausente'].contains(estadoActual) ? estadoActual : 'pendiente',
-                      isExpanded: true,
-                      isDense: true,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadii.boton), borderSide: BorderSide(color: _colorTextoEstado(estadoActual), width: 1.2)),
-                        filled: true,
-                        fillColor: _colorFondoEstado(estadoActual),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadii.campo),
+          onTap: () => context.push('/operativos/$opId/alumnos/$id'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        [if (apellido.isNotEmpty) apellido, if (nombre.isNotEmpty) nombre]
+                            .join(', '),
+                        style: AppTypography.subtitulo,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual)),
-                      icon: Icon(Icons.keyboard_arrow_down, size: 16, color: _colorTextoEstado(estadoActual)),
-                      items: const [
-                        DropdownMenuItem(value: 'pendiente', child: Text('Pendiente', style: TextStyle(fontSize: 11))),
-                        DropdownMenuItem(value: 'presente', child: Text('Presente', style: TextStyle(fontSize: 11))),
-                        DropdownMenuItem(value: 'ausente', child: Text('Ausente', style: TextStyle(fontSize: 11))),
+                      if (dni.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text('DNI $dni',
+                            style: AppTypography.texto.copyWith(
+                                fontSize: 12,
+                                color: AppColors.texto.withValues(alpha: 0.6))),
                       ],
-                      onChanged: (v) {
-                        if (v != null && v != estadoActual) _cambiarEstadoAlumno(id, v);
-                      },
-                    ),
+                    ],
                   ),
-                ],
-              )
-            else
-              Row(
-                children: [
-                  Icon(Icons.how_to_reg_outlined, size: 12, color: _colorTextoEstado(estadoActual)),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: _colorFondoEstado(estadoActual), borderRadius: BorderRadius.circular(AppRadii.boton), border: Border.all(color: _colorTextoEstado(estadoActual).withValues(alpha: 0.3))),
-                    child: Text(_labelEstadoAlumno(estadoActual), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _colorTextoEstado(estadoActual))),
-                  ),
-                ],
-              ),
-            if (esAusente)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text('Ausente — no requiere evaluaciones', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6), fontStyle: FontStyle.italic)),
-              ),
-            if (operativoEstado != 'finalizado' && !esPresente && !esAusente) ...[
-              const SizedBox(height: 4),
-              Text('Marcá como Presente para habilitar la carga', style: AppTypography.texto.copyWith(fontSize: 10, color: AppColors.texto.withValues(alpha: 0.5))),
-            ],
-          ],
+                ),
+                _badgeEstado(completo),
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(Icons.chevron_right, color: AppColors.texto),
+              ],
+            ),
+          ),
         ),
-        bannerChips: (esPresente || esEvaluado) ? tildes : const <String>[],
-        bannerBottom: acciones.isNotEmpty
-            ? Wrap(spacing: 8, runSpacing: 8, children: acciones)
-            : null,
       ),
     );
-  }
-
-  Future<void> _cambiarEstadoAlumno(String alumnoId, String nuevoEstado) async {
-    try {
-      await ref.read(operativosRepositoryProvider).patchEstadoAlumno(widget.operativoId, alumnoId, nuevoEstado);
-      ref.invalidate(alumnosProvider(widget.operativoId));
-      ref.invalidate(completitudProvider(widget.operativoId));
-      ref.invalidate(operativoDetailProvider(widget.operativoId));
-      if (mounted) ref.read(notificacionProvider.notifier).exito('Asistencia: ${_labelEstadoAlumno(nuevoEstado)}');
-    } catch (e) {
-      if (mounted) ref.read(notificacionProvider.notifier).error('No se pudo actualizar asistencia: $e');
-    }
-  }
-
-  Color _colorFondoEstado(String estado) {
-    switch (estado) {
-      case 'presente':
-        return Colors.green.withValues(alpha: 0.12);
-      case 'ausente':
-        return Colors.red.withValues(alpha: 0.10);
-      case 'evaluado':
-        return Colors.blue.withValues(alpha: 0.10);
-      default:
-        return AppColors.gris.withValues(alpha: 0.10);
-    }
-  }
-
-  Color _colorTextoEstado(String estado) {
-    switch (estado) {
-      case 'presente':
-        return Colors.green.shade700;
-      case 'ausente':
-        return Colors.red.shade700;
-      case 'evaluado':
-        return Colors.blue.shade700;
-      default:
-        return AppColors.texto;
-    }
-  }
-
-  String _labelEstadoAlumno(String estado) {
-    switch (estado) {
-      case 'presente':
-        return 'Presente';
-      case 'ausente':
-        return 'Ausente';
-      case 'evaluado':
-        return 'Evaluado';
-      default:
-        return 'Pendiente';
-    }
   }
 
   Widget _badgeEstado(bool completo) {

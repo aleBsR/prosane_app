@@ -12,7 +12,144 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/providers.dart';
+import '../../../../core/session/entities.dart';
+import '../../../../core/session/session_controller.dart';
 import '../controllers/operativo_detail_controller.dart';
+
+const Map<String, String> _motivoNoExamenLabels = {
+  'negativa_familiar': 'Negativa familiar',
+  'negativa_nino': 'Negativa del niño',
+  'ausente': 'Ausente',
+  'otros': 'Otros',
+};
+
+const Map<String, String> _lugarExamenLabels = {
+  'escuela': 'En la escuela',
+  'centro_salud': 'En el centro de salud',
+};
+
+const Map<String, String> _percentilTallaLabels = {
+  'menor_3': 'Menor a 3',
+  'mayor_igual_3': 'Mayor o igual a 3',
+};
+
+const Map<String, String> _percentilImcLabels = {
+  'menor_3': 'Menor a 3 (emaciación)',
+  'entre_3_9': 'Entre 3 y 9 (riesgo de bajo peso)',
+  'entre_10_84': 'Entre 10 y 84 (normal)',
+  'entre_85_97': 'Entre 85 y 97 (sobrepeso)',
+  'mayor_97': 'Mayor a 97 (obesidad)',
+};
+
+const Map<String, String> _audiometriaLabels = {
+  'pasa': 'Pasa',
+  'no_pasa': 'No pasa',
+};
+
+const Map<String, String> _saludBucalLabels = {
+  'con_hallazgos': 'Con hallazgos',
+  'sin_hallazgos': 'Sin hallazgos',
+  'no_eval': 'No evaluado',
+};
+
+const Map<String, String> _hallazgoLabels = {
+  'piel': 'Piel',
+  'partes_blandas': 'Partes blandas',
+  'cardiovascular': 'Cardiovascular',
+  'respiratorio': 'Respiratorio',
+  'abdominal': 'Abdominal',
+  'genitourinario': 'Genitourinario',
+  'osteoarticular': 'Osteoarticular',
+  'neurologico': 'Neurológico',
+  'salud_visual': 'Salud visual',
+  'fonoaudiologica': 'Fonoaudiológica',
+  'icv': 'ICV',
+};
+
+const List<String> _sistemasHallazgo = [
+  'piel', 'partes_blandas', 'cardiovascular', 'respiratorio', 'abdominal',
+  'genitourinario', 'osteoarticular', 'neurologico', 'salud_visual',
+  'fonoaudiologica', 'icv',
+];
+
+const Map<String, String> _hallazgoEstadoLabels = {
+  'con': 'Con hallazgos',
+  'sin': 'Sin hallazgos',
+  'no_eval': 'No evaluado',
+};
+
+const Map<String, String> _derivacionLabels = {
+  'odontologia': 'Odontología',
+  'oftalmologia': 'Oftalmología',
+  'nutricion': 'Nutrición',
+  'neurologia': 'Neurología',
+  'cardiologia': 'Cardiología',
+  'fonoaudiologia': 'Fonoaudiología',
+  'psicologia': 'Psicología',
+  'otros': 'Otros',
+};
+
+const Map<String, String> _estadoPiezaLabels = {
+  '': 'Normal',
+  'ausente': 'Ausente',
+  'perdido': 'Perdido',
+  'extraido': 'Extraído',
+  'corona': 'Corona',
+  'protesis': 'Prótesis',
+  'implante': 'Implante',
+  'a_extraer': 'Para extraer',
+  'fractura_total': 'Fractura total',
+};
+
+const Map<String, String> _estadoCaraLabels = {
+  '': 'Sana',
+  'caries': 'Caries',
+  'restauracion': 'Restauración',
+  'sellador': 'Sellador',
+  'fractura': 'Fractura',
+  'a_tratar': 'A tratar',
+  'tratada': 'Tratada',
+};
+
+const Map<String, String> _estadoRaizLabels = {
+  '': 'Normal',
+  'conducto_realizado': 'Conducto realizado',
+  'conducto_pendiente': 'Conducto pendiente',
+};
+
+const Map<String, String> _caraLabels = {
+  'oclusal': 'Oclusal',
+  'mesial': 'Mesial',
+  'distal': 'Distal',
+  'vestibular': 'Vestibular',
+  'lingual': 'Lingual / palatina',
+};
+
+const Map<String, String> _siNoLabels = {
+  'SI': 'Sí',
+  'NO': 'No',
+  'NO_SABE': 'No sabe',
+};
+
+const Map<String, String> _sexoLabels = {
+  'masculino': 'Masculino',
+  'femenino': 'Femenino',
+  'otro': 'Otro',
+};
+
+const Map<String, String> _coberturaLabels = {
+  'obra_social': 'Obra Social (incluye PAMI)',
+  'estatal': 'Programas o planes estatales',
+  'prepaga': 'Plan privado o Prepaga',
+  'sin_cobertura': 'No tiene',
+};
+
+const Map<String, String> _ultimaConsultaLabels = {
+  'menos_1_anio': 'Hace menos de 1 año',
+  'mas_1_anio': 'Hace más de 1 año',
+  'no_recuerda': 'No recuerda',
+  'NINGUNA': 'Ninguna',
+};
 
 class EscuelaDatosScreen extends ConsumerStatefulWidget {
   const EscuelaDatosScreen({super.key, required this.operativoId, required this.alumnoId});
@@ -59,6 +196,13 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
   final _otros = TextEditingController();
   final _primeraMenst = TextEditingController();
   final _edadPrimeraMenst = TextEditingController();
+  Map<String, dynamic>? _evalMedica;
+  Map<String, dynamic>? _evalOdontologica;
+  Map<String, dynamic>? _operativoAlumno;
+  Map<String, dynamic>? _persona;
+  Map<String, dynamic>? _paciente;
+  Map<String, dynamic>? _domicilio;
+  Map<String, dynamic>? _antecedentes;
 
   @override
   void initState() {
@@ -103,7 +247,7 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
     super.dispose();
   }
 
-  Future<void> _cargar() async {
+Future<void> _cargar() async {
     setState(() {
       _cargando = true;
       _error = null;
@@ -152,6 +296,17 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
         _otros.text = (ant?['otros_problemas_salud'] ?? 'NINGUNO').toString();
         _primeraMenst.text = (ant?['primera_menstruacion'] ?? 'NO').toString();
         _edadPrimeraMenst.text = (ant?['edad_primera_menstruacion'] ?? '0').toString();
+        _evalMedica = data['evaluacion_medica'] is Map
+            ? Map<String, dynamic>.from(data['evaluacion_medica'] as Map)
+            : null;
+_evalOdontologica = data['evaluacion_odontologica'] is Map
+          ? Map<String, dynamic>.from(data['evaluacion_odontologica'] as Map)
+          : null;
+        _operativoAlumno = opAl.isEmpty ? null : Map<String, dynamic>.from(opAl);
+        _persona = persona;
+        _paciente = paciente;
+        _domicilio = domicilio;
+        _antecedentes = ant;
         _cargando = false;
       });
     } catch (e) {
@@ -241,10 +396,15 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
   @override
   Widget build(BuildContext context) {
     final operativoAsync = ref.watch(operativoDetailProvider(widget.operativoId));
-    final esNoEditable = operativoAsync.maybeWhen(
+    final operativoBloqueado = operativoAsync.maybeWhen(
       data: (op) => op['estado'] == 'finalizado' || op['estado'] == 'cancelado',
       orElse: () => false,
     );
+    final sesion = ref.watch(sessionControllerProvider);
+    final puedeEditar = sesion is SesionAutenticada &&
+        (sesion.sesion.permisos.contains('cargarAntecedentesNino') ||
+            sesion.sesion.usuario.rolName == 'superadmin');
+    final esNoEditable = operativoBloqueado || !puedeEditar;
     return AppGradientScaffold(
       child: Column(
         children: [
@@ -278,20 +438,23 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
                                 children: [
                                   const Icon(Icons.lock_outline, size: 14, color: Color(0xFF2E7D32)),
                                   const SizedBox(width: 6),
-                                  Flexible(child: Text('Operativo finalizado — solo lectura', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)))),
+                                  Flexible(child: Text(
+                                    operativoBloqueado
+                                        ? 'Operativo finalizado — solo lectura'
+                                        : 'Solo lectura — no tenés permisos de edición',
+                                    style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)))),
                                 ],
                               ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                         ],
-                        AbsorbPointer(
-                          absorbing: esNoEditable,
-                          child: Opacity(
-                            opacity: esNoEditable ? 0.85 : 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
+                        if (esNoEditable)
+                          ..._fichaSecciones(),
+                        if (!esNoEditable)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                                 AppCard(
                                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                                     Text('Datos personales', style: AppTypography.subtitulo),
@@ -488,13 +651,15 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
                                       onChanged: (v) => setState(() => _primeraMenst.text = v),
                                     ),
                                     const SizedBox(height: AppSpacing.sm),
-                                    AppTextField(label: 'Edad primera menstruación', controller: _edadPrimeraMenst, keyboardType: TextInputType.number),
+AppTextField(label: 'Edad primera menstruación', controller: _edadPrimeraMenst, keyboardType: TextInputType.number),
                                   ]),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _seccionEvalMedica(),
+                        const SizedBox(height: AppSpacing.md),
+                        _seccionEvalOdontologica(),
                         const SizedBox(height: AppSpacing.md),
                         if (_error != null) Text(_error!, style: AppTypography.texto.copyWith(color: AppColors.error), textAlign: TextAlign.center),
                         const SizedBox(height: AppSpacing.sm),
@@ -507,6 +672,331 @@ class _EscuelaDatosScreenState extends ConsumerState<EscuelaDatosScreen> {
         ],
       ),
     );
+  }
+
+  String _txt(dynamic v) => v?.toString().trim() ?? '';
+
+  String _siNo(dynamic v) => v == true ? 'Sí' : 'No';
+
+  String _mapValue(Map<String, String> labels, dynamic v) {
+    final key = _txt(v);
+    return labels[key] ?? key;
+  }
+
+  Widget _filaValor(String label, dynamic valor) {
+    final v = _txt(valor);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 170,
+            child: Text(label,
+                style: AppTypography.texto.copyWith(
+                    fontSize: 12, color: AppColors.texto.withValues(alpha: 0.7))),
+          ),
+          Expanded(
+            child: Text(v.isEmpty ? '—' : v,
+                style: AppTypography.texto.copyWith(
+                    fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _fichaSecciones() => [
+        _seccionFichaDatos(),
+        const SizedBox(height: AppSpacing.md),
+        _seccionFichaCobertura(),
+        const SizedBox(height: AppSpacing.md),
+        _seccionFichaAntecedentes(),
+        const SizedBox(height: AppSpacing.md),
+      ];
+
+  Widget _tituloFicha(IconData icono, String titulo) => Row(children: [
+        Icon(icono, size: 18, color: AppColors.primario),
+        const SizedBox(width: 6),
+        Expanded(child: Text(titulo, style: AppTypography.subtitulo)),
+      ]);
+
+  String _fmtFecha(DateTime? d) => d == null
+      ? ''
+      : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  Widget _seccionFichaDatos() {
+    final al = _operativoAlumno;
+    final per = _persona;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _tituloFicha(Icons.person_outline, 'Datos personales'),
+          const SizedBox(height: AppSpacing.sm),
+          _filaValor('Nombre', per?['nombre'] ?? al?['nombre']),
+          _filaValor('Apellido', per?['apellido'] ?? al?['apellido']),
+          _filaValor('DNI', per?['dni'] ?? al?['dni']),
+          _filaValor('Fecha de nacimiento', _fmtFecha(_fechaNacimiento)),
+          _filaValor('Sexo',
+              _mapValue(_sexoLabels, per?['sexo'] ?? al?['sexo'])),
+          _filaValor('Edad', _paciente?['edad']),
+          _filaValor('Localidad', _domicilio?['localidad']),
+        ],
+      ),
+    );
+  }
+
+  Widget _seccionFichaCobertura() {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _tituloFicha(Icons.phone_outlined, 'Cobertura y contacto'),
+          const SizedBox(height: AppSpacing.sm),
+          _filaValor('Celular', _paciente?['celular']),
+          _filaValor('Teléfono fijo', _paciente?['telefono_fijo']),
+          _filaValor('¿Tiene CUD?',
+              _mapValue(_siNoLabels, _paciente?['tiene_cud'] ?? 'NO')),
+          _filaValor('Tipo cobertura',
+              _mapValue(_coberturaLabels, _paciente?['tipo_cobertura'] ?? '')),
+          _filaValor('Nombre cobertura', _paciente?['nombre_cobertura']),
+        ],
+      ),
+    );
+  }
+
+  Widget _seccionFichaAntecedentes() {
+    final a = _antecedentes;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _tituloFicha(Icons.assignment_outlined, 'Antecedentes personales'),
+          const SizedBox(height: AppSpacing.sm),
+          _filaValor('Nació prematuro',
+              _mapValue(_siNoLabels, a?['nacio_prematuro'] ?? 'NO')),
+          _filaValor('Peso al nacer', a?['peso_nacimiento']),
+          _filaValor('Convulsiones/Epilepsia',
+              _mapValue(_siNoLabels, a?['convulsiones_epilepsia'] ?? 'NO')),
+          _filaValor('Mareos/Desmayos',
+              _mapValue(_siNoLabels, a?['mareos_desmayos'] ?? 'NO')),
+          _filaValor('Infecciones urinarias',
+              _mapValue(_siNoLabels, a?['infecciones_urinarias'] ?? 'NO')),
+          _filaValor('Asma/Espasmos',
+              _mapValue(_siNoLabels, a?['asma_espasmos'] ?? 'NO')),
+          _filaValor('Tuberculosis',
+              _mapValue(_siNoLabels, a?['tuberculosis'] ?? 'NO')),
+          _filaValor('Diabetes', _mapValue(_siNoLabels, a?['diabetes'] ?? 'NO')),
+          _filaValor('Hipertensión',
+              _mapValue(_siNoLabels, a?['hipertension'] ?? 'NO')),
+          _filaValor('Cardiopatía congénita',
+              _mapValue(_siNoLabels, a?['cardiopatia_congenita'] ?? 'NO')),
+          _filaValor('Traumatismo/Internación',
+              _mapValue(_siNoLabels, a?['traumatismo_internacion'] ?? 'NO')),
+          _filaValor('Diarrea frecuente',
+              _mapValue(_siNoLabels, a?['diarrea_frecuente'] ?? 'NO')),
+          _filaValor('Infecciones de oído',
+              _mapValue(_siNoLabels, a?['infecciones_oido'] ?? 'NO')),
+          _filaValor('¿Estuvo internado?',
+              _mapValue(_siNoLabels, a?['internacion_previa'] ?? 'NO')),
+          if (_txt(a?['causa_hospitalizacion']).isNotEmpty)
+            _filaValor('Causa de hospitalización', a?['causa_hospitalizacion']),
+          _filaValor('Tratamiento actual',
+              _mapValue(_siNoLabels, a?['tratamiento_actual'] ?? 'NO')),
+          if (_txt(a?['descripcion_tratamiento']).isNotEmpty)
+            _filaValor(
+                'Descripción del tratamiento', a?['descripcion_tratamiento']),
+          _filaValor('Última consulta médica',
+              _mapValue(_ultimaConsultaLabels, a?['ultima_consulta_medica'] ?? 'NINGUNA')),
+          if (_txt(a?['otros_problemas_salud']).isNotEmpty)
+            _filaValor('Otros problemas de salud', a?['otros_problemas_salud']),
+          _filaValor('Primera menstruación',
+              _mapValue(_siNoLabels, a?['primera_menstruacion'] ?? 'NO')),
+          if (_txt(a?['edad_primera_menstruacion']).isNotEmpty)
+            _filaValor(
+                'Edad primera menstruación', a?['edad_primera_menstruacion']),
+        ],
+      ),
+    );
+  }
+
+  Widget _seccionEvalMedica() {
+    final em = _evalMedica;
+    if (em == null) return const SizedBox.shrink();
+    final completada = em['completada'] == true;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(children: [
+            const Icon(Icons.medical_services_outlined, size: 16, color: AppColors.primario),
+            const SizedBox(width: 6),
+            Expanded(child: Text('Evaluación médica', style: AppTypography.subtitulo)),
+          ]),
+          if (!completada) ...[
+            const SizedBox(height: 4),
+            Text('Pendiente de completar',
+                style: AppTypography.texto.copyWith(
+                    fontSize: 11,
+                    color: AppColors.texto.withValues(alpha: 0.6),
+                    fontStyle: FontStyle.italic)),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          _filaValor('Profesional', em['profesional']),
+          _filaValor('Examen realizado', _siNo(em['examen_realizado'])),
+          if (_txt(em['motivo_no_examen']).isNotEmpty)
+            _filaValor('Motivo de no examen',
+                _mapValue(_motivoNoExamenLabels, em['motivo_no_examen'])),
+          if (_txt(em['lugar_examen']).isNotEmpty)
+            _filaValor('Lugar del examen',
+                _mapValue(_lugarExamenLabels, em['lugar_examen'])),
+          _filaValor('Peso (kg)', em['peso']),
+          _filaValor('Talla (cm)', em['talla']),
+          _filaValor('IMC', em['imc']),
+          if (_txt(em['percentil_talla']).isNotEmpty)
+            _filaValor('Percentil talla',
+                _mapValue(_percentilTallaLabels, em['percentil_talla'])),
+          if (_txt(em['percentil_imc']).isNotEmpty)
+            _filaValor('Percentil IMC',
+                _mapValue(_percentilImcLabels, em['percentil_imc'])),
+          _filaValor('PAS (sistólica)', em['pas']),
+          _filaValor('PAD (diastólica)', em['pad']),
+          if (_txt(em['presion_clasificacion']).isNotEmpty)
+            _filaValor(
+                'Clasificación presión', em['presion_clasificacion']),
+          _filaValor('Agudeza evaluada', _siNo(em['agudeza_evaluada'])),
+          _filaValor('Ojo derecho', em['ojo_derecho']),
+          _filaValor('Ojo izquierdo', em['ojo_izquierdo']),
+          _filaValor('Usa lentes', _siNo(em['usa_lentes'])),
+          _filaValor('Audiometría realizada', _siNo(em['audiometria_realizada'])),
+          if (_txt(em['audiometria_resultado']).isNotEmpty)
+            _filaValor('Resultado audiometría',
+                _mapValue(_audiometriaLabels, em['audiometria_resultado'])),
+          _filaValor('Trajo carnet', _siNo(em['trajo_carnet'])),
+          _filaValor('Carnet completo', _siNo(em['carnet_completo'])),
+          if (_txt(em['vacunas_aplicadas']).isNotEmpty)
+            _filaValor('Vacunas aplicadas', em['vacunas_aplicadas']),
+          if (_txt(em['vacunas_indicadas']).isNotEmpty)
+            _filaValor('Vacunas indicadas', em['vacunas_indicadas']),
+          ..._hallazgosFilas(em['hallazgos']),
+          ..._derivacionesFilas(em['derivaciones']),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _hallazgosFilas(dynamic hallazgos) {
+    if (hallazgos is! Map) return const [];
+    final filas = <Widget>[];
+    for (final sistema in _sistemasHallazgo) {
+      final raw = hallazgos[sistema];
+      if (raw is! Map) continue;
+      final estado = _txt(raw['estado']);
+      final detalle = _txt(raw['detalle']);
+      if ((estado.isEmpty || estado == 'no_eval') && detalle.isEmpty) continue;
+      filas.add(_filaValor(
+        _hallazgoLabels[sistema] ?? sistema,
+        [
+          if (estado.isNotEmpty) _mapValue(_hallazgoEstadoLabels, estado),
+          if (detalle.isNotEmpty) detalle,
+        ].join(' — '),
+      ));
+    }
+    if (filas.isEmpty) filas.add(_filaValor('Hallazgos', 'Sin hallazgos registrados'));
+    return filas;
+  }
+
+  List<Widget> _derivacionesFilas(dynamic derivaciones) {
+    if (derivaciones is! Map) return const [];
+    final filas = <Widget>[];
+    derivaciones.forEach((esp, raw) {
+      if (raw is Map && raw['deriva'] == true) {
+        filas.add(_filaValor(
+            'Deriva a ${_derivacionLabels[esp.toString()] ?? esp}', raw['motivo']));
+      }
+    });
+    if (filas.isEmpty) filas.add(_filaValor('Derivaciones', 'Sin derivaciones'));
+    return filas;
+  }
+
+  Widget _seccionEvalOdontologica() {
+    final eo = _evalOdontologica;
+    if (eo == null) return const SizedBox.shrink();
+    final completada = eo['completada'] == true;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(children: [
+            const Icon(Icons.health_and_safety_outlined, size: 16, color: AppColors.primario),
+            const SizedBox(width: 6),
+            Expanded(child: Text('Evaluación odontológica', style: AppTypography.subtitulo)),
+          ]),
+          if (!completada) ...[
+            const SizedBox(height: 4),
+            Text('Pendiente de completar',
+                style: AppTypography.texto.copyWith(
+                    fontSize: 11,
+                    color: AppColors.texto.withValues(alpha: 0.6),
+                    fontStyle: FontStyle.italic)),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          _filaValor('Profesional', eo['profesional']),
+          if (_txt(eo['salud_bucal']).isNotEmpty)
+            _filaValor('Salud bucal',
+                _mapValue(_saludBucalLabels, eo['salud_bucal'])),
+          _filaValor('Lesiones en tejidos blandos', _siNo(eo['lesiones_tejidos_blandos'])),
+          _filaValor('Maloclusión', _siNo(eo['maloclusion'])),
+          _filaValor('Fluorosis', _siNo(eo['fluorosis'])),
+          _filaValor('Caries', _siNo(eo['caries'])),
+          if (_txt(eo['otros']).isNotEmpty) _filaValor('Otros', eo['otros']),
+          _filaValor('Topicación de flúor', _siNo(eo['topicacion_fluor'])),
+          _filaValor('Enseñanza de cepillado', _siNo(eo['ensenanza_cepillado'])),
+          _filaValor('Alta básica', _siNo(eo['alta_basica'])),
+          _filaValor('CPO — Cariados (C)', eo['cpo_c']),
+          _filaValor('CPO — Perdidos (P)', eo['cpo_p']),
+          _filaValor('CPO — Obturados (O)', eo['cpo_o']),
+          _filaValor('ceo — Cariados (c)', eo['ceo_c']),
+          _filaValor('ceo — Extracción indicada (e)', eo['ceo_e']),
+          _filaValor('ceo — Obturados (o)', eo['ceo_o']),
+          ..._odontogramaCompleto(eo['odontograma']),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _odontogramaCompleto(dynamic odontograma) {
+    if (odontograma is! Map || odontograma.isEmpty) {
+      return [_filaValor('Odontograma', 'Sin piezas cargadas')];
+    }
+    final filas = <Widget>[];
+    odontograma.forEach((pieza, raw) {
+      if (raw is! Map) return;
+      filas.add(Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 2),
+        child: Text('Pieza $pieza',
+            style: AppTypography.texto.copyWith(
+                fontWeight: FontWeight.bold, fontSize: 12)),
+      ));
+      filas.add(_filaValor('Estado general',
+          _mapValue(_estadoPiezaLabels, raw['estado_general'])));
+      final caras = raw['caras'];
+      if (caras is Map) {
+        caras.forEach((cara, v) {
+          filas.add(_filaValor(_caraLabels[cara.toString()] ?? cara.toString(),
+              _mapValue(_estadoCaraLabels, v)));
+        });
+      }
+      if (_txt(raw['raiz']).isNotEmpty) {
+        filas.add(_filaValor(
+            'Raíz / pulpa', _mapValue(_estadoRaizLabels, raw['raiz'])));
+      }
+      if (_txt(raw['notas']).isNotEmpty) {
+        filas.add(_filaValor('Notas', raw['notas']));
+      }
+    });
+    return filas;
   }
 }
 

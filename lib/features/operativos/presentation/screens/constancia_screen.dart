@@ -87,16 +87,37 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
 
   Future<void> _compartir() async {
     if (_pdfBytes == null) return;
-    final dni = _alumnoDni ?? widget.alumnoId;
-    final path = await _guardarTemp(_pdfBytes!, 'constancia-$dni.pdf');
-    await Share.shareXFiles([XFile(path)], text: 'Constancia PROSANE — DNI $dni');
+    try {
+      final dni = _alumnoDni ?? widget.alumnoId;
+      final path = await _guardarTemp(_pdfBytes!, 'constancia-$dni.pdf');
+      await Share.shareXFiles([XFile(path)],
+          text: 'Constancia PROSANE — DNI $dni');
+    } catch (_) {
+      _aviso('No se pudo compartir el PDF. Intentá nuevamente.');
+    }
   }
 
   Future<void> _abrir() async {
     if (_pdfBytes == null) return;
-    final dni = _alumnoDni ?? widget.alumnoId;
-    final path = await _guardarTemp(_pdfBytes!, 'constancia-$dni.pdf');
-    await OpenFilex.open(path);
+    try {
+      final dni = _alumnoDni ?? widget.alumnoId;
+      final path = await _guardarTemp(_pdfBytes!, 'constancia-$dni.pdf');
+      final result = await OpenFilex.open(path);
+      if (result.type != ResultType.done) {
+        _aviso(
+            'No se encontró una app para abrir el PDF en este dispositivo. Probá con "Compartir".');
+      }
+    } catch (_) {
+      _aviso(
+          'No se pudo abrir el PDF. Probá con "Compartir" para guardarlo o enviarlo.');
+    }
+  }
+
+  void _aviso(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    );
   }
 
   @override
