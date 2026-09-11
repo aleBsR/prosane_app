@@ -265,4 +265,20 @@ class EscuelasRepository {
       throw Exception(e.message);
     }
   }
+
+  /// La escuela completa los datos de su propio establecimiento.
+  /// [payload] admite los mismos campos que la edición (nombre, cue,
+  /// sector_gestion, modalidad_educativa, telefono, domicilio, etc.).
+  Future<Map<String, dynamic>> completarMiEscuela(
+      Map<String, dynamic> payload) async {
+    try {
+      final res = await _dio.patch('/escuelas/mi-escuela/', data: payload);
+      if (res.statusCode == 200) {
+        return Map<String, dynamic>.from(res.data as Map);
+      }
+      throw Exception('Error ${res.statusCode}');
+    } on DioException catch (e) {
+      throw Exception(_mensajeServidor(e, duplicado: 'CUE duplicado'));
+    }
+  }
 }

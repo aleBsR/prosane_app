@@ -10,12 +10,24 @@ import '../../../data/escuelas_repository.dart';
 import '../../controllers/escuelas_acciones_controller.dart';
 import '../../controllers/escuelas_list_controller.dart';
 
-/// Diálogo de edición de escuela. Usado desde la lista y desde el detalle.
+/// Diálogo de edición de escuela. Usado desde la lista, desde el detalle y
+/// desde "Mi escuela" (completar datos).
+/// [onGuardar] permite redirigir el guardado (ej. la escuela usa
+/// `PATCH /escuelas/mi-escuela/` en vez de `PATCH /escuelas/:id/`).
 /// Tras guardar con éxito invalida la lista.
+/// [titulo] personaliza el encabezado (ej. "Completar datos de mi escuela").
 Future<void> mostrarEditarEscuelaDialog(
-    BuildContext context, WidgetRef ref, Escuela escuela) async {
+  BuildContext context,
+  WidgetRef ref,
+  Escuela escuela, {
+  Future<bool> Function(Map<String, dynamic> payload)? onGuardar,
+  String titulo = 'Editar escuela',
+  Escuela? detalleInicial,
+}) async {
   final ctrl = ref.read(escuelasAccionesControllerProvider.notifier);
-  final detalle = await ctrl.obtener(escuela.id);
+  // La escuela no tiene permiso de ver el detalle por id: en ese flujo se
+  // pasa el dato ya cargado desde "Mi escuela" y se omite la recarga.
+  final detalle = detalleInicial ?? await ctrl.obtener(escuela.id);
   if (detalle == null) {
     if (context.mounted) {
       ref.read(notificacionProvider.notifier).error('No se pudo cargar la escuela');
@@ -46,7 +58,7 @@ Future<void> mostrarEditarEscuelaDialog(
         // Modal más ancho: menos margen lateral que el defecto (40).
         insetPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        title: const Text('Editar escuela'),
+        title: Text(titulo),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -123,14 +135,17 @@ Future<void> mostrarEditarEscuelaDialog(
                   'domicilio': {'localidad': localidadCtrl.text.trim()},
               };
 
-              final ok = await ctrl.editar(escuela.id, payload);
+              final ok = onGuardar != null
+                  ? await onGuardar(payload)
+                  : await ctrl.editar(escuela.id, payload);
               if (dialogCtx.mounted) Navigator.pop(dialogCtx);
               if (ok) {
                 ref.invalidate(escuelasListControllerProvider);
-                if (context.mounted) {
+                if (onGuardar == null && context.mounted) {
                   ref.read(notificacionProvider.notifier).exito('Escuela actualizada');
                 }
-              } else {
+              } else if (onGuardar == null) {
+                // Con onGuardar personalizado, el llamador ya notificó el error.
                 final error = ref.read(escuelasAccionesControllerProvider).error;
                 if (context.mounted) {
                   ref.read(notificacionProvider.notifier).error(error ?? 'Error al editar');

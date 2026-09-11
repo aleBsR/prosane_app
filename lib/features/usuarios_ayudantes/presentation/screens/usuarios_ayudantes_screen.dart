@@ -187,6 +187,7 @@ class UsuarioAyudanteFormDialog extends ConsumerStatefulWidget {
 class _UsuarioAyudanteFormDialogState
     extends ConsumerState<UsuarioAyudanteFormDialog> {
   late final TextEditingController _emailCtrl;
+  late final TextEditingController _emailConfirmCtrl;
   late bool _isActive;
   String? _error;
   bool _guardando = false;
@@ -198,21 +199,34 @@ class _UsuarioAyudanteFormDialogState
   void initState() {
     super.initState();
     _emailCtrl = TextEditingController(text: widget.usuario?.email ?? '');
+    _emailConfirmCtrl = TextEditingController();
     _isActive = widget.usuario?.isActive ?? true;
   }
 
   @override
   void dispose() {
     _emailCtrl.dispose();
+    _emailConfirmCtrl.dispose();
     super.dispose();
+  }
+
+  /// Los correos deben coincidir (solo en alta; en edición no se pide repetir).
+  bool get _emailsCoinciden {
+    if (_esEdicion) return true;
+    return _emailCtrl.text.trim().toLowerCase() ==
+        _emailConfirmCtrl.text.trim().toLowerCase();
   }
 
   bool get _puedeGuardar {
     final emailOk = _emailCtrl.text.trim().contains('@');
-    return emailOk && !_guardando;
+    return emailOk && _emailsCoinciden && !_guardando;
   }
 
   Future<void> _guardar() async {
+    if (!_emailsCoinciden) {
+      setState(() => _error = 'Los correos no coinciden. Revisalos antes de guardar.');
+      return;
+    }
     setState(() {
       _error = null;
       _guardando = true;
@@ -277,6 +291,19 @@ class _UsuarioAyudanteFormDialogState
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (_) => setState(() {}),
               ),
+              if (!_esEdicion) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  label: 'Repetir email *',
+                  controller: _emailConfirmCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => setState(() {}),
+                  errorText: !_emailsCoinciden &&
+                          _emailConfirmCtrl.text.isNotEmpty
+                      ? 'Los correos no coinciden'
+                      : null,
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
               if (!_esEdicion)
                 Container(

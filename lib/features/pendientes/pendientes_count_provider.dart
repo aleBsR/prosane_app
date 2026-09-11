@@ -127,20 +127,66 @@ final operativosPendientesProvider =
   return items;
 });
 
-/// Lista combinada: pendientes del tutor (Drift) + operativos borrador.
+/// Ítem de perfil incompleto para el rol escuela (función pura, testeable).
+/// Si no es escuela o el perfil está completo → null (sin pendiente).
+ItemPendiente? itemPerfilEscuelaPendiente({
+  required bool esEscuela,
+  required bool perfilCompleto,
+  required List<String> faltantes,
+}) {
+  if (!esEscuela || perfilCompleto) return null;
+  final detalle =
+      faltantes.isEmpty ? 'datos del establecimiento' : faltantes.join(', ');
+  return ItemPendiente(
+    titulo: 'Datos de mi escuela',
+    subtitulo: 'Completá los datos obligatorios: $detalle',
+    ruta: '/escuelas/mi-escuela',
+    icono: Icons.school_outlined,
+  );
+}
+
+/// Pendiente de perfil para la escuela: si `mi-escuela` informa
+/// `perfil_completo: false`, se suma una card que lleva a completarlo.
+/// Solo se consulta si el usuario tiene `verMiEscuela` (evita 403 en otros roles).
+final perfilEscuelaPendienteProvider =
+    FutureProvider.autoDispose<ItemPendiente?>((ref) async {
+  final s = ref.watch(sessionControllerProvider);
+  if (s is! SesionAutenticada) return null;
+  if (!s.sesion.permisos.contains('verMiEscuela')) return null;
+  try {
+    final escuela = await ref.watch(escuelasRepositoryProvider).miEscuela();
+    final faltantes = (escuela['campos_faltantes'] as List?)
+            ?.map((e) => '$e')
+            .toList() ??
+        const [];
+    return itemPerfilEscuelaPendiente(
+      esEscuela: true,
+      perfilCompleto: escuela['perfil_completo'] == true,
+      faltantes: faltantes,
+    );
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Lista combinada: pendientes del tutor (Drift) + perfil escuela + operativos.
 final pendientesTotalProvider = Provider.autoDispose<List<ItemPendiente>>((ref) {
   final tutor = ref.watch(pendientesItemsProvider).maybeWhen(
         data: (v) => v,
+        orElse: () => const <ItemPendiente>[],
+      );
+  final perfil = ref.watch(perfilEscuelaPendienteProvider).maybeWhen(
+        data: (v) => v == null ? const <ItemPendiente>[] : [v],
         orElse: () => const <ItemPendiente>[],
       );
   final ops = ref.watch(operativosPendientesProvider).maybeWhen(
         data: (v) => v,
         orElse: () => const <ItemPendiente>[],
       );
-  return [...tutor, ...ops];
+  return [...tutor, ...perfil, ...ops];
 });
 
-/// Conteo para el badge del nav bar (tutor + operativos borrador).
+/// Conteo para el badge del nav bar (tutor + perfil escuela + operativos).
 final pendientesCountProvider = Provider<AsyncValue<int>>(
   (ref) => AsyncValue.data(ref.watch(pendientesTotalProvider).length),
 );

@@ -46,4 +46,36 @@ void main() {
 
     expect(find.text('Gestionar cursos'), findsOneWidget);
   });
+
+  testWidgets('perfil incompleto muestra aviso obligatorio', (tester) async {
+    await tester.pumpWidget(_buildScreen({
+      'id': 'e1',
+      'nombre': 'Incompleta',
+      'plurigrado_rural': false,
+      'cursos': [],
+      'perfil_completo': false,
+      'campos_faltantes': ['CUE', 'Teléfono'],
+    }));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Completá los datos de tu escuela (obligatorio)'),
+        findsOneWidget);
+    expect(find.text('Completar datos'), findsOneWidget);
+  });
+
+  testWidgets('perfil completo no muestra aviso', (tester) async {
+    await tester.pumpWidget(_buildScreen({
+      'id': 'e1',
+      'nombre': 'Completa',
+      'plurigrado_rural': false,
+      'cursos': [],
+      'perfil_completo': true,
+      'campos_faltantes': [],
+    }));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Completá los datos de tu escuela (obligatorio)'),
+        findsNothing);
+    expect(find.text('Completar datos'), findsNothing);
+  });
 }

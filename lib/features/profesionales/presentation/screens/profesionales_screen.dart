@@ -209,6 +209,7 @@ class ProfesionalFormDialog extends ConsumerStatefulWidget {
 class _ProfesionalFormDialogState
     extends ConsumerState<ProfesionalFormDialog> {
   late final TextEditingController _emailCtrl;
+  late final TextEditingController _emailConfirmCtrl;
   late final TextEditingController _matriculaCtrl;
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoCtrl;
@@ -217,6 +218,7 @@ class _ProfesionalFormDialogState
   String? _error;
   bool _guardando = false;
   bool _validando = false;
+  bool _reenvizando = false;
 
   bool get _esEdicion => widget.profesional != null;
 
@@ -225,6 +227,7 @@ class _ProfesionalFormDialogState
     super.initState();
     final p = widget.profesional;
     _emailCtrl = TextEditingController(text: p?.email ?? '');
+    _emailConfirmCtrl = TextEditingController();
     _matriculaCtrl = TextEditingController(text: p?.matricula ?? '');
     _nombreCtrl = TextEditingController(text: p?.nombre ?? '');
     _apellidoCtrl = TextEditingController(text: p?.apellido ?? '');
@@ -235,17 +238,30 @@ class _ProfesionalFormDialogState
   @override
   void dispose() {
     _emailCtrl.dispose();
+    _emailConfirmCtrl.dispose();
     _matriculaCtrl.dispose();
     _nombreCtrl.dispose();
     _apellidoCtrl.dispose();
     super.dispose();
   }
 
+  /// Los correos deben coincidir (solo en alta; en edición no se pide repetir).
+  bool get _emailsCoinciden {
+    if (_esEdicion) return true;
+    return _emailCtrl.text.trim().toLowerCase() ==
+        _emailConfirmCtrl.text.trim().toLowerCase();
+  }
+
   bool get _puedeGuardar {
     final emailOk = _emailCtrl.text.trim().contains('@');
     final matriculaOk = _matriculaCtrl.text.trim().isNotEmpty;
     final rolOk = _rol != null && _rol!.isNotEmpty;
-    return emailOk && matriculaOk && rolOk && !_guardando && !_validando;
+    return emailOk &&
+        _emailsCoinciden &&
+        matriculaOk &&
+        rolOk &&
+        !_guardando &&
+        !_validando;
   }
 
   /// Valida la matrícula contra REFEPS y autocompleta nombre/apellido (y el rol
@@ -288,7 +304,30 @@ class _ProfesionalFormDialogState
     return null;
   }
 
+  Future<void> _reenviar() async {
+    if (!_esEdicion) return;
+    setState(() => _reenvizando = true);
+    try {
+      await ref
+          .read(profesionalesRepositoryProvider)
+          .reenviarTemporal(widget.profesional!.id);
+      if (!mounted) return;
+      ref
+          .read(notificacionProvider.notifier)
+          .exito('Contraseña temporal reenviada por mail (72h).');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _reenvizando = false);
+    }
+  }
+
   Future<void> _guardar() async {
+    if (!_emailsCoinciden) {
+      setState(() => _error = 'Los correos no coinciden. Revisalos antes de guardar.');
+      return;
+    }
     setState(() {
       _error = null;
       _guardando = true;
@@ -348,6 +387,19 @@ class _ProfesionalFormDialogState
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (_) => setState(() {}),
               ),
+              if (!_esEdicion) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  label: 'Repetir email *',
+                  controller: _emailConfirmCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => setState(() {}),
+                  errorText: !_emailsCoinciden &&
+                          _emailConfirmCtrl.text.isNotEmpty
+                      ? 'Los correos no coinciden'
+                      : null,
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
 
               if (!_esEdicion)
@@ -370,15 +422,28 @@ class _ProfesionalFormDialogState
                   ),
                 )
               else
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF66BB6A)),
-                  ),
-                  child: Text('La contraseña solo la gestiona el usuario. Use "Reenviar temporal" si es necesario (próximamente).',
-                      style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF66BB6A)),
+                      ),
+                      child: Text('La contraseña solo la gestiona el propio usuario. No es visible para el admin.',
+                          style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: _reenvizando ? null : _reenviar,
+                      icon: _reenvizando
+                          ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.refresh, size: 16),
+                      label: Text(_reenvizando ? 'Reenviando...' : 'Reenviar contraseña temporal (72h)'),
+                    ),
+                  ],
                 ),
               const SizedBox(height: AppSpacing.md),
 

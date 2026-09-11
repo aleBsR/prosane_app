@@ -61,6 +61,7 @@ void main() {
     expect(find.text('Nuevo usuario ayudante'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(0), 'nuevo@mail.com');
+    await tester.enterText(find.byType(TextField).at(1), 'nuevo@mail.com');
     await tester.pump();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
@@ -68,5 +69,27 @@ void main() {
     verify(() => repo.crear(email: 'nuevo@mail.com'))
         .called(1);
     expect(find.text('Nuevo usuario ayudante'), findsNothing);
+  });
+
+  testWidgets('crear: bloquea el guardado si los correos no coinciden', (tester) async {
+    final repo = _MockRepo();
+    when(() => repo.crear(email: any(named: 'email')))
+        .thenAnswer((_) async =>
+            UsuarioAyudante(id: '9', email: 'nuevo@mail.com', isActive: true));
+
+    await tester.pumpWidget(_buildScreen(repo, []));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Nuevo usuario'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).at(0), 'nuevo@mail.com');
+    await tester.enterText(find.byType(TextField).at(1), 'otro@mail.com');
+    await tester.pump();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => repo.crear(email: any(named: 'email')));
+    expect(find.text('Los correos no coinciden'), findsWidgets);
   });
 }

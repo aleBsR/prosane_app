@@ -22,37 +22,20 @@ Widget _buildScreen(_MockRepo repo) {
 }
 
 void main() {
-  testWidgets('modalidad es desplegable con Común y Especial',
-      (tester) async {
+  testWidgets('alta mínima: solo pide nombre y CUE', (tester) async {
     await tester.pumpWidget(_buildScreen(_MockRepo()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Modalidad educativa'), findsOneWidget);
-    // No hay campo de texto libre para la modalidad.
+    expect(find.text('Nombre *'), findsOneWidget);
+    expect(find.text('CUE'), findsOneWidget);
+    // El resto lo completa la escuela al ingresar.
+    expect(find.text('Modalidad educativa'), findsNothing);
+    expect(find.text('Sector de gestión'), findsNothing);
+    expect(find.text('Teléfono'), findsNothing);
+    expect(find.text('Localidad'), findsNothing);
     expect(
-        find.widgetWithText(TextField, 'Para plurigrado escribí'),
-        findsNothing);
-
-    // Abre el segundo desplegable (el primero es Sector de gestión).
-    await tester.tap(find.byType(DropdownButtonFormField<String>).at(1));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Común'), findsWidgets);
-    expect(find.text('Especial'), findsWidgets);
-  });
-
-  testWidgets('sector ofrece Estatal, Privado y Social/cooperativa',
-      (tester) async {
-    await tester.pumpWidget(_buildScreen(_MockRepo()));
-    await tester.pumpAndSettle();
-
-    // Abre el primer desplegable (Sector de gestión).
-    await tester.tap(find.byType(DropdownButtonFormField<String>).at(0));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Estatal'), findsWidgets);
-    expect(find.text('Privado'), findsWidgets);
-    expect(find.text('Social/cooperativa'), findsWidgets);
-    expect(find.text('Obra Social'), findsNothing);
+        find.text(
+            'Solo se pide lo mínimo. Los demás datos del establecimiento los completa la escuela al ingresar.'),
+        findsOneWidget);
   });
 }

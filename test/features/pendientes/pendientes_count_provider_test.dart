@@ -34,4 +34,29 @@ void main() {
     );
     expect(items.single.ruta, '/consentimiento');
   });
+
+  test('escuela con perfil incompleto → card a Mi escuela', () {
+    final item = itemPerfilEscuelaPendiente(
+      esEscuela: true, perfilCompleto: false, faltantes: const ['Teléfono'],
+    );
+    expect(item, isNotNull);
+    expect(item!.ruta, '/escuelas/mi-escuela');
+    expect(item.subtitulo, contains('Teléfono'));
+  });
+
+  test('escuela con perfil completo → sin pendiente', () {
+    expect(
+      itemPerfilEscuelaPendiente(
+          esEscuela: true, perfilCompleto: true, faltantes: const []),
+      isNull,
+    );
+  });
+
+  test('no escuela → sin pendiente de perfil', () {
+    expect(
+      itemPerfilEscuelaPendiente(
+          esEscuela: false, perfilCompleto: false, faltantes: const ['CUE']),
+      isNull,
+    );
+  });
 }

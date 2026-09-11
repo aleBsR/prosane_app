@@ -104,6 +104,16 @@ class ProfesionalesRepository {
     }
   }
 
+  /// Reenvía una contraseña temporal (72h) al profesional.
+  Future<void> reenviarTemporal(String id) async {
+    try {
+      final res = await _dio.post('/profesionales/$id/resend-temp/');
+      if (res.statusCode != 200) throw Exception('Error ${res.statusCode}');
+    } on DioException catch (e) {
+      throw Exception(_mensajeError(e));
+    }
+  }
+
   /// Valida la matrícula contra REFEPS. Lanza [Exception] si la matrícula no
   /// existe (404) o si el servicio está caído (503).
   Future<RefepsDatos> validarMatricula(String matricula) async {
