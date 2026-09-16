@@ -40,12 +40,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> logout(String refresh) => _dio.post('/logout/', data: {'refresh': refresh});
 
   @override
+  // OJO: este Dio tiene base .../api/v1/auth, por eso NO lleva prefijo /auth.
+  // Antes era '/auth/reset-password/' -> 404 (.../auth/auth/...).
   Future<void> solicitarResetPassword(String email) =>
-      _dio.post('/auth/reset-password/', data: {'email': email});
+      _dio.post('/reset-password/', data: {'email': email});
 
   @override
   Future<void> confirmarResetPassword(String email, String code, String newPassword) =>
-      _dio.post('/auth/reset-password/confirm/', data: {
+      _dio.post('/reset-password/confirm/', data: {
         'email': email,
         'code': code,
         'new_password': newPassword,

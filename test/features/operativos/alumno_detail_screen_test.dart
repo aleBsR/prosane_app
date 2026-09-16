@@ -117,7 +117,7 @@ void main() {
     expect(find.text('Evaluado'), findsOneWidget);
   });
 
-  testWidgets('botones de carga aparecen solo cuando el alumno está presente',
+  testWidgets('botones de carga aparecen cuando el alumno está presente',
       (tester) async {
     await tester.pumpWidget(_buildScreen(
       _MockRepo(),
@@ -145,8 +145,42 @@ void main() {
 
     expect(find.text('Evaluación médica'), findsOneWidget);
     expect(find.text('Eval. odontológica'), findsOneWidget);
-    expect(find.text('Sección escuela'), findsOneWidget);
+    // El fixture ya trae E completa → rótulo de ver/editar.
+    expect(find.text('Ver / editar sec. escuela'), findsOneWidget);
     expect(find.text('Datos de Alumno'), findsOneWidget);
+  });
+
+  testWidgets('alumno evaluado en curso ofrece ver y modificar sus secciones',
+      (tester) async {
+    await tester.pumpWidget(_buildScreen(
+      _MockRepo(),
+      alumnoCompleto: true,
+      estado: 'en_curso',
+      acciones: [
+        Accion.fromJson(const {
+          'name': 'cargarEvaluacionMedica',
+          'label': 'Cargar Médica',
+        }),
+        Accion.fromJson(const {
+          'name': 'cargarEvaluacionOdontologica',
+          'label': 'Cargar Odonto',
+        }),
+        Accion.fromJson(const {
+          'name': 'cargarSeccionEscuela',
+          'label': 'Cargar Escuela',
+        }),
+        Accion.fromJson(const {
+          'name': 'cargarAntecedentesNino',
+          'label': 'Cargar Datos',
+        }),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ver / editar eval. médica'), findsOneWidget);
+    expect(find.text('Ver / editar eval. odonto.'), findsOneWidget);
+    expect(find.text('Ver / editar sec. escuela'), findsOneWidget);
+    expect(find.text('Ver / editar datos'), findsOneWidget);
   });
 
   testWidgets('antes de en_curso no se ofrecen evaluaciones pero sí escuela',
@@ -177,7 +211,7 @@ void main() {
 
     expect(find.text('Evaluación médica'), findsNothing);
     expect(find.text('Eval. odontológica'), findsNothing);
-    expect(find.text('Sección escuela'), findsOneWidget);
+    expect(find.text('Ver / editar sec. escuela'), findsOneWidget);
     expect(find.text('Datos de Alumno'), findsOneWidget);
   });
 

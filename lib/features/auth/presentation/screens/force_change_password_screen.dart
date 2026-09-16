@@ -27,7 +27,31 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild para el checklist en vivo de requisitos.
+    _newCtrl.addListener(_onPasswordChanged);
+    _confirmCtrl.addListener(_onPasswordChanged);
+  }
+
+  void _onPasswordChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _largoOk => _newCtrl.text.length >= 8;
+  bool get _noSoloNumeros {
+    final v = _newCtrl.text;
+    if (v.isEmpty) return false;
+    return !RegExp(r'^\d+$').hasMatch(v);
+  }
+
+  bool get _coinciden =>
+      _newCtrl.text.isNotEmpty && _newCtrl.text == _confirmCtrl.text;
+
+  @override
   void dispose() {
+    _newCtrl.removeListener(_onPasswordChanged);
+    _confirmCtrl.removeListener(_onPasswordChanged);
     _oldCtrl.dispose();
     _newCtrl.dispose();
     _confirmCtrl.dispose();
@@ -43,8 +67,12 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
       setState(() => _error = 'La nueva contraseña y la confirmación no coinciden');
       return;
     }
-    if (_newCtrl.text.length < 6) {
-      setState(() => _error = 'La nueva contraseña debe tener al menos 6 caracteres');
+    if (_newCtrl.text.length < 8) {
+      setState(() => _error = 'La nueva contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+    if (RegExp(r'^\d+$').hasMatch(_newCtrl.text)) {
+      setState(() => _error = 'La contraseña no puede ser solo números');
       return;
     }
     setState(() {
@@ -57,12 +85,14 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
         'old_password': _oldCtrl.text,
         'new_password': _newCtrl.text,
       });
-      // Refrescar sesión para limpiar must_change_password
+      // Refrescar sesión para limpiar must_change_password y avisar al router.
+      // Sin esto el guard (mustChange) sigue en true y rebota /inicio -> /change-password.
       final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.refrescarSesion();
+      final sesion = await authRepo.refrescarSesion();
+      ref.read(sessionControllerProvider.notifier).refrescar(sesion);
       if (!mounted) return;
       ref.read(notificacionProvider.notifier).exito('Contraseña actualizada. ¡Bienvenido!');
-      // Limpiar y ir a inicio
+      // Ir a inicio (el guard ya permite salir de /change-password)
       context.go('/inicio');
     } catch (e) {
       String friendly = 'No se pudo cambiar la contraseña';
@@ -128,6 +158,34 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
                   const SizedBox(height: AppSpacing.md),
                   AppCard(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.info_outline, size: 18, color: AppColors.primario),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('Requisitos de la nueva contraseña',
+                                  style: AppTypography.texto.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _RequisitoRow(cumple: _largoOk, texto: 'Mínimo 8 caracteres'),
+                        _RequisitoRow(cumple: _noSoloNumeros, texto: 'No puede ser solo números'),
+                        _RequisitoRow(
+                            cumple: _newCtrl.text.isEmpty ? false : true,
+                            texto: 'No uses una clave común (ej: 12345678, password)'),
+                        _RequisitoRow(
+                            cumple: _coinciden, texto: 'La confirmación debe coincidir'),
+                        Text('El servidor también rechaza claves parecidas a tu email o nombre.',
+                            style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppCard(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         AppTextField(label: 'Contraseña temporal actual *', controller: _oldCtrl, isPassword: true),
@@ -163,6 +221,32 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RequisitoRow extends StatelessWidget {
+  const _RequisitoRow({required this.cumple, required this.texto});
+  final bool cumple;
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(cumple ? Icons.check_circle : Icons.radio_button_unchecked,
+              size: 16, color: cumple ? Colors.green : AppColors.gris),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(texto,
+                style: AppTypography.texto.copyWith(
+                    fontSize: 12,
+                    color: cumple ? AppColors.texto : AppColors.texto.withValues(alpha: 0.7))),
           ),
         ],
       ),

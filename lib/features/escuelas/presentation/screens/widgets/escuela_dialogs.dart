@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design_system/app_dialog.dart';
 import '../../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../../core/design_system/app_text_field.dart';
 import '../../../../../core/notificaciones/notificacion_controller.dart';
@@ -54,105 +55,90 @@ Future<void> mostrarEditarEscuelaDialog(
   await showDialog<void>(
     context: context,
     builder: (dialogCtx) => StatefulBuilder(
-      builder: (ctx, setState) => AlertDialog(
-        // Modal más ancho: menos margen lateral que el defecto (40).
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        title: Text(titulo),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                label: 'Nombre *',
-                controller: nombreCtrl,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                label: 'CUE',
-                controller: cueCtrl,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppDropdownField(
-                label: 'Sector de gestión',
-                value: sectorGestion,
-                items: sectoresGestion,
-                onChanged: (v) => setState(() => sectorGestion = v),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppDropdownField(
-                label: 'Modalidad educativa',
-                value: modalidad,
-                items: modalidadesEducativas,
-                onChanged: (v) => setState(() => modalidad = v),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                label: 'Teléfono',
-                controller: telefonoCtrl,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                label: 'Localidad',
-                controller: localidadCtrl,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              CheckRow(
-                label: 'Intercultural bilingüe',
-                value: interculturalBilingue,
-                onChanged: (v) => setState(() => interculturalBilingue = v),
-              ),
-              CheckRow(
-                label: 'Plurigrado rural',
-                value: plurigradoRural,
-                onChanged: (v) => setState(() => plurigradoRural = v),
-              ),
-            ],
+      builder: (ctx, setState) => WideFormDialog(
+        title: titulo,
+        onSave: () async {
+          final nombre = nombreCtrl.text.trim();
+          if (nombre.isEmpty) return;
+
+          final payload = {
+            'nombre': nombre,
+            if (cueCtrl.text.trim().isNotEmpty) 'cue': cueCtrl.text.trim(),
+            if (sectorGestion != null && sectorGestion!.isNotEmpty)
+              'sector_gestion': sectorGestion,
+            if (modalidad != null && modalidad!.isNotEmpty)
+              'modalidad_educativa': modalidad,
+            if (telefonoCtrl.text.trim().isNotEmpty)
+              'telefono': telefonoCtrl.text.trim(),
+            'intercultural_bilingue': interculturalBilingue,
+            'plurigrado_rural': plurigradoRural,
+            if (localidadCtrl.text.trim().isNotEmpty)
+              'domicilio': {'localidad': localidadCtrl.text.trim()},
+          };
+
+          final ok = onGuardar != null
+              ? await onGuardar(payload)
+              : await ctrl.editar(escuela.id, payload);
+          if (dialogCtx.mounted) Navigator.pop(dialogCtx);
+          if (ok) {
+            ref.invalidate(escuelasListControllerProvider);
+            if (onGuardar == null && context.mounted) {
+              ref.read(notificacionProvider.notifier).exito('Escuela actualizada');
+            }
+          } else if (onGuardar == null) {
+            // Con onGuardar personalizado, el llamador ya notificó el error.
+            final error = ref.read(escuelasAccionesControllerProvider).error;
+            if (context.mounted) {
+              ref.read(notificacionProvider.notifier).error(error ?? 'Error al editar');
+            }
+          }
+        },
+        onCancel: () => Navigator.pop(dialogCtx),
+        children: [
+          AppTextField(
+            label: 'Nombre *',
+            controller: nombreCtrl,
           ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () async {
-              final nombre = nombreCtrl.text.trim();
-              if (nombre.isEmpty) return;
-
-              final payload = {
-                'nombre': nombre,
-                if (cueCtrl.text.trim().isNotEmpty) 'cue': cueCtrl.text.trim(),
-                if (sectorGestion != null && sectorGestion!.isNotEmpty)
-                  'sector_gestion': sectorGestion,
-                if (modalidad != null && modalidad!.isNotEmpty)
-                  'modalidad_educativa': modalidad,
-                if (telefonoCtrl.text.trim().isNotEmpty)
-                  'telefono': telefonoCtrl.text.trim(),
-                'intercultural_bilingue': interculturalBilingue,
-                'plurigrado_rural': plurigradoRural,
-                if (localidadCtrl.text.trim().isNotEmpty)
-                  'domicilio': {'localidad': localidadCtrl.text.trim()},
-              };
-
-              final ok = onGuardar != null
-                  ? await onGuardar(payload)
-                  : await ctrl.editar(escuela.id, payload);
-              if (dialogCtx.mounted) Navigator.pop(dialogCtx);
-              if (ok) {
-                ref.invalidate(escuelasListControllerProvider);
-                if (onGuardar == null && context.mounted) {
-                  ref.read(notificacionProvider.notifier).exito('Escuela actualizada');
-                }
-              } else if (onGuardar == null) {
-                // Con onGuardar personalizado, el llamador ya notificó el error.
-                final error = ref.read(escuelasAccionesControllerProvider).error;
-                if (context.mounted) {
-                  ref.read(notificacionProvider.notifier).error(error ?? 'Error al editar');
-                }
-              }
-            },
-            child: const Text('Guardar'),
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            label: 'CUE',
+            controller: cueCtrl,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppDropdownField(
+            label: 'Sector de gestión',
+            value: sectorGestion,
+            items: sectoresGestion,
+            onChanged: (v) => setState(() => sectorGestion = v),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppDropdownField(
+            label: 'Modalidad educativa',
+            value: modalidad,
+            items: modalidadesEducativas,
+            onChanged: (v) => setState(() => modalidad = v),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            label: 'Teléfono',
+            controller: telefonoCtrl,
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppTextField(
+            label: 'Localidad',
+            controller: localidadCtrl,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          CheckRow(
+            label: 'Intercultural bilingüe',
+            value: interculturalBilingue,
+            onChanged: (v) => setState(() => interculturalBilingue = v),
+          ),
+          CheckRow(
+            label: 'Plurigrado rural',
+            value: plurigradoRural,
+            onChanged: (v) => setState(() => plurigradoRural = v),
           ),
         ],
       ),

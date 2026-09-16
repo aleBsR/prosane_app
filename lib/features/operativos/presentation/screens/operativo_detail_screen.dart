@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_dialog.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/detail_post_card.dart';
 import '../../../../core/design_system/app_text_field.dart';
@@ -655,73 +656,76 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     String rol = 'medico';
     await showDialog<void>(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Asignar profesional'),
-        content: Consumer(
-          builder: (c, dialogRef, _) {
-            final async = dialogRef.watch(profesionalesDisponiblesProvider);
-            return async.when(
-              loading: () => const SizedBox(
-                  height: 80, child: Center(child: CircularProgressIndicator())),
-              error: (e, _) => const Text('Error al cargar profesionales'),
-              data: (profs) {
-                if (profs.isEmpty) {
-                  return const Text(
-                      'No hay profesionales disponibles. Creá médicos u odontólogos primero.');
-                }
-                return StatefulBuilder(
-                  builder: (c, setLocal) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButton<String>(
-                        isExpanded: true,
-                        hint: const Text('Elegí un profesional'),
-                        value: profId,
-                        items: profs.map((p) {
-                          final nom =
-                              '${p['nombre'] ?? ''} ${p['apellido'] ?? ''}'.trim();
-                          final label = nom.isEmpty ? (p['email'] ?? '') : nom;
-                          return DropdownMenuItem(
-                              value: p['id'] as String, child: Text('$label'));
-                        }).toList(),
-                        onChanged: (v) => setLocal(() => profId = v),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      DropdownButton<String>(
-                        isExpanded: true,
-                        value: rol,
-                        items: const [
-                          DropdownMenuItem(value: 'medico', child: Text('Médico')),
-                          DropdownMenuItem(
-                              value: 'odontologo', child: Text('Odontólogo')),
-                          DropdownMenuItem(
-                              value: 'ayudante', child: Text('Ayudante')),
-                        ],
-                        onChanged: (v) => setLocal(() => rol = v ?? 'medico'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogCtx),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () async {
-              if (profId == null) return;
-              Navigator.pop(dialogCtx);
-              final ctrl = ref.read(
-                  operativoDetailControllerProvider(widget.operativoId).notifier);
-              await ctrl.asignarProfesional(profId!, rol);
-              ref.invalidate(operativoDetailProvider(widget.operativoId));
-              ref.invalidate(operativosListControllerProvider);
-              ref.invalidate(profesionalesDisponiblesProvider);
+      builder: (dialogCtx) => WideFormDialog(
+        title: 'Asignar profesional',
+        saveLabel: 'Asignar',
+        onSave: () async {
+          if (profId == null) return;
+          Navigator.pop(dialogCtx);
+          final ctrl = ref.read(
+              operativoDetailControllerProvider(widget.operativoId).notifier);
+          await ctrl.asignarProfesional(profId!, rol);
+          ref.invalidate(operativoDetailProvider(widget.operativoId));
+          ref.invalidate(operativosListControllerProvider);
+          ref.invalidate(profesionalesDisponiblesProvider);
+        },
+        onCancel: () => Navigator.pop(dialogCtx),
+        children: [
+          Consumer(
+            builder: (c, dialogRef, _) {
+              final async = dialogRef.watch(profesionalesDisponiblesProvider);
+              return async.when(
+                loading: () => const SizedBox(
+                    height: 80,
+                    child: Center(child: CircularProgressIndicator())),
+                error: (e, _) => const Text('Error al cargar profesionales'),
+                data: (profs) {
+                  if (profs.isEmpty) {
+                    return const Text(
+                        'No hay profesionales disponibles. Creá médicos u odontólogos primero.');
+                  }
+                  return StatefulBuilder(
+                    builder: (c, setLocal) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DropdownButton<String>(
+                          isExpanded: true,
+                          hint: const Text('Elegí un profesional'),
+                          value: profId,
+                          items: profs.map((p) {
+                            final nom =
+                                '${p['nombre'] ?? ''} ${p['apellido'] ?? ''}'
+                                    .trim();
+                            final label =
+                                nom.isEmpty ? (p['email'] ?? '') : nom;
+                            return DropdownMenuItem(
+                                value: p['id'] as String,
+                                child: Text('$label'));
+                          }).toList(),
+                          onChanged: (v) => setLocal(() => profId = v),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButton<String>(
+                          isExpanded: true,
+                          value: rol,
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'medico', child: Text('Médico')),
+                            DropdownMenuItem(
+                                value: 'odontologo',
+                                child: Text('Odontólogo')),
+                            DropdownMenuItem(
+                                value: 'ayudante', child: Text('Ayudante')),
+                          ],
+                          onChanged: (v) =>
+                              setLocal(() => rol = v ?? 'medico'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
             },
-            child: const Text('Asignar'),
           ),
         ],
       ),

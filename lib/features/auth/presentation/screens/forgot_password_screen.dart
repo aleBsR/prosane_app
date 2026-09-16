@@ -9,6 +9,7 @@ import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../controllers/reset_password_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           _emailCtrl.text.trim(),
         );
     if (!mounted || !ok) return;
+    ref.read(notificacionProvider.notifier).exito('Si el correo está registrado, te enviamos un código de 6 dígitos (vence en 30 min).');
     context.push('/reset-password', extra: _emailCtrl.text.trim());
   }
 

@@ -48,14 +48,18 @@ void main() {
     expect(_boton(tester).onPressed, isNull); // falta contraseña
 
     await tester.enterText(
-        find.byType(TextField).at(2), 'nueva1'); // contraseña 6+
+        find.byType(TextField).at(2), 'nueva123'); // contraseña 8+, no solo números
+    await tester.pump();
+    expect(_boton(tester).onPressed, isNull); // falta confirmación
+    await tester.enterText(
+        find.byType(TextField).at(3), 'nueva123'); // confirmación coincide
     await tester.pump();
     expect(_boton(tester).onPressed, isNotNull);
   });
 
   testWidgets('éxito: llama al usecase y navega a /login', (tester) async {
     final confirmar = _MockConfirmar();
-    when(() => confirmar('a@b.com', '123456', 'nueva1'))
+    when(() => confirmar('a@b.com', '123456', 'nueva123'))
         .thenAnswer((_) async {});
 
     await tester.pumpWidget(ProviderScope(
@@ -82,12 +86,15 @@ void main() {
 
     await tester.enterText(find.byType(TextField).at(0), 'a@b.com');
     await tester.enterText(find.byType(TextField).at(1), '123456');
-    await tester.enterText(find.byType(TextField).at(2), 'nueva1');
+    await tester.enterText(find.byType(TextField).at(2), 'nueva123');
+    await tester.enterText(find.byType(TextField).at(3), 'nueva123');
     await tester.pump();
-    await tester.tap(find.text('RESTABLECER CONTRASEÑA'));
+    await tester.ensureVisible(find.text('RESTABLECER CONTRASEÑA'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('RESTABLECER CONTRASEÑA'), warnIfMissed: false);
     await tester.pumpAndSettle();
 
-    verify(() => confirmar('a@b.com', '123456', 'nueva1')).called(1);
+    verify(() => confirmar('a@b.com', '123456', 'nueva123')).called(1);
     expect(find.byType(SizedBox), findsOneWidget);
   });
 
@@ -98,9 +105,12 @@ void main() {
 
     await tester.pumpWidget(_buildScreen(confirmar, email: 'a@b.com'));
     await tester.enterText(find.byType(TextField).at(1), '123456');
-    await tester.enterText(find.byType(TextField).at(2), 'nueva1');
+    await tester.enterText(find.byType(TextField).at(2), 'nueva123');
+    await tester.enterText(find.byType(TextField).at(3), 'nueva123');
     await tester.pump();
-    await tester.tap(find.text('RESTABLECER CONTRASEÑA'));
+    await tester.ensureVisible(find.text('RESTABLECER CONTRASEÑA'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('RESTABLECER CONTRASEÑA'), warnIfMissed: false);
     await tester.pumpAndSettle();
 
     expect(find.text('Hubo un problema, probá de nuevo'), findsOneWidget);

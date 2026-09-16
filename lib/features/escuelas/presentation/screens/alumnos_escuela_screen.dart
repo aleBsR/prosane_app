@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_dialog.dart';
 import '../../../../core/design_system/app_date_field.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
@@ -193,12 +194,79 @@ class _AlumnosEscuelaScreenState
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Registrar alumno'),
-          content: SingleChildScrollView(
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        builder: (dialogContext, setDialogState) => WideFormDialog(
+          title: 'Registrar alumno',
+          error: dialogError,
+          onSave: () async {
+            if ([nombre, apellido, dni, sexo, edad].any((c) => c.text.trim().isEmpty) || fechaNacimiento == null) {
+              setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
+              return;
+            }
+            if (cursoId == null && !esPlurigrado) {
+              setDialogState(() => dialogError = 'Elegí un curso');
+              return;
+            }
+            if (operativoId == null) {
+              setDialogState(() => dialogError = 'Elegí un operativo');
+              return;
+            }
+            // Plurigrado sin curso: usar curso por defecto (null → backend lo trata como Plurigrado)
+            String? cursoIdFinal = cursoId;
+            if (esPlurigrado && cursoId == null && cursos.isEmpty) {
+              // No hay curso creado: se enviará sin curso_id y el backend lo dejará como plurigrado por defecto
+              cursoIdFinal = null;
+            }
+            final fechaIso = fechaNacimiento != null
+                ? '${fechaNacimiento!.year.toString().padLeft(4, '0')}-${fechaNacimiento!.month.toString().padLeft(2, '0')}-${fechaNacimiento!.day.toString().padLeft(2, '0')}'
+                : '';
+            final payload = {
+              'persona': {
+                'nombre': nombre.text.trim(),
+                'apellido': apellido.text.trim(),
+                'dni': dni.text.trim(),
+                'tipo_dni': 'DNI',
+                'sexo': sexo.text.trim(),
+                'fecha_nacimiento': fechaIso,
+              },
+              'edad': int.tryParse(edad.text.trim()) ?? 0,
+              'domicilio': {'localidad': localidad.text.trim()},
+              'curso_id': ?cursoIdFinal,
+              'operativo_id': ?operativoId,
+              if (telefono.text.trim().isNotEmpty) 'celular': telefono.text.trim(),
+              if (telefonoFijo.text.trim().isNotEmpty) 'telefono_fijo': telefonoFijo.text.trim(),
+              if (tieneCud.text.trim().isNotEmpty) 'tiene_cud': tieneCud.text.trim(),
+              if (tipoCobertura.text.trim().isNotEmpty) 'tipo_cobertura': tipoCobertura.text.trim(),
+              if (nombreCobertura.text.trim().isNotEmpty) 'nombre_cobertura': nombreCobertura.text.trim(),
+              'antecedentes': {
+                if (nacioPrematuro.text.trim().isNotEmpty) 'nacio_prematuro': nacioPrematuro.text.trim(),
+                if (pesoNacimiento.text.trim().isNotEmpty) 'peso_nacimiento': pesoNacimiento.text.trim(),
+                if (asma.text.trim().isNotEmpty) 'asma_espasmos': asma.text.trim(),
+                if (otrosProblemas.text.trim().isNotEmpty) 'otros_problemas_salud': otrosProblemas.text.trim(),
+              },
+            };
+            final ctrl = ref.read(alumnosEscuelaControllerProvider.notifier);
+            final ok = await ctrl.crear(payload);
+            if (!ok) {
+              final err = ref.read(alumnosEscuelaControllerProvider).error ?? 'Error al registrar alumno';
+              String friendly = err;
+              if (err.contains('persona.dni') && err.contains('Ya existe')) {
+                friendly = 'Ya existe una persona con este DNI. Verificá el DNI o usá otro.';
+              } else if (err.contains('fecha_nacimiento') || err.contains('Fecha con formato')) {
+                friendly = 'Fecha de nacimiento inválida. Usá el calendario (dd/mm/aaaa) y revisá el año.';
+              } else if (err.contains('persona.')) {
+                friendly = err.replaceAll('persona.', '').replaceAll('_', ' ');
+              }
+              setDialogState(() => dialogError = friendly);
+              return;
+            }
+            if (dialogContext.mounted) Navigator.pop(dialogContext);
+            ref.invalidate(alumnosEscuelaProvider);
+            if (context.mounted) {
+              ref.read(notificacionProvider.notifier).exito('¡Alumno registrado!');
+            }
+          },
+          onCancel: () => Navigator.pop(dialogContext),
+          children: [
               AppTextField(label: 'Nombre *', controller: nombre),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Apellido *', controller: apellido),
@@ -357,88 +425,6 @@ class _AlumnosEscuelaScreenState
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Otros problemas de salud', controller: otrosProblemas),
-              if (dialogError != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(dialogError!, style: AppTypography.texto.copyWith(color: AppColors.error), textAlign: TextAlign.center),
-              ],
-            ],
-          ),
-        ),
-          actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar')),
-          TextButton(
-            onPressed: () async {
-              if ([nombre, apellido, dni, sexo, edad].any((c) => c.text.trim().isEmpty) || fechaNacimiento == null) {
-                setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
-                return;
-              }
-              if (cursoId == null && !esPlurigrado) {
-                setDialogState(() => dialogError = 'Elegí un curso');
-                return;
-              }
-              if (operativoId == null) {
-                setDialogState(() => dialogError = 'Elegí un operativo');
-                return;
-              }
-              // Plurigrado sin curso: usar curso por defecto (null → backend lo trata como Plurigrado)
-              String? cursoIdFinal = cursoId;
-              if (esPlurigrado && cursoId == null && cursos.isEmpty) {
-                // No hay curso creado: se enviará sin curso_id y el backend lo dejará como plurigrado por defecto
-                cursoIdFinal = null;
-              }
-              final fechaIso = fechaNacimiento != null
-                  ? '${fechaNacimiento!.year.toString().padLeft(4, '0')}-${fechaNacimiento!.month.toString().padLeft(2, '0')}-${fechaNacimiento!.day.toString().padLeft(2, '0')}'
-                  : '';
-              final payload = {
-                'persona': {
-                  'nombre': nombre.text.trim(),
-                  'apellido': apellido.text.trim(),
-                  'dni': dni.text.trim(),
-                  'tipo_dni': 'DNI',
-                  'sexo': sexo.text.trim(),
-                  'fecha_nacimiento': fechaIso,
-                },
-                'edad': int.tryParse(edad.text.trim()) ?? 0,
-                'domicilio': {'localidad': localidad.text.trim()},
-                'curso_id': ?cursoIdFinal,
-                'operativo_id': ?operativoId,
-                if (telefono.text.trim().isNotEmpty) 'celular': telefono.text.trim(),
-                if (telefonoFijo.text.trim().isNotEmpty) 'telefono_fijo': telefonoFijo.text.trim(),
-                if (tieneCud.text.trim().isNotEmpty) 'tiene_cud': tieneCud.text.trim(),
-                if (tipoCobertura.text.trim().isNotEmpty) 'tipo_cobertura': tipoCobertura.text.trim(),
-                if (nombreCobertura.text.trim().isNotEmpty) 'nombre_cobertura': nombreCobertura.text.trim(),
-                'antecedentes': {
-                  if (nacioPrematuro.text.trim().isNotEmpty) 'nacio_prematuro': nacioPrematuro.text.trim(),
-                  if (pesoNacimiento.text.trim().isNotEmpty) 'peso_nacimiento': pesoNacimiento.text.trim(),
-                  if (asma.text.trim().isNotEmpty) 'asma_espasmos': asma.text.trim(),
-                  if (otrosProblemas.text.trim().isNotEmpty) 'otros_problemas_salud': otrosProblemas.text.trim(),
-                },
-              };
-              final ctrl = ref.read(alumnosEscuelaControllerProvider.notifier);
-              final ok = await ctrl.crear(payload);
-              if (!ok) {
-                final err = ref.read(alumnosEscuelaControllerProvider).error ?? 'Error al registrar alumno';
-                String friendly = err;
-                if (err.contains('persona.dni') && err.contains('Ya existe')) {
-                  friendly = 'Ya existe una persona con este DNI. Verificá el DNI o usá otro.';
-                } else if (err.contains('fecha_nacimiento') || err.contains('Fecha con formato')) {
-                  friendly = 'Fecha de nacimiento inválida. Usá el calendario (dd/mm/aaaa) y revisá el año.';
-                } else if (err.contains('persona.')) {
-                  friendly = err.replaceAll('persona.', '').replaceAll('_', ' ');
-                }
-                setDialogState(() => dialogError = friendly);
-                return;
-              }
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-              ref.invalidate(alumnosEscuelaProvider);
-              if (context.mounted) {
-                ref.read(notificacionProvider.notifier).exito('¡Alumno registrado!');
-              }
-            },
-            child: const Text('Guardar'),
-          ),
           ],
         ),
       ),

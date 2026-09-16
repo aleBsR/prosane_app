@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
+import '../../../../core/design_system/app_dialog.dart';
 import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -172,31 +173,6 @@ class CursosScreen extends ConsumerWidget {
     );
   }
 
-  /// Cartelito de error dentro del diálogo (ej. curso repetido).
-  Widget _cartelError(String mensaje) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.error),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(mensaje,
-                style: AppTypography.texto.copyWith(
-                    fontSize: 12, color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _crearCursoDialog(BuildContext context, WidgetRef ref) async {
     final gradoCtrl = TextEditingController();
     final divisionCtrl = TextEditingController();
@@ -209,121 +185,94 @@ class CursosScreen extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (dialogCtx, setState) => AlertDialog(
-          title: const Text('Agregar curso'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (errorMsg != null) _cartelError(errorMsg!),
-                AppTextField(
-                  label: 'Grado / Sala (ej: 1°) *',
-                  controller: gradoCtrl,
-                  hint: 'Escribí 1 y se completa a 1°',
-                  onChanged: (v) {
-                    final completo = autocompletarGrado(v);
-                    if (completo != null && completo != v) {
-                      gradoCtrl.text = completo;
-                      gradoCtrl.selection = TextSelection.fromPosition(
-                        TextPosition(offset: completo.length),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
-                  label: 'División (ej: A) *',
-                  controller: divisionCtrl,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
-                  label: 'Ciclo lectivo',
-                  controller: cicloCtrl,
-                  keyboardType: TextInputType.number,
-                  hint: 'Ej: 2026',
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Escuelas plurigrado: usá "Plurigrado" como grado para agrupar varios años en un mismo curso.',
-                  style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
-                ),
-              ],
+        builder: (dialogCtx, setState) => WideFormDialog(
+          title: 'Agregar curso',
+          error: errorMsg,
+          saving: guardando,
+          onSave: () async {
+            final grado = normalizarGrado(gradoCtrl.text);
+            final division = normalizarDivision(divisionCtrl.text);
+            if (grado.isEmpty || division.isEmpty) {
+              setState(() =>
+                  errorMsg = 'Completá grado y división para guardar.');
+              return;
+            }
+            final ciclo = int.tryParse(cicloCtrl.text.trim());
+            // Aviso inmediato sin ir al servidor.
+            if (esCursoDuplicado(
+              existentes: existentes,
+              grado: grado,
+              division: division,
+              cicloLectivo: ciclo,
+            )) {
+              setState(() => errorMsg = mensajeCursoDuplicado);
+              return;
+            }
+            setState(() {
+              guardando = true;
+              errorMsg = null;
+            });
+            final ctrl =
+                ref.read(cursosControllerProvider(escuelaId).notifier);
+            final ok = await ctrl.crear(
+              grado: grado,
+              division: division,
+              cicloLectivo: ciclo,
+            );
+            if (!dialogCtx.mounted) return;
+            if (ok) {
+              Navigator.pop(dialogCtx);
+              ref.invalidate(cursosProvider(escuelaId));
+              if (context.mounted) {
+                ref.read(notificacionProvider.notifier).exito('¡Curso creado!');
+              }
+            } else {
+              final crudo =
+                  ref.read(cursosControllerProvider(escuelaId)).error;
+              final mensaje = crudo == null
+                  ? 'No se pudo guardar el curso.'
+                  : mensajeAmigableCurso(crudo);
+              setState(() {
+                guardando = false;
+                errorMsg = mensaje;
+              });
+              if (context.mounted) {
+                ref.read(notificacionProvider.notifier).error(mensaje);
+              }
+            }
+          },
+          onCancel: () => Navigator.pop(dialogCtx),
+          children: [
+            AppTextField(
+              label: 'Grado / Sala (ej: 1°) *',
+              controller: gradoCtrl,
+              hint: 'Escribí 1 y se completa a 1°',
+              onChanged: (v) {
+                final completo = autocompletarGrado(v);
+                if (completo != null && completo != v) {
+                  gradoCtrl.text = completo;
+                  gradoCtrl.selection = TextSelection.fromPosition(
+                    TextPosition(offset: completo.length),
+                  );
+                }
+              },
             ),
-          ),
-          actions: [
-            TextButton(
-                onPressed:
-                    guardando ? null : () => Navigator.pop(dialogCtx),
-                child: const Text('Cancelar')),
-            TextButton(
-              onPressed: guardando
-                  ? null
-                  : () async {
-                      final grado = normalizarGrado(gradoCtrl.text);
-                      final division =
-                          normalizarDivision(divisionCtrl.text);
-                      if (grado.isEmpty || division.isEmpty) {
-                        setState(() => errorMsg =
-                            'Completá grado y división para guardar.');
-                        return;
-                      }
-                      final ciclo = int.tryParse(cicloCtrl.text.trim());
-                      // Aviso inmediato sin ir al servidor.
-                      if (esCursoDuplicado(
-                        existentes: existentes,
-                        grado: grado,
-                        division: division,
-                        cicloLectivo: ciclo,
-                      )) {
-                        setState(
-                            () => errorMsg = mensajeCursoDuplicado);
-                        return;
-                      }
-                      setState(() {
-                        guardando = true;
-                        errorMsg = null;
-                      });
-                      final ctrl = ref.read(
-                          cursosControllerProvider(escuelaId).notifier);
-                      final ok = await ctrl.crear(
-                        grado: grado,
-                        division: division,
-                        cicloLectivo: ciclo,
-                      );
-                      if (!dialogCtx.mounted) return;
-                      if (ok) {
-                        Navigator.pop(dialogCtx);
-                        ref.invalidate(cursosProvider(escuelaId));
-                        if (context.mounted) {
-                          ref
-                              .read(notificacionProvider.notifier)
-                              .exito('¡Curso creado!');
-                        }
-                      } else {
-                        final crudo = ref
-                            .read(cursosControllerProvider(escuelaId))
-                            .error;
-                        final mensaje = crudo == null
-                            ? 'No se pudo guardar el curso.'
-                            : mensajeAmigableCurso(crudo);
-                        setState(() {
-                          guardando = false;
-                          errorMsg = mensaje;
-                        });
-                        if (context.mounted) {
-                          ref
-                              .read(notificacionProvider.notifier)
-                              .error(mensaje);
-                        }
-                      }
-                    },
-              child: guardando
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Guardar'),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              label: 'División (ej: A) *',
+              controller: divisionCtrl,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              label: 'Ciclo lectivo',
+              controller: cicloCtrl,
+              keyboardType: TextInputType.number,
+              hint: 'Ej: 2026',
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Escuelas plurigrado: usá "Plurigrado" como grado para agrupar varios años en un mismo curso.',
+              style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
             ),
           ],
         ),
@@ -345,122 +294,97 @@ class CursosScreen extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (dialogCtx, setState) => AlertDialog(
-          title: const Text('Editar curso'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (errorMsg != null) _cartelError(errorMsg!),
-                AppTextField(
-                  label: 'Grado / Sala',
-                  controller: gradoCtrl,
-                  hint: 'Escribí 1 y se completa a 1°',
-                  onChanged: (v) {
-                    final completo = autocompletarGrado(v);
-                    if (completo != null && completo != v) {
-                      gradoCtrl.text = completo;
-                      gradoCtrl.selection = TextSelection.fromPosition(
-                        TextPosition(offset: completo.length),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
-                  label: 'División',
-                  controller: divisionCtrl,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                AppTextField(
-                  label: 'Ciclo lectivo',
-                  controller: cicloCtrl,
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Escuelas plurigrado: usá "Plurigrado" como grado.',
-                  style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
-                ),
-              ],
+        builder: (dialogCtx, setState) => WideFormDialog(
+          title: 'Editar curso',
+          error: errorMsg,
+          saving: guardando,
+          onSave: () async {
+            final grado = normalizarGrado(gradoCtrl.text);
+            final division = normalizarDivision(divisionCtrl.text);
+            if (grado.isEmpty || division.isEmpty) {
+              setState(() =>
+                  errorMsg = 'Completá grado y división para guardar.');
+              return;
+            }
+            final ciclo = int.tryParse(cicloCtrl.text.trim());
+            // Aviso inmediato sin ir al servidor (ignora este curso).
+            if (esCursoDuplicado(
+              existentes: existentes,
+              grado: grado,
+              division: division,
+              cicloLectivo: ciclo,
+              excluirId: curso.id,
+            )) {
+              setState(() => errorMsg = mensajeCursoDuplicado);
+              return;
+            }
+            setState(() {
+              guardando = true;
+              errorMsg = null;
+            });
+            final ctrl =
+                ref.read(cursosControllerProvider(escuelaId).notifier);
+            final ok = await ctrl.editar(
+              cursoId: curso.id,
+              grado: grado,
+              division: division,
+              cicloLectivo: ciclo,
+            );
+            if (!dialogCtx.mounted) return;
+            if (ok) {
+              Navigator.pop(dialogCtx);
+              ref.invalidate(cursosProvider(escuelaId));
+              if (context.mounted) {
+                ref
+                    .read(notificacionProvider.notifier)
+                    .exito('¡Curso actualizado!');
+              }
+            } else {
+              final crudo =
+                  ref.read(cursosControllerProvider(escuelaId)).error;
+              final mensaje = crudo == null
+                  ? 'No se pudo guardar el curso.'
+                  : mensajeAmigableCurso(crudo);
+              setState(() {
+                guardando = false;
+                errorMsg = mensaje;
+              });
+              if (context.mounted) {
+                ref.read(notificacionProvider.notifier).error(mensaje);
+              }
+            }
+          },
+          onCancel: () => Navigator.pop(dialogCtx),
+          children: [
+            AppTextField(
+              label: 'Grado / Sala',
+              controller: gradoCtrl,
+              hint: 'Escribí 1 y se completa a 1°',
+              onChanged: (v) {
+                final completo = autocompletarGrado(v);
+                if (completo != null && completo != v) {
+                  gradoCtrl.text = completo;
+                  gradoCtrl.selection = TextSelection.fromPosition(
+                    TextPosition(offset: completo.length),
+                  );
+                }
+              },
             ),
-          ),
-          actions: [
-            TextButton(
-                onPressed:
-                    guardando ? null : () => Navigator.pop(dialogCtx),
-                child: const Text('Cancelar')),
-            TextButton(
-              onPressed: guardando
-                  ? null
-                  : () async {
-                      final grado = normalizarGrado(gradoCtrl.text);
-                      final division =
-                          normalizarDivision(divisionCtrl.text);
-                      if (grado.isEmpty || division.isEmpty) {
-                        setState(() => errorMsg =
-                            'Completá grado y división para guardar.');
-                        return;
-                      }
-                      final ciclo = int.tryParse(cicloCtrl.text.trim());
-                      // Aviso inmediato sin ir al servidor (ignora este curso).
-                      if (esCursoDuplicado(
-                        existentes: existentes,
-                        grado: grado,
-                        division: division,
-                        cicloLectivo: ciclo,
-                        excluirId: curso.id,
-                      )) {
-                        setState(
-                            () => errorMsg = mensajeCursoDuplicado);
-                        return;
-                      }
-                      setState(() {
-                        guardando = true;
-                        errorMsg = null;
-                      });
-                      final ctrl = ref.read(
-                          cursosControllerProvider(escuelaId).notifier);
-                      final ok = await ctrl.editar(
-                        cursoId: curso.id,
-                        grado: grado,
-                        division: division,
-                        cicloLectivo: ciclo,
-                      );
-                      if (!dialogCtx.mounted) return;
-                      if (ok) {
-                        Navigator.pop(dialogCtx);
-                        ref.invalidate(cursosProvider(escuelaId));
-                        if (context.mounted) {
-                          ref
-                              .read(notificacionProvider.notifier)
-                              .exito('¡Curso actualizado!');
-                        }
-                      } else {
-                        final crudo = ref
-                            .read(cursosControllerProvider(escuelaId))
-                            .error;
-                        final mensaje = crudo == null
-                            ? 'No se pudo guardar el curso.'
-                            : mensajeAmigableCurso(crudo);
-                        setState(() {
-                          guardando = false;
-                          errorMsg = mensaje;
-                        });
-                        if (context.mounted) {
-                          ref
-                              .read(notificacionProvider.notifier)
-                              .error(mensaje);
-                        }
-                      }
-                    },
-              child: guardando
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Guardar'),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              label: 'División',
+              controller: divisionCtrl,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              label: 'Ciclo lectivo',
+              controller: cicloCtrl,
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Escuelas plurigrado: usá "Plurigrado" como grado.',
+              style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6)),
             ),
           ],
         ),

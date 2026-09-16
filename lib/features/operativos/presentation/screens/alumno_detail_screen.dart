@@ -121,13 +121,27 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
             operativoEstado != 'cancelado';
 
     final operativoEnCurso = operativoEstado == 'en_curso';
+    final operativoMutable =
+        operativoEstado != 'finalizado' && operativoEstado != 'cancelado';
+
+    // Ver y modificar mientras el operativo siga abierto: los botones aparecen
+    // tanto en presente como en evaluado. Cada pantalla ya muestra los datos
+    // cargados y permite editarlos (solo lectura si el operativo se cerró).
+    final puedeVerOModificar = (esPresente || esEvaluado) && operativoMutable;
+
+    final medicaHecha = a['medica_completada'] as bool? ?? false;
+    final odontoHecha = a['odontologica_completada'] as bool? ?? false;
+    final escuelaHecha = a['escuela_completado'] as bool? ?? false;
+    final datosHechos = a['antecedentes_completado'] as bool? ?? false;
 
     final acciones = <Widget>[];
-    if (esPresente) {
+    if (puedeVerOModificar) {
       if (permisos.contains('cargarEvaluacionMedica') && operativoEnCurso) {
         acciones.add(PostActionButton(
-          icono: Icons.medical_services_outlined,
-          texto: 'Evaluación médica',
+          icono: medicaHecha
+              ? Icons.visibility_outlined
+              : Icons.medical_services_outlined,
+          texto: medicaHecha ? 'Ver / editar eval. médica' : 'Evaluación médica',
           colorFondo: AppColors.primario,
           colorTexto: AppColors.blanco,
           onPressed: () =>
@@ -136,8 +150,11 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
       }
       if (permisos.contains('cargarEvaluacionOdontologica') && operativoEnCurso) {
         acciones.add(PostActionButton(
-          icono: Icons.health_and_safety_outlined,
-          texto: 'Eval. odontológica',
+          icono: odontoHecha
+              ? Icons.visibility_outlined
+              : Icons.health_and_safety_outlined,
+          texto:
+              odontoHecha ? 'Ver / editar eval. odonto.' : 'Eval. odontológica',
           colorFondo: AppColors.primario,
           colorTexto: AppColors.blanco,
           onPressed: () =>
@@ -146,8 +163,8 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
       }
       if (permisos.contains('cargarSeccionEscuela')) {
         acciones.add(PostActionButton(
-          icono: Icons.school_outlined,
-          texto: 'Sección escuela',
+          icono: escuelaHecha ? Icons.visibility_outlined : Icons.school_outlined,
+          texto: escuelaHecha ? 'Ver / editar sec. escuela' : 'Sección escuela',
           colorFondo: AppColors.primario,
           colorTexto: AppColors.blanco,
           onPressed: () =>
@@ -157,8 +174,10 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
       if (permisos.contains('cargarAntecedentesNino') ||
           rolName == 'superadmin') {
         acciones.add(PostActionButton(
-          icono: Icons.family_restroom_outlined,
-          texto: 'Datos de Alumno',
+          icono: datosHechos
+              ? Icons.visibility_outlined
+              : Icons.family_restroom_outlined,
+          texto: datosHechos ? 'Ver / editar datos' : 'Datos de Alumno',
           colorFondo: AppColors.primario,
           colorTexto: AppColors.blanco,
           onPressed: () =>
@@ -189,6 +208,15 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
     final conMenuFinal =
         operativoEstado == 'finalizado' && (completo || esAusente || esEvaluado);
 
+    // Ficha de datos visible también en curso (solo lectura si no hay
+    // permiso de edición). La constancia sigue siendo solo de finalizado
+    // porque el backend la exige (409 en otros estados).
+    final puedeVerFicha = (completo || esAusente || esEvaluado) &&
+        (operativoEstado == 'finalizado' || operativoEnCurso) &&
+        (permisos.contains('verOperativo') ||
+            permisos.contains('cargarAntecedentesNino') ||
+            rolName == 'superadmin');
+
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
       children: [
@@ -214,10 +242,7 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
                 icon: Icons.picture_as_pdf_outlined,
                 color: AppColors.primario,
               ),
-            if (conMenuFinal &&
-                (permisos.contains('verOperativo') ||
-                    permisos.contains('cargarAntecedentesNino') ||
-                    rolName == 'superadmin'))
+            if (puedeVerFicha)
               const PostMenuEntry(
                 value: 'datos',
                 label: 'Ver datos',
@@ -347,7 +372,8 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
                 ),
               if (operativoEstado != 'finalizado' &&
                   !esPresente &&
-                  !esAusente) ...[
+                  !esAusente &&
+                  !esEvaluado) ...[
                 const SizedBox(height: 4),
                 Text('Marcá como Presente para habilitar la carga',
                     style: AppTypography.texto.copyWith(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/design_system/app_button.dart';
 import '../../../../core/design_system/app_card.dart';
+import '../../../../core/design_system/app_dialog.dart';
 import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_switch.dart';
@@ -287,8 +288,11 @@ class _UsuarioEscuelaFormDialogState
 
     return Dialog(
       backgroundColor: Colors.transparent,
+      insetPadding: kWideDialogInset,
       child: SingleChildScrollView(
-        child: AppCard(
+        child: SizedBox(
+          width: wideDialogWidth(context),
+          child: AppCard(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -447,6 +451,7 @@ class _UsuarioEscuelaFormDialogState
             ],
           ),
         ),
+      ),
       ),
     );
   }
