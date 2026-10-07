@@ -1,0 +1,45 @@
+{
+  // Configuraciones de lanzamiento (requiere extensión Dart-Code).
+  // Elegir en Run and Debug (Ctrl+Shift+D) y lanzar con F5.
+  // La IP del backend viaja igual que siempre (--dart-define); acá queda
+  // guardada en vez de tipearla. "Celular en LAN" pide la IP al lanzar.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "App (Chrome local)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": [
+        "--dart-define=API_BASE_URL=http://localhost:8000/api/v1/auth"
+      ]
+    },
+    {
+      "name": "App (Emulador Android)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1/auth"
+      ]
+    },
+    {
+      "name": "App (Celular en LAN)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=API_BASE_URL=http://${input:lanIp}:8000/api/v1/auth"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "lanIp",
+      "type": "promptString",
+      "description": "IP LAN de la PC del backend (ej. 192.168.252.31)",
+      "default": "192.168.252.31"
+    }
+  ]
+}

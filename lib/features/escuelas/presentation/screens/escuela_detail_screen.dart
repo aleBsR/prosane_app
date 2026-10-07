@@ -47,7 +47,7 @@ class EscuelaDetailScreen extends ConsumerWidget {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -56,7 +56,7 @@ class EscuelaDetailScreen extends ConsumerWidget {
                   }
                 },
               ),
-              const Expanded(
+               Expanded(
                 child: Text('Detalle de escuela',
                     style: TextStyle(
                         fontSize: 22,
@@ -94,14 +94,14 @@ class EscuelaDetailScreen extends ConsumerWidget {
                       ],
                       menuEntries: [
                         if (puedeEditar)
-                          const PostMenuEntry(
+                           PostMenuEntry(
                             value: 'editar',
                             label: 'Editar',
                             icon: Icons.edit_outlined,
                             color: AppColors.primario,
                           ),
                         if (puedeEliminar)
-                          const PostMenuEntry(
+                           PostMenuEntry(
                             value: 'eliminar',
                             label: 'Eliminar',
                             icon: Icons.delete_outline,

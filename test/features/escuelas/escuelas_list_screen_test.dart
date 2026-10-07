@@ -44,7 +44,7 @@ void main() {
     expect(find.byIcon(Icons.delete_outline), findsNothing);
   });
 
-  testWidgets('la tarjeta muestra solo nombre, CUE y localidad',
+  testWidgets('la tarjeta muestra nombre, CUE, localidad y usuario asociado',
       (tester) async {
     final repo = _MockRepo();
     final completa = Escuela(
@@ -54,14 +54,29 @@ void main() {
       localidad: 'Cerrillos',
       ambito: 'rural',
       plurigradoRural: true,
+      usuariosAsociados: [
+        {'email': 'escuela@prosane.test', 'nombre': '', 'is_active': true},
+      ],
     );
     await tester.pumpWidget(_buildScreen(repo, [completa]));
     await tester.pumpAndSettle();
 
     expect(find.text('Rural'), findsOneWidget);
     expect(find.text('CUE 66000002 • Cerrillos'), findsOneWidget);
-    // Nada más: ni ámbito, ni notas, ni usuarios en la lista.
+    expect(find.text('Usuario: escuela@prosane.test'), findsOneWidget);
+    expect(find.text('Sin usuario asociado'), findsNothing);
+    // Nada más: ni ámbito ni notas en la lista.
     expect(find.textContaining('rural'), findsNothing);
     expect(find.text('Plurigrado rural: no usa cursos'), findsNothing);
+  });
+
+  testWidgets('la tarjeta advierte si no hay usuario asociado',
+      (tester) async {
+    final repo = _MockRepo();
+    await tester.pumpWidget(_buildScreen(repo, [escuela]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Escuela 1'), findsOneWidget);
+    expect(find.text('Sin usuario asociado'), findsOneWidget);
   });
 }

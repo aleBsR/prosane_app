@@ -95,8 +95,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsOneWidget);
 
-    // Confirmar → el guard vuelve a /login
-    await tester.tap(find.text('Confirmar'));
+    // Confirmar (Sí) → el guard vuelve a /login
+    await tester.tap(find.text('Sí'));
     await tester.pumpAndSettle();
     expect(find.text('No tenés acciones disponibles todavía'), findsNothing);
     expect(find.text('Bienvenido'), findsOneWidget);

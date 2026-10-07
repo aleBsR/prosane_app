@@ -23,7 +23,7 @@ class OperativosListScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                   onPressed: () {
                     if (context.canPop()) {
                       context.pop();
@@ -91,7 +91,7 @@ class OperativosListScreen extends ConsumerWidget {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(_labelEstado(op['estado']),
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.blanco)),
+                                        style:  TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.blanco)),
                                   ),
                                 ],
                               ),

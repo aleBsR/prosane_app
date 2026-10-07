@@ -2345,7 +2345,16 @@ class $$SyncStateRowsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SyncStateRowsTable, SyncStateRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SyncStateRowsTable,
+                    SyncStateRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -2781,7 +2790,16 @@ class $$CachedSessionRowsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CachedSessionRowsTable, CachedSessionRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CachedSessionRowsTable,
+                    CachedSessionRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -3068,7 +3086,16 @@ class $$HijosRowsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$HijosRowsTable, HijosRow>(table),
+                  BaseReferences<_$AppDatabase, $HijosRowsTable, HijosRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -3304,7 +3331,18 @@ class $$AntecedentesNinoRowsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$AntecedentesNinoRowsTable, AntecedentesNinoRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $AntecedentesNinoRowsTable,
+                    AntecedentesNinoRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

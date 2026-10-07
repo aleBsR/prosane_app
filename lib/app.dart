@@ -4,8 +4,11 @@ import 'core/notificaciones/notificacion_host.dart';
 import 'core/providers.dart';
 import 'core/router/app_router.dart';
 import 'core/session/entities.dart';
+import 'core/session/inactividad_watcher.dart';
 import 'core/session/session_controller.dart';
+import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 
 class ProsaneApp extends ConsumerStatefulWidget {
   const ProsaneApp({super.key});
@@ -48,15 +51,25 @@ class _ProsaneAppState extends ConsumerState<ProsaneApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
-    title: 'PROSANE',
-    debugShowCheckedModeBanner: false,
-    theme: AppTheme.light(),
-    routerConfig: ref.watch(goRouterProvider),
-    // El host de notificaciones se monta una vez, por encima del router,
-    // así la tarjeta flota sobre cualquier pantalla (incluida la de registro,
-    // que está fuera del shell con nav bar).
-    builder: (context, child) =>
-        Stack(children: [?child, const NotificacionHost()]),
-  );
+  Widget build(BuildContext context) {
+    final modo = ref.watch(themeModeProvider);
+    // Fija el brillo ANTES de construir el tema: todos los AppColors de
+    // este frame se resuelven con la paleta del modo activo.
+    AppColors.brillo =
+        modo == ThemeMode.dark ? Brightness.dark : Brightness.light;
+    return MaterialApp.router(
+      title: 'PROSANE',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: modo,
+      routerConfig: ref.watch(goRouterProvider),
+      // El host de notificaciones se monta una vez, por encima del router,
+      // así la tarjeta flota sobre cualquier pantalla (incluida la de registro,
+      // que está fuera del shell con nav bar).
+      builder: (context, child) => InactividadWatcher(
+        child: Stack(children: [?child, const NotificacionHost()]),
+      ),
+    );
+  }
 }

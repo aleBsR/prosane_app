@@ -129,7 +129,7 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -146,7 +146,7 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
           ),
           Expanded(
             child: _cargando
-                ? const Center(child: CircularProgressIndicator(color: AppColors.blanco))
+                ?  Center(child: CircularProgressIndicator(color: AppColors.blanco))
                 : _error != null
                     ? Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
@@ -154,7 +154,7 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                               Icon(Icons.error_outline, size: 48, color: AppColors.error),
                               const SizedBox(height: AppSpacing.md),
                               Text(_error!, style: AppTypography.texto, textAlign: TextAlign.center),
                               const SizedBox(height: AppSpacing.md),
@@ -171,7 +171,7 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
                             AppCard(
                               child: Column(
                                 children: [
-                                  const Icon(Icons.picture_as_pdf, size: 48, color: AppColors.primario),
+                                   Icon(Icons.picture_as_pdf, size: 48, color: AppColors.primario),
                                   const SizedBox(height: AppSpacing.sm),
                                   Text('Constancia lista',
                                       style: AppTypography.subtitulo.copyWith(color: AppColors.primario)),
@@ -211,18 +211,18 @@ class _ConstanciaScreenState extends ConsumerState<ConstanciaScreen> {
                                 constraints: const BoxConstraints(maxWidth: 320),
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F5E9),
+                                  color: AppColors.okFondo,
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: const Color(0xFF66BB6A)),
+                                  border: Border.all(color: AppColors.ok),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.verified_outlined, size: 14, color: Color(0xFF2E7D32)),
+                                     Icon(Icons.verified_outlined, size: 14, color: AppColors.ok),
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text('Documento generado desde operativo finalizado — PROSANE Salta',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ok)),
                                     ),
                                   ],
                                 ),

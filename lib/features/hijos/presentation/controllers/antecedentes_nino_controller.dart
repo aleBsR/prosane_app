@@ -102,7 +102,19 @@ class AntecedentesNinoController extends StateNotifier<AntecedentesNinoState> {
 
   void setCampo(String campo, String valor) {
     if (!mounted) return;
-    state = state.copyWith(respuestas: {...state.respuestas, campo: valor});
+    var s = state.copyWith(respuestas: {...state.respuestas, campo: valor});
+    // Al cambiar a No/No sabe se borran los detalles dependientes para no
+    // guardarlos huérfanos (el payload además los descarta).
+    if (campo == 'internacion_previa' && valor != 'si') {
+      s = s.copyWith(causaHospitalizacion: '');
+    }
+    if (campo == 'tratamiento_actual' && valor != 'si') {
+      s = s.copyWith(descripcionTratamiento: '');
+    }
+    if (campo == 'primera_menstruacion' && valor != 'si') {
+      s = s.copyWith(edadMenstruacion: '');
+    }
+    state = s;
   }
 
   void setPesoNacimiento(String v) => state = state.copyWith(pesoNacimiento: v);
@@ -155,7 +167,8 @@ class AntecedentesNinoController extends StateNotifier<AntecedentesNinoState> {
       'descripcion_tratamiento': s.recibeTratamiento ? s.descripcionTratamiento : '',
       'ultima_consulta_medica': s.ultimaConsultaMedica,
       'otros_problemas_salud': s.otrosProblemasSalud,
-      'edad_primera_menstruacion': int.tryParse(s.edadMenstruacion) ?? 0,
+      'edad_primera_menstruacion':
+          s.tuvoMenstruacion ? int.tryParse(s.edadMenstruacion) ?? 0 : 0,
     };
   }
 

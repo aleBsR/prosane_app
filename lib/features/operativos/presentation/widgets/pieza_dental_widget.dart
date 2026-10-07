@@ -32,7 +32,7 @@ class PiezaDentalWidget extends StatelessWidget {
                 painter: _DientePainter(pieza),
               ),
             ),
-            Text(numero, style: const TextStyle(fontSize: 11, color: AppColors.texto)),
+            Text(numero, style:  TextStyle(fontSize: 11, color: AppColors.texto)),
           ],
         ),
       ),

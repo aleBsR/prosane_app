@@ -21,8 +21,8 @@ void main() {
       title: 'Escuela 1',
       subtitle: 'CUE 1 • Salta',
       bannerIcon: Icons.school_outlined,
-      bannerChips: const ['Estatal', 'Común'],
-      menuEntries: const [
+      bannerChips:  ['Estatal', 'Común'],
+      menuEntries:  [
         PostMenuEntry(
             value: 'editar',
             label: 'Editar',

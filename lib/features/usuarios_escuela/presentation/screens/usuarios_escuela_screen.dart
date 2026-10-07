@@ -47,7 +47,7 @@ class UsuariosEscuelaScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                   onPressed: () {
                     if (context.canPop()) {
                       context.pop();
@@ -94,7 +94,7 @@ class UsuariosEscuelaScreen extends ConsumerWidget {
                   itemBuilder: (context, i) {
                     final u = usuarios[i];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding:  EdgeInsets.only(bottom: AppSpacing.md),
                       child: AppCard(
                         child: Row(
                           children: [
@@ -127,14 +127,14 @@ class UsuariosEscuelaScreen extends ConsumerWidget {
                               ),
                             ),
                             PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert,
+                              icon:  Icon(Icons.more_vert,
                                   color: AppColors.texto),
                               onSelected: (valor) {
                                 if (valor == 'editar') {
                                   _abrirFormulario(context, ref, usuario: u);
                                 }
                               },
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) =>  [
                                 PopupMenuItem(
                                   value: 'editar',
                                   child: Row(
@@ -324,17 +324,17 @@ class _UsuarioEscuelaFormDialogState
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: AppColors.okFondo,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF66BB6A)),
+                    border: Border.all(color: AppColors.ok),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.mail_outline, size: 16, color: Color(0xFF2E7D32)),
+                       Icon(Icons.mail_outline, size: 16, color: AppColors.ok),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text('Se enviará contraseña temporal por mail (vence en 72h). El usuario deberá cambiarla al primer ingreso.',
-                            style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                            style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.ok)),
                       ),
                     ],
                   ),
@@ -346,12 +346,12 @@ class _UsuarioEscuelaFormDialogState
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
+                        color: AppColors.okFondo,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF66BB6A)),
+                        border: Border.all(color: AppColors.ok),
                       ),
                       child: Text('La contraseña solo la gestiona el propio usuario. No es visible para el admin.',
-                          style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                          style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.ok)),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     OutlinedButton.icon(
@@ -391,7 +391,7 @@ class _UsuarioEscuelaFormDialogState
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.warning_amber_outlined,
+                             Icon(Icons.warning_amber_outlined,
                                 color: AppColors.error, size: 18),
                             const SizedBox(width: 6),
                             Expanded(

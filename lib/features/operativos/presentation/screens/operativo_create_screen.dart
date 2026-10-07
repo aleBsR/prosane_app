@@ -46,7 +46,7 @@ class OperativoCreateScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                   onPressed: () => context.pop(),
                 ),
                 Expanded(
@@ -130,7 +130,7 @@ class OperativoCreateScreen extends ConsumerWidget {
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
+                                  borderSide:  BorderSide(
                                     color: AppColors.primario,
                                     width: 1.5,
                                   ),

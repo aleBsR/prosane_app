@@ -107,7 +107,7 @@ class _StepDatosPersonalesState extends State<StepDatosPersonales> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadii.campo),
               borderSide:
-                  const BorderSide(color: AppColors.primario, width: 1.5),
+                   BorderSide(color: AppColors.primario, width: 1.5),
             ),
           ),
           items: const [
@@ -139,7 +139,7 @@ class _StepDatosPersonalesState extends State<StepDatosPersonales> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(fechaTexto, style: AppTypography.campo),
-                const Icon(Icons.calendar_today_outlined,
+                 Icon(Icons.calendar_today_outlined,
                     size: 18, color: AppColors.link),
               ],
             ),

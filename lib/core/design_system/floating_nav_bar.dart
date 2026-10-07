@@ -22,7 +22,7 @@ class FloatingNavBar extends StatelessWidget {
   final bool compacta;
 
   static const _inactivo = Color(0xFF9286C4); // primario violeta desaturado (sin token aún)
-  static const _activo = AppColors.link;
+  static Color get _activo => AppColors.link;
 
   @override
   Widget build(BuildContext context) {

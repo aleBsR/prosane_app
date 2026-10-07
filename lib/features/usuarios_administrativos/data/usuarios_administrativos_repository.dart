@@ -1,18 +1,18 @@
 import 'package:dio/dio.dart';
 
-class UsuarioAyudante {
+class UsuarioAdministrativo {
   final String id;
   final String email;
   final bool isActive;
 
-  UsuarioAyudante({
+  UsuarioAdministrativo({
     required this.id,
     required this.email,
     this.isActive = true,
   });
 
-  factory UsuarioAyudante.fromJson(Map<String, dynamic> json) {
-    return UsuarioAyudante(
+  factory UsuarioAdministrativo.fromJson(Map<String, dynamic> json) {
+    return UsuarioAdministrativo(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
       isActive: json['is_active'] ?? true,
@@ -20,18 +20,18 @@ class UsuarioAyudante {
   }
 }
 
-class UsuariosAyudantesRepository {
+class UsuariosAdministrativosRepository {
   final Dio _dio;
 
-  UsuariosAyudantesRepository(this._dio);
+  UsuariosAdministrativosRepository(this._dio);
 
-  Future<List<UsuarioAyudante>> listar() async {
+  Future<List<UsuarioAdministrativo>> listar() async {
     try {
-      final res = await _dio.get('/usuarios/ayudantes/');
+      final res = await _dio.get('/usuarios/administrativos/');
       if (res.statusCode == 200) {
         final data = res.data as List;
         return data
-            .map((e) => UsuarioAyudante.fromJson(e as Map<String, dynamic>))
+            .map((e) => UsuarioAdministrativo.fromJson(e as Map<String, dynamic>))
             .toList();
       }
       throw Exception('Error ${res.statusCode}');
@@ -40,15 +40,15 @@ class UsuariosAyudantesRepository {
     }
   }
 
-  Future<UsuarioAyudante> crear({
+  Future<UsuarioAdministrativo> crear({
     required String email,
   }) async {
     try {
-      final res = await _dio.post('/usuarios/ayudantes/', data: {
+      final res = await _dio.post('/usuarios/administrativos/', data: {
         'email': email,
       });
       if (res.statusCode == 201) {
-        return UsuarioAyudante.fromJson(res.data as Map<String, dynamic>);
+        return UsuarioAdministrativo.fromJson(res.data as Map<String, dynamic>);
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
@@ -58,20 +58,20 @@ class UsuariosAyudantesRepository {
 
   Future<void> reenviarTemporal(String id) async {
     try {
-      final res = await _dio.post('/usuarios/ayudantes/$id/resend-temp/');
+      final res = await _dio.post('/usuarios/administrativos/$id/resend-temp/');
       if (res.statusCode != 200) throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {
       throw Exception(_mensajeError(e));
     }
   }
 
-  /// Edita una cuenta de ayudante. [cambios] admite `email`, `password`
+  /// Edita una cuenta de administrativo. [cambios] admite `email`, `password`
   /// e `is_active` (solo se envían los campos a modificar).
-  Future<UsuarioAyudante> editar(String id, Map<String, dynamic> cambios) async {
+  Future<UsuarioAdministrativo> editar(String id, Map<String, dynamic> cambios) async {
     try {
-      final res = await _dio.patch('/usuarios/ayudantes/$id/', data: cambios);
+      final res = await _dio.patch('/usuarios/administrativos/$id/', data: cambios);
       if (res.statusCode == 200) {
-        return UsuarioAyudante.fromJson(res.data as Map<String, dynamic>);
+        return UsuarioAdministrativo.fromJson(res.data as Map<String, dynamic>);
       }
       throw Exception('Error ${res.statusCode}');
     } on DioException catch (e) {

@@ -20,6 +20,13 @@ class OperativosRepository {
     return resp.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> actualizar(
+      String operativoId, Map<String, dynamic> datos) async {
+    final resp =
+        await _dio.patch('/operativos/$operativoId/', data: datos);
+    return resp.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> confirmar(String operativoId) async {
     final resp = await _dio.post('/operativos/$operativoId/confirmar/');
     return resp.data as Map<String, dynamic>;
@@ -120,9 +127,25 @@ class OperativosRepository {
     return resp.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> getDerivaciones(String operativoId, {String? especialidad}) async {
+    final resp = await _dio.get(
+      '/operativos/$operativoId/derivaciones/',
+      queryParameters: {if (especialidad != null && especialidad.isNotEmpty) 'especialidad': especialidad},
+    );
+    return resp.data as Map<String, dynamic>;
+  }
+
   Future<List<int>> getConstanciaPdf(String opId, String alumnoId) async {
     final resp = await _dio.get(
       '/operativos/$opId/alumnos/$alumnoId/constancia/',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return (resp.data as List<int>);
+  }
+
+  Future<List<int>> getPlanillaPdf(String opId, String alumnoId) async {
+    final resp = await _dio.get(
+      '/operativos/$opId/alumnos/$alumnoId/planilla/',
       options: Options(responseType: ResponseType.bytes),
     );
     return (resp.data as List<int>);

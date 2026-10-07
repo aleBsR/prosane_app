@@ -26,7 +26,7 @@ class _ActionGroupState extends State<ActionGroup> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.blanco,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: const Color(0xFF2B2440).withValues(alpha: 0.16), blurRadius: 22, offset: const Offset(0, 8))],
       ),
@@ -41,7 +41,7 @@ class _ActionGroupState extends State<ActionGroup> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
                 child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text(widget.titulo, style: const TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w700,
+                  Text(widget.titulo, style:  TextStyle(fontFamily: 'Rubik', fontWeight: FontWeight.w700,
                       fontSize: 13, letterSpacing: 1, color: AppColors.primario)),
                   Icon(_abierto ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right, color: const Color(0xFFB9AEE8)),
                 ]),

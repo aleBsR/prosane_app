@@ -56,7 +56,11 @@ class AntecedentesFamiliaresController
   final Future<void> Function() refrescarSesion;
   final String? tutorId;
 
-  void setProblemaSalud(String v) => state = state.copyWith(problemaSalud: v);
+  // Al cambiar a No/No sabe se borra el detalle para no guardarlo huérfano.
+  void setProblemaSalud(String v) => state = state.copyWith(
+        problemaSalud: v,
+        problemaCual: v == 'si' ? state.problemaCual : '',
+      );
   void setProblemaCual(String v) => state = state.copyWith(problemaCual: v);
   void setMuerteSubita(String v) => state = state.copyWith(muerteSubita: v);
 
@@ -66,9 +70,11 @@ class AntecedentesFamiliaresController
     try {
       final d = await ds.getAntecedentes(tutorId!);
       if (!mounted) return;
+      final salud = (d['problema_salud_importante'] as String?) ?? '';
       state = state.copyWith(
-        problemaSalud: (d['problema_salud_importante'] as String?) ?? '',
-        problemaCual: (d['problema_salud_cual'] as String?) ?? '',
+        problemaSalud: salud,
+        // Sanea detalle huérfano legacy.
+        problemaCual: salud == 'si' ? (d['problema_salud_cual'] as String?) ?? '' : '',
         muerteSubita: (d['muerte_subita_familiar'] as String?) ?? '',
         cargando: false,
       );

@@ -52,7 +52,7 @@ class AppDropdownField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadii.campo),
-              borderSide: const BorderSide(color: AppColors.primario, width: 1.5),
+              borderSide:  BorderSide(color: AppColors.primario, width: 1.5),
             ),
           ),
           items: [

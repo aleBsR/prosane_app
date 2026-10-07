@@ -9,11 +9,14 @@ import '../../../../core/design_system/app_dropdown_field.dart';
 import '../../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../../core/design_system/app_text_field.dart';
 import '../../../../core/notificaciones/notificacion_controller.dart';
+import '../../../../core/providers.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radii.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../controllers/alumnos_escuela_controller.dart';
 import '../controllers/mi_escuela_controller.dart';
+import '../../data/alumnos_escuela_repository.dart';
 import '../../../operativos/presentation/controllers/operativos_list_controller.dart';
 
 class AlumnosEscuelaScreen extends ConsumerStatefulWidget {
@@ -63,7 +66,7 @@ class _AlumnosEscuelaScreenState
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -88,42 +91,25 @@ class _AlumnosEscuelaScreenState
             child: alumnosAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(child: Text('Error: $e')),
-              data: (alumnos) => ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: alumnos.length,
-                itemBuilder: (context, index) {
-                  final alumno = alumnos[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${alumno.apellido}, ${alumno.nombre}',
-                              style: AppTypography.subtitulo),
-                          const SizedBox(height: 4),
-                          Text('DNI ${alumno.dni} • ${alumno.edad} años • ${alumno.sexo}',
-                              style: AppTypography.texto.copyWith(fontSize: 12)),
-                          if (alumno.localidad.isNotEmpty)
-                            Text(alumno.localidad,
-                                style: AppTypography.texto.copyWith(
-                                    fontSize: 12,
-                                    color: AppColors.texto.withValues(alpha: 0.6))),
-                          if (alumno.celular.isNotEmpty || alumno.telefonoFijo.isNotEmpty)
-                            Text([if (alumno.celular.isNotEmpty) 'Cel: ${alumno.celular}', if (alumno.telefonoFijo.isNotEmpty) 'Tel: ${alumno.telefonoFijo}'].join(' • '),
-                                style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6))),
-                          if (alumno.operativos.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text('Operativos: ${alumno.operativos.map((o) => o['nombre'] ?? o['id']).join(', ')}',
-                                  style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.primario)),
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+              data: (alumnos) {
+                final pendientes =
+                    alumnos.where((a) => a.tutorDni.isEmpty).toList();
+                final resto =
+                    alumnos.where((a) => a.tutorDni.isNotEmpty).toList();
+                return ListView(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  children: [
+                    if (pendientes.isNotEmpty) ...[
+                      _SeccionTitulo('Datos pendientes'),
+                      for (final alumno in pendientes)
+                        _filaAlumno(context, ref, alumno, pendiente: true),
+                    ],
+                    _SeccionTitulo('Alumnos'),
+                    for (final alumno in resto)
+                      _filaAlumno(context, ref, alumno),
+                  ],
+                );
+              },
             ),
           ),
           if (_soloLectura)
@@ -144,9 +130,69 @@ class _AlumnosEscuelaScreenState
     );
   }
 
+  Widget _filaAlumno(
+      BuildContext context, WidgetRef ref, AlumnoEscuela alumno,
+      {bool pendiente = false}) {
+    final escuelaId = widget.escuelaId;
+    final completo = !pendiente;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadii.campo),
+          onTap: () {
+            final ruta = escuelaId != null && escuelaId.isNotEmpty
+                ? '/escuelas/alumnos/${alumno.id}?escuelaId=$escuelaId'
+                : '/escuelas/alumnos/${alumno.id}';
+            context.push(ruta);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${alumno.apellido}, ${alumno.nombre}',
+                          style: AppTypography.subtitulo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text('${alumno.tipoDni} ${alumno.dni}',
+                          style: AppTypography.texto.copyWith(
+                              fontSize: 12,
+                              color: AppColors.texto.withValues(alpha: 0.6))),
+                    ],
+                  ),
+                ),
+                _badgeEstado(completo),
+                const SizedBox(width: AppSpacing.sm),
+                 Icon(Icons.chevron_right, color: AppColors.texto),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badgeEstado(bool completo) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: completo ? Colors.green : AppColors.gris,
+        borderRadius: BorderRadius.circular(AppRadii.campo),
+      ),
+      child: Text(completo ? 'Completo' : 'Pendiente',
+          style:  TextStyle(
+              color: AppColors.blanco, fontSize: 11, fontWeight: FontWeight.bold)),
+    );
+  }
+
   Future<void> _mostrarFormulario(BuildContext context, WidgetRef ref) async {
-    late final Map<String, dynamic> escuela;
-    late final List<Map<String, dynamic>> operativos;
+    late final Map<String, dynamic> escuela;    late final List<Map<String, dynamic>> operativos;
     try {
       escuela = await ref.read(miEscuelaProvider.future);
       operativos = await ref.read(operativosListControllerProvider.future);
@@ -173,6 +219,7 @@ class _AlumnosEscuelaScreenState
     final nombre = TextEditingController();
     final apellido = TextEditingController();
     final dni = TextEditingController();
+    final tipoDoc = TextEditingController(text: 'DNI');
     DateTime? fechaNacimiento;
     final sexo = TextEditingController();
     final edad = TextEditingController();
@@ -189,7 +236,104 @@ class _AlumnosEscuelaScreenState
     final pesoNacimiento = TextEditingController(text: '0');
     final asma = TextEditingController(text: 'NO');
     final otrosProblemas = TextEditingController(text: 'NINGUNO');
+    // tutor (adulto responsable, opcional en esta etapa)
+    final tutorNombre = TextEditingController();
+    final tutorApellido = TextEditingController();
+    final tutorDni = TextEditingController();
+    final tutorTipoDoc = TextEditingController(text: 'DNI');
+    final tutorParentesco = TextEditingController();
+    final tutorSexo = TextEditingController();
+    DateTime? tutorFechaNacimiento;
     String? dialogError;
+    var validandoDni = false;
+    var validandoTutorDni = false;
+    // null = pendiente de validar (campos bloqueados), 'ok' | 'manual'.
+    String? renaperA;
+    String? renaperT;
+
+    /// Autocompleta desde RENAPER (vía SAFESA). Solo pisa campos con datos.
+    Future<void> validarRena(
+        bool esTutor, void Function(void Function()) setSt) async {
+      final dniCtrl = esTutor ? tutorDni : dni;
+      final sexoCtrl = esTutor ? tutorSexo : sexo;
+      if (dniCtrl.text.trim().isEmpty) {
+        setSt(() => dialogError = 'Ingresá el DNI primero');
+        return;
+      }
+      setSt(() {
+        dialogError = null;
+        if (esTutor) {
+          validandoTutorDni = true;
+        } else {
+          validandoDni = true;
+        }
+      });
+      try {
+        final data = await ref.read(alumnosEscuelaRepositoryProvider).validarDni(
+              dniCtrl.text.trim(),
+              sexo: sexoCtrl.text.trim().isEmpty ? null : sexoCtrl.text.trim(),
+            );
+        final d = data['persona'] is Map
+            ? Map<String, dynamic>.from(data['persona'] as Map)
+            : data;
+        String txt(dynamic v) => '${v ?? ''}'.trim();
+        final apellidoTxt = txt(d['apellido'] ?? d['apellidos'] ?? d['lastName']);
+        final nombresTxt = txt(d['nombres'] ?? d['nombre'] ?? d['firstName']);
+        final fechaTxt = txt(d['fecha_nacimiento'] ?? d['fechaNacimiento'] ?? d['fecha_nac'] ?? d['f_nac']);
+        final sx = txt(d['sexo'] ?? d['idSexo']).toUpperCase();
+        final sexoUi = sx == 'M' || sx == 'MASCULINO' || sx == '1'
+            ? 'masculino'
+            : sx == 'F' || sx == 'FEMENINO' || sx == '2'
+                ? 'femenino'
+                : '';
+        final localidadTxt = txt(d['ciudad'] ?? d['municipio'] ?? d['localidad']);
+        DateTime? fechaDt;
+        if (fechaTxt.isNotEmpty) {
+          try {
+            fechaDt = DateTime.parse(
+                fechaTxt.length >= 10 ? fechaTxt.substring(0, 10) : fechaTxt);
+          } catch (_) {}
+        }
+        setSt(() {
+          if (esTutor) {
+            if (apellidoTxt.isNotEmpty) tutorApellido.text = apellidoTxt;
+            if (nombresTxt.isNotEmpty) tutorNombre.text = nombresTxt;
+            if (sexoUi.isNotEmpty) tutorSexo.text = sexoUi;
+            if (fechaDt != null) tutorFechaNacimiento = fechaDt;
+            validandoTutorDni = false;
+            renaperT = 'ok';
+          } else {
+            if (apellidoTxt.isNotEmpty) apellido.text = apellidoTxt;
+            if (nombresTxt.isNotEmpty) nombre.text = nombresTxt;
+            if (sexoUi.isNotEmpty) sexo.text = sexoUi;
+            if (localidadTxt.isNotEmpty && localidad.text.trim().isEmpty) {
+              localidad.text = localidadTxt;
+            }
+            if (fechaDt != null) fechaNacimiento = fechaDt;
+            validandoDni = false;
+            renaperA = 'ok';
+          }
+        });
+        ref.read(notificacionProvider.notifier).exito('Datos de RENAPER cargados');
+      } catch (e) {
+        final noEncontrado = e.toString().contains('404');
+        setSt(() {
+          validandoDni = false;
+          validandoTutorDni = false;
+          if (esTutor) {
+            renaperT = 'manual';
+          } else {
+            renaperA = 'manual';
+          }
+          dialogError = noEncontrado
+              ? null
+              : e.toString().replaceFirst('Exception: ', '');
+        });
+        ref.read(notificacionProvider.notifier).info(noEncontrado
+            ? 'No está en RENAPER: cargá los datos manual'
+            : 'Sin conexión con RENAPER: cargá manual');
+      }
+    }
 
     await showDialog<void>(
       context: context,
@@ -198,6 +342,14 @@ class _AlumnosEscuelaScreenState
           title: 'Registrar alumno',
           error: dialogError,
           onSave: () async {
+            if (dni.text.trim().isEmpty || operativoId == null) {
+              setDialogState(() => dialogError = 'Completá DNI y operativo');
+              return;
+            }
+            if (renaperA == null) {
+              setDialogState(() => dialogError = 'Validá el DNI del alumno primero');
+              return;
+            }
             if ([nombre, apellido, dni, sexo, edad].any((c) => c.text.trim().isEmpty) || fechaNacimiento == null) {
               setDialogState(() => dialogError = 'Faltan campos obligatorios (*)');
               return;
@@ -208,6 +360,16 @@ class _AlumnosEscuelaScreenState
             }
             if (operativoId == null) {
               setDialogState(() => dialogError = 'Elegí un operativo');
+              return;
+            }
+            final tutorCampos = [tutorNombre, tutorApellido, tutorDni, tutorParentesco, tutorSexo];
+            final tutorCompleto = tutorCampos.every((c) => c.text.trim().isNotEmpty) && tutorFechaNacimiento != null;
+            if (renaperT == null) {
+              setDialogState(() => dialogError = 'Validá el DNI del tutor primero');
+              return;
+            }
+            if (!tutorCompleto) {
+              setDialogState(() => dialogError = 'Completá los datos del tutor (obligatorio)');
               return;
             }
             // Plurigrado sin curso: usar curso por defecto (null → backend lo trata como Plurigrado)
@@ -224,7 +386,7 @@ class _AlumnosEscuelaScreenState
                 'nombre': nombre.text.trim(),
                 'apellido': apellido.text.trim(),
                 'dni': dni.text.trim(),
-                'tipo_dni': 'DNI',
+                'tipo_dni': tipoDoc.text.trim().isEmpty ? 'DNI' : tipoDoc.text.trim(),
                 'sexo': sexo.text.trim(),
                 'fecha_nacimiento': fechaIso,
               },
@@ -243,6 +405,19 @@ class _AlumnosEscuelaScreenState
                 if (asma.text.trim().isNotEmpty) 'asma_espasmos': asma.text.trim(),
                 if (otrosProblemas.text.trim().isNotEmpty) 'otros_problemas_salud': otrosProblemas.text.trim(),
               },
+              if (tutorCompleto)
+                'tutor': {
+                  'persona': {
+                    'nombre': tutorNombre.text.trim(),
+                    'apellido': tutorApellido.text.trim(),
+                    'dni': tutorDni.text.trim(),
+                    'tipo_dni': tutorTipoDoc.text.trim().isEmpty ? 'DNI' : tutorTipoDoc.text.trim(),
+                    'sexo': tutorSexo.text.trim(),
+                    'fecha_nacimiento':
+                        '${tutorFechaNacimiento!.year.toString().padLeft(4, '0')}-${tutorFechaNacimiento!.month.toString().padLeft(2, '0')}-${tutorFechaNacimiento!.day.toString().padLeft(2, '0')}',
+                  },
+                  'parentesco': tutorParentesco.text.trim(),
+                },
             };
             final ctrl = ref.read(alumnosEscuelaControllerProvider.notifier);
             final ok = await ctrl.crear(payload);
@@ -267,22 +442,56 @@ class _AlumnosEscuelaScreenState
           },
           onCancel: () => Navigator.pop(dialogContext),
           children: [
-              AppTextField(label: 'Nombre *', controller: nombre),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(label: 'Apellido *', controller: apellido),
+              AppDropdownField(
+                label: 'Tipo de documento *',
+                value: tipoDoc.text.isEmpty ? null : tipoDoc.text,
+                items: const [
+                  (value: 'DNI', label: 'DNI'),
+                  (value: 'Pasaporte', label: 'Pasaporte'),
+                ],
+                onChanged: (v) => setDialogState(() => tipoDoc.text = v),
+              ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'DNI *', controller: dni,
-                  keyboardType: TextInputType.number),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() => renaperA = null)),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: validandoDni
+                      ? null
+                      : () => validarRena(false, setDialogState),
+                  child: Text(validandoDni ? 'Validando…' : 'Validar en RENAPER'),
+                ),
+              ),
+              if (renaperA == null)
+                Text('Validá el DNI para autocompletar. Si no está en RENAPER, igual podés cargar manual.',
+                    style: AppTypography.texto.copyWith(
+                        fontSize: 12,
+                        color: AppColors.texto.withValues(alpha: 0.6))),
+              if (renaperA == null) const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Nombre *', controller: nombre,
+                  readOnly: renaperA == null),
               const SizedBox(height: AppSpacing.sm),
-              AppDateField(
-                label: 'Fecha de nacimiento *',
-                value: fechaNacimiento,
-                hint: 'dd/mm/aaaa',
-                onChanged: (v) => setDialogState(() => fechaNacimiento = v),
+              AppTextField(label: 'Apellido *', controller: apellido,
+                  readOnly: renaperA == null),
+              const SizedBox(height: AppSpacing.sm),
+              IgnorePointer(
+                ignoring: renaperA == null,
+                child: Opacity(
+                  opacity: renaperA == null ? 0.5 : 1,
+                  child: AppDateField(
+                    label: 'Fecha de nacimiento *',
+                    value: fechaNacimiento,
+                    hint: 'dd/mm/aaaa',
+                    onChanged: (v) => setDialogState(() => fechaNacimiento = v),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppDropdownField(
                 label: 'Sexo *',
+                enabled: renaperA != null,
                 value: sexo.text.isEmpty ? null : sexo.text,
                 items: const [
                   (value: 'masculino', label: 'Masculino'),
@@ -293,23 +502,24 @@ class _AlumnosEscuelaScreenState
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Edad *', controller: edad,
-                  keyboardType: TextInputType.number),
+                  keyboardType: TextInputType.number,
+                  readOnly: renaperA == null),
               const SizedBox(height: AppSpacing.sm),
               if (cursos.isEmpty && !esPlurigrado)
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
+                    color: AppColors.avisoFondo,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFFB74D)),
+                    border: Border.all(color: AppColors.aviso),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: Color(0xFFE65100)),
+                       Icon(Icons.info_outline, size: 16, color: AppColors.aviso),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text('Todavía no hay cursos. Creá uno para poder guardar.',
-                            style: AppTypography.texto.copyWith(fontSize: 12, color: Color(0xFFE65100))),
+                            style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.aviso)),
                       ),
                       TextButton(
                         onPressed: () {
@@ -333,7 +543,7 @@ class _AlumnosEscuelaScreenState
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.primario),
+                       Icon(Icons.info_outline, size: 16, color: AppColors.primario),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text('Curso: Plurigrado (por defecto) — no hace falta seleccionar',
@@ -406,6 +616,80 @@ class _AlumnosEscuelaScreenState
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: 'Nombre cobertura', controller: nombreCobertura),
               const SizedBox(height: AppSpacing.md),
+              Text('Adulto responsable - tutor (obligatorio)', style: AppTypography.subtitulo.copyWith(fontSize: 14)),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Tipo de documento del tutor',
+                value: tutorTipoDoc.text.isEmpty ? null : tutorTipoDoc.text,
+                items: const [
+                  (value: 'DNI', label: 'DNI'),
+                  (value: 'Pasaporte', label: 'Pasaporte'),
+                ],
+                onChanged: (v) => setDialogState(() => tutorTipoDoc.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'DNI del tutor', controller: tutorDni,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => setDialogState(() => renaperT = null)),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: validandoTutorDni
+                      ? null
+                      : () => validarRena(true, setDialogState),
+                  child: Text(validandoTutorDni ? 'Validando…' : 'Validar en RENAPER'),
+                ),
+              ),
+              if (renaperT == null)
+                Text('Validá el DNI para autocompletar. Si no está en RENAPER, igual podés cargar manual.',
+                    style: AppTypography.texto.copyWith(
+                        fontSize: 12,
+                        color: AppColors.texto.withValues(alpha: 0.6))),
+              if (renaperT == null) const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Nombre del tutor', controller: tutorNombre,
+                  readOnly: renaperT == null),
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(label: 'Apellido del tutor', controller: tutorApellido,
+                  readOnly: renaperT == null),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Parentesco',
+                enabled: renaperT != null,
+                value: tutorParentesco.text.isEmpty ? null : tutorParentesco.text,
+                items: const [
+                  (value: 'madre', label: 'Madre'),
+                  (value: 'padre', label: 'Padre'),
+                  (value: 'tutor_legal', label: 'Tutor/a legal'),
+                  (value: 'otro', label: 'Otro'),
+                ],
+                onChanged: (v) => setDialogState(() => tutorParentesco.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppDropdownField(
+                label: 'Sexo del tutor',
+                enabled: renaperT != null,
+                value: tutorSexo.text.isEmpty ? null : tutorSexo.text,
+                items: const [
+                  (value: 'masculino', label: 'Masculino'),
+                  (value: 'femenino', label: 'Femenino'),
+                  (value: 'otro', label: 'Otro'),
+                ],
+                onChanged: (v) => setDialogState(() => tutorSexo.text = v),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              IgnorePointer(
+                ignoring: renaperT == null,
+                child: Opacity(
+                  opacity: renaperT == null ? 0.5 : 1,
+                  child: AppDateField(
+                    label: 'Fecha de nacimiento del tutor',
+                    value: tutorFechaNacimiento,
+                    hint: 'dd/mm/aaaa',
+                    onChanged: (v) => setDialogState(() => tutorFechaNacimiento = v),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
               Text('Antecedentes (opcional)', style: AppTypography.subtitulo.copyWith(fontSize: 14)),
               const SizedBox(height: AppSpacing.sm),
               AppDropdownField(
@@ -428,6 +712,25 @@ class _AlumnosEscuelaScreenState
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Título de sección de la lista (espejo de .group-title web).
+class _SeccionTitulo extends StatelessWidget {
+  const _SeccionTitulo(this.texto);
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+      child: Text(texto.toUpperCase(),
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+              color: Colors.white)),
     );
   }
 }

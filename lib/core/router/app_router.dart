@@ -11,6 +11,8 @@ import '../../features/acciones/presentation/acciones_screen.dart';
 import '../../features/pendientes/presentation/pendientes_screen.dart';
 import '../../features/usuario/presentation/usuario_screen.dart';
 import '../../features/usuario/presentation/configuracion_screen.dart';
+import '../../features/usuario/presentation/datos_personales_screen.dart';
+import '../../features/usuario/presentation/cambiar_password_screen.dart';
 import '../../features/auth/presentation/screens/force_change_password_screen.dart';
 import '../../features/pendientes/pendientes_count_provider.dart';
 import '../../features/hijos/presentation/screens/hijos_list_screen.dart';
@@ -25,6 +27,8 @@ import '../../features/operativos/presentation/screens/evaluacion_medica_screen.
 import '../../features/operativos/presentation/screens/evaluacion_odontologica_screen.dart';
 import '../../features/operativos/presentation/screens/seccion_escuela_screen.dart';
 import '../../features/operativos/presentation/screens/constancia_screen.dart';
+import '../../features/operativos/presentation/screens/derivaciones_screen.dart';
+import '../../features/operativos/presentation/screens/planilla_operativo_screen.dart';
 import '../../features/operativos/presentation/screens/escuela_datos_screen.dart';
 import '../../features/operativos/presentation/screens/alumno_detail_screen.dart';
 import '../../features/escuelas/presentation/screens/escuela_create_screen.dart';
@@ -33,9 +37,9 @@ import '../../features/escuelas/presentation/screens/escuelas_list_screen.dart';
 import '../../features/escuelas/presentation/screens/cursos_screen.dart';
 import '../../features/escuelas/presentation/screens/mi_escuela_screen.dart';
 import '../../features/escuelas/presentation/screens/alumnos_escuela_screen.dart';
-import '../../features/usuarios/presentation/screens/gestion_usuarios_screen.dart';
+import '../../features/escuelas/presentation/screens/alumno_escuela_detail_screen.dart';
 import '../../features/usuarios_escuela/presentation/screens/usuarios_escuela_screen.dart';
-import '../../features/usuarios_ayudantes/presentation/screens/usuarios_ayudantes_screen.dart';
+import '../../features/usuarios_administrativos/presentation/screens/usuarios_administrativos_screen.dart';
 import '../../features/profesionales/presentation/screens/profesionales_screen.dart';
 import 'app_shell.dart';
 
@@ -102,6 +106,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (c, s) => OperativoDetailScreen(operativoId: s.pathParameters['operativoId']!),
       ),
       GoRoute(
+        path: '/operativos/:operativoId/derivaciones',
+        builder: (c, s) => DerivacionesScreen(operativoId: s.pathParameters['operativoId']!),
+      ),
+      GoRoute(
         path: '/operativos/:operativoId/alumnos/:alumnoId',
         builder: (c, s) => AlumnoDetailScreen(
           operativoId: s.pathParameters['operativoId']!,
@@ -132,6 +140,13 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/operativos/:operativoId/alumnos/:alumnoId/constancia',
         builder: (c, s) => ConstanciaScreen(
+          operativoId: s.pathParameters['operativoId']!,
+          alumnoId: s.pathParameters['alumnoId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/operativos/:operativoId/alumnos/:alumnoId/planilla',
+        builder: (c, s) => PlanillaOperativoScreen(
           operativoId: s.pathParameters['operativoId']!,
           alumnoId: s.pathParameters['alumnoId']!,
         ),
@@ -176,22 +191,27 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/gestion-usuarios',
-        builder: (c, s) => const GestionUsuariosScreen(),
+        path: '/escuelas/alumnos/:alumnoId',
+        builder: (c, s) => AlumnoEscuelaDetailScreen(
+          alumnoId: s.pathParameters['alumnoId']!,
+          escuelaId: s.uri.queryParameters['escuelaId'],
+        ),
       ),
       GoRoute(
         path: '/usuarios-escuela',
         builder: (c, s) => const UsuariosEscuelaScreen(),
       ),
       GoRoute(
-        path: '/usuarios-ayudantes',
-        builder: (c, s) => const UsuariosAyudantesScreen(),
+        path: '/usuarios-administrativos',
+        builder: (c, s) => const UsuariosAdministrativosScreen(),
       ),
       GoRoute(
         path: '/profesionales',
         builder: (c, s) => const ProfesionalesScreen(),
       ),
       GoRoute(path: '/usuario/configuracion', builder: (c, s) => const ConfiguracionScreen()),
+      GoRoute(path: '/usuario/configuracion/datos', builder: (c, s) => const DatosPersonalesScreen()),
+      GoRoute(path: '/usuario/configuracion/password', builder: (c, s) => const CambiarPasswordScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => Consumer(
           builder: (c, ref, _) {

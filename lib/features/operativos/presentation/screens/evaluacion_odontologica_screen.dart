@@ -30,6 +30,47 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
   final String operativoId;
   final String alumnoId;
 
+  static const _titulosPasos = [
+    'Salud bucal',
+    'Prácticas e índices',
+    'Odontograma',
+    'Revisión',
+  ];
+
+  Future<void> _salir(BuildContext context, bool hayCambios) async {
+    if (!hayCambios) {
+      _pop(context);
+      return;
+    }
+    final salir = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Salir sin guardar'),
+        content: const Text(
+            'Tenés cambios sin guardar. Si salís ahora se pierden.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: const Text('Seguir editando')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child:  Text('Salir sin guardar',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (salir == true && context.mounted) _pop(context);
+  }
+
+  void _pop(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/operativos');
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final args = (opId: operativoId, alumnoId: alumnoId);
@@ -55,23 +96,20 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go('/operativos');
-                  }
-                },
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
+                onPressed: () => _salir(
+                    context, ctrl.tieneCambiosSinGuardar && esEnCurso),
               ),
-              Text(esNoEditable ? 'Evaluación odontológica — solo lectura' : esBloqueadoPrevio ? 'Evaluación odontológica — no disponible' : 'Evaluación odontológica',
-                  style: AppTypography.titulo
-                      .copyWith(color: AppColors.blanco, fontSize: 22)),
+              Expanded(
+                child: Text(esNoEditable ? 'Evaluación odontológica — solo lectura' : esBloqueadoPrevio ? 'Evaluación odontológica — no disponible' : 'Evaluación odontológica',
+                    style: AppTypography.titulo
+                        .copyWith(color: AppColors.blanco, fontSize: 22)),
+              ),
             ]),
           ),
           Expanded(
             child: state.cargando
-                ? const Center(
+                ?  Center(
                     child: CircularProgressIndicator(color: AppColors.blanco),
                   )
                 : SingleChildScrollView(
@@ -85,16 +123,16 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
                               constraints: const BoxConstraints(maxWidth: 300),
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8F5E9),
+                                color: AppColors.okFondo,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: const Color(0xFF66BB6A)),
+                                border: Border.all(color: AppColors.ok),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.lock_outline, size: 14, color: Color(0xFF2E7D32)),
+                                   Icon(Icons.lock_outline, size: 14, color: AppColors.ok),
                                   const SizedBox(width: 6),
-                                  Flexible(child: Text('Operativo finalizado — solo lectura', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32)))),
+                                  Flexible(child: Text('Operativo finalizado — solo lectura', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ok))),
                                 ],
                               ),
                             ),
@@ -106,16 +144,16 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
                               constraints: const BoxConstraints(maxWidth: 320),
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3E0),
+                                color: AppColors.avisoFondo,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: const Color(0xFFFFB74D)),
+                                border: Border.all(color: AppColors.aviso),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.info_outline, size: 14, color: Color(0xFFE65100)),
+                                   Icon(Icons.info_outline, size: 14, color: AppColors.aviso),
                                   const SizedBox(width: 6),
-                                  Flexible(child: Text('Solo se puede cargar cuando el operativo está en curso', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFE65100)))),
+                                  Flexible(child: Text('Solo se puede cargar cuando el operativo está en curso', style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.aviso))),
                                 ],
                               ),
                             ),
@@ -129,58 +167,26 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                _cardSaludBucal(state, ctrl),
+                                _cabeceraPasos(state, ctrl),
                                 const SizedBox(height: AppSpacing.md),
-                                _cardPracticas(state, ctrl),
-                                const SizedBox(height: AppSpacing.md),
-                                _cardIndices(state, ctrl),
-                                const SizedBox(height: AppSpacing.md),
-                                _cardOdontograma(context, state, ctrl, enabled: !esNoEditable),
+                                _pasoActual(context, state, ctrl,
+                                    habilitado: !esNoEditable),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        if (esEnCurso)
-                          AppCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (state.error != null) ...[
-                                  Text(state.error!,
-                                      style: AppTypography.texto
-                                          .copyWith(color: AppColors.error),
-                                      textAlign: TextAlign.center),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
-                                AppButton(
-                                  label: 'Guardar',
-                                  isLoading: state.guardando,
-                                  onPressed: state.guardando
-                                      ? null
-                                      : () async {
-                                          final ok = await ctrl.guardar();
-                                          if (ok && context.mounted) {
-                                            ref.invalidate(
-                                                alumnosProvider(operativoId));
-                                            ref.invalidate(
-                                                completitudProvider(operativoId));
-                                            ref.invalidate(
-                                                operativoDetailProvider(operativoId));
-                                            context.pop();
-                                          }
-                                        },
-                                ),
-                              ],
-                            ),
-                          )
-                        else if (state.error != null)
+                        _botonesNavegacion(context, ref, state, ctrl,
+                            editable: esEnCurso),
+                        if (state.error != null) ...[
+                          const SizedBox(height: AppSpacing.md),
                           AppCard(
                             child: Text(state.error!,
                                 style: AppTypography.texto
                                     .copyWith(color: AppColors.error),
                                 textAlign: TextAlign.center),
                           ),
+                        ],
                         const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
@@ -191,8 +197,192 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
     );
   }
 
+  /// Cabecera del wizard: "Paso X de 4 · título" + progreso + salto directo.
+  Widget _cabeceraPasos(EvaluacionOdontologicaState state,
+      EvaluacionOdontologicaController ctrl) {
+    final paso = state.paso.clamp(0, 3);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Paso ${paso + 1} de 4 · ${_titulosPasos[paso]}',
+              style: AppTypography.subtitulo),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: (paso + 1) / 4,
+              minHeight: 6,
+              backgroundColor: AppColors.campo,
+              valueColor:
+                   AlwaysStoppedAnimation<Color>(AppColors.primario),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var i = 0; i < 4; i++)
+                InkWell(
+                  onTap: () => ctrl.setPaso(i),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i == paso
+                          ? AppColors.primario
+                          : AppColors.primario.withValues(alpha: 0.15),
+                    ),
+                    child: Text(
+                      '${i + 1}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: i == paso
+                            ? AppColors.blanco
+                            : AppColors.primario,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Muestra solo la tarjeta del paso actual (3 = revisión).
+  Widget _pasoActual(BuildContext context, EvaluacionOdontologicaState state,
+      EvaluacionOdontologicaController ctrl,
+      {bool habilitado = true}) {
+    switch (state.paso) {
+      case 0:
+        return _cardSaludBucal(state, ctrl);
+      case 1:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _cardPracticas(state, ctrl),
+            const SizedBox(height: AppSpacing.md),
+            _cardIndices(state, ctrl),
+          ],
+        );
+      case 2:
+        return _cardOdontograma(context, state, ctrl, enabled: habilitado);
+      default:
+        return _cardRevision(state, ctrl);
+    }
+  }
+
+  /// Resumen por sección + Guardar final.
+  Widget _cardRevision(EvaluacionOdontologicaState state,
+      EvaluacionOdontologicaController ctrl) {
+    const secciones = [
+      'Salud bucal',
+      'Prácticas e índices',
+      'Odontograma',
+    ];
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Revisión', style: AppTypography.subtitulo),
+          const SizedBox(height: AppSpacing.sm),
+          for (var i = 0; i < secciones.length; i++)
+            InkWell(
+              onTap: () => ctrl.setPaso(i),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline,
+                        size: 20, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(secciones[i], style: AppTypography.texto),
+                    ),
+                     Icon(Icons.chevron_right,
+                        size: 18, color: AppColors.gris),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Atrás / Siguiente con autoguardado (o Guardar final en revisión).
+  /// En solo lectura solo navega (sin guardar).
+  Widget _botonesNavegacion(BuildContext context, WidgetRef ref,
+      EvaluacionOdontologicaState state,
+      EvaluacionOdontologicaController ctrl,
+      {required bool editable}) {
+    final paso = state.paso.clamp(0, 3);
+    final esRevision = paso == 3;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              if (paso > 0)
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: state.guardando
+                        ? null
+                        : () => ctrl.setPaso(paso - 1),
+                    child: const Text('Atrás'),
+                  ),
+                ),
+              if (paso > 0) const SizedBox(width: AppSpacing.sm),
+              // En revisión solo se guarda si es editable; si no, solo Atrás.
+              if (!esRevision || editable)
+                Expanded(
+                  child: AppButton(
+                    label: esRevision ? 'Guardar' : 'Siguiente',
+                  isLoading: state.guardando,
+                  onPressed: state.guardando
+                      ? null
+                      : () async {
+                          if (esRevision) {
+                            await _guardarFinal(context, ref, ctrl);
+                            return;
+                          }
+                          if (editable) {
+                            await ctrl.intentarAvanzar();
+                          } else {
+                            ctrl.setPaso(paso + 1);
+                          }
+                        },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _guardarFinal(BuildContext context, WidgetRef ref,
+      EvaluacionOdontologicaController ctrl) async {
+    final ok = await ctrl.guardar();
+    if (ok && context.mounted) {
+      ref.invalidate(alumnosProvider(operativoId));
+      ref.invalidate(completitudProvider(operativoId));
+      ref.invalidate(operativoDetailProvider(operativoId));
+      context.pop();
+    }
+  }
+
   Widget _cardSaludBucal(EvaluacionOdontologicaState state,
       EvaluacionOdontologicaController ctrl) {
+    final conHallazgos = state.saludBucal == 'con_hallazgos';
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -201,39 +391,51 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           AppDropdownField(
             label: 'Estado',
-            value: state.saludBucal.isEmpty ? null : state.saludBucal,
+            value: state.saludBucal,
             items: _saludBucalItems,
             onChanged: ctrl.setSaludBucal,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _CheckRow(
-            label: 'Lesiones en tejidos blandos',
-            value: state.lesionesTejidosBlandos,
-            onChanged: ctrl.setLesionesTejidosBlandos,
-          ),
-          _CheckRow(
-            label: 'Maloclusión',
-            value: state.maloclusion,
-            onChanged: ctrl.setMaloclusion,
-          ),
-          _CheckRow(
-            label: 'Fluorosis',
-            value: state.fluorosis,
-            onChanged: ctrl.setFluorosis,
-          ),
-          _CheckRow(
-            label: 'Caries',
-            value: state.caries,
-            onChanged: ctrl.setCaries,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            label: 'Otros',
-            controller: TextEditingController(text: state.otros)
-              ..selection =
-                  TextSelection.collapsed(offset: state.otros.length),
-            onChanged: ctrl.setOtros,
-          ),
+          // Los checks solo tienen sentido con hallazgos: si es "Sin
+          // hallazgos" o "No evaluado" se ocultan (y se limpian en el
+          // controlador al cambiar el estado).
+          if (conHallazgos) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _CheckRow(
+              label: 'Lesiones sospechosas en tejidos blandos',
+              value: state.lesionesTejidosBlandos,
+              onChanged: ctrl.setLesionesTejidosBlandos,
+            ),
+            _CheckRow(
+              label: 'Maloclusión',
+              value: state.maloclusion,
+              onChanged: ctrl.setMaloclusion,
+            ),
+            _CheckRow(
+              label: 'Fluorosis',
+              value: state.fluorosis,
+              onChanged: ctrl.setFluorosis,
+            ),
+            _CheckRow(
+              label: 'Caries',
+              value: state.caries,
+              onChanged: ctrl.setCaries,
+            ),
+            _CheckRow(
+              label: 'Otros',
+              value: state.otrosMarcado,
+              onChanged: ctrl.setOtrosMarcado,
+            ),
+            if (state.otrosMarcado) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppTextField(
+                label: '¿Cuáles?',
+                controller: TextEditingController(text: state.otros)
+                  ..selection =
+                      TextSelection.collapsed(offset: state.otros.length),
+                onChanged: ctrl.setOtros,
+              ),
+            ],
+          ],
         ],
       ),
     );
@@ -278,34 +480,42 @@ class EvaluacionOdontologicaScreen extends ConsumerWidget {
           Text('CPO (dentición permanente)',
               style:
                   AppTypography.texto.copyWith(fontWeight: FontWeight.w600)),
+          _CheckRow(
+            label: 'Cariados (C)',
+            value: state.cpoC,
+            onChanged: ctrl.setCpoC,
+          ),
+          _CheckRow(
+            label: 'Perdidos (P)',
+            value: state.cpoP,
+            onChanged: ctrl.setCpoP,
+          ),
+          _CheckRow(
+            label: 'Obturados (O)',
+            value: state.cpoO,
+            onChanged: ctrl.setCpoO,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          _numField('Cariados (C)', state.cpoC, ctrl.setCpoC),
-          const SizedBox(height: AppSpacing.md),
-          _numField('Perdidos (P)', state.cpoP, ctrl.setCpoP),
-          const SizedBox(height: AppSpacing.md),
-          _numField('Obturados (O)', state.cpoO, ctrl.setCpoO),
-          const SizedBox(height: AppSpacing.md),
           Text('ceo (dentición temporaria)',
               style:
                   AppTypography.texto.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: AppSpacing.sm),
-          _numField('Cariados (c)', state.ceoC, ctrl.setCeoC),
-          const SizedBox(height: AppSpacing.md),
-          _numField('Con extracción indicada (e)', state.ceoE, ctrl.setCeoE),
-          const SizedBox(height: AppSpacing.md),
-          _numField('Obturados (o)', state.ceoO, ctrl.setCeoO),
+          _CheckRow(
+            label: 'Cariados (c)',
+            value: state.ceoC,
+            onChanged: ctrl.setCeoC,
+          ),
+          _CheckRow(
+            label: 'Con extracción indicada (e)',
+            value: state.ceoE,
+            onChanged: ctrl.setCeoE,
+          ),
+          _CheckRow(
+            label: 'Obturados (o)',
+            value: state.ceoO,
+            onChanged: ctrl.setCeoO,
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _numField(String label, String value, ValueChanged<String> onChanged) {
-    return AppTextField(
-      label: label,
-      controller: TextEditingController(text: value)
-        ..selection = TextSelection.collapsed(offset: value.length),
-      keyboardType: TextInputType.number,
-      onChanged: onChanged,
     );
   }
 

@@ -19,7 +19,7 @@ import '../features/operativos/data/operativos_repository.dart';
 import '../features/escuelas/data/escuelas_repository.dart';
 import '../features/escuelas/data/alumnos_escuela_repository.dart';
 import '../features/usuarios_escuela/data/usuarios_escuela_repository.dart';
-import '../features/usuarios_ayudantes/data/usuarios_ayudantes_repository.dart';
+import '../features/usuarios_administrativos/data/usuarios_administrativos_repository.dart';
 import '../features/profesionales/data/profesionales_repository.dart';
 import '../features/usuario/data/usuario_repository.dart';
 
@@ -128,8 +128,8 @@ final usuariosEscuelaRepositoryProvider = Provider<UsuariosEscuelaRepository>(
   (ref) => UsuariosEscuelaRepository(ref.watch(dioV1Provider)),
 );
 
-final usuariosAyudantesRepositoryProvider = Provider<UsuariosAyudantesRepository>(
-  (ref) => UsuariosAyudantesRepository(ref.watch(dioV1Provider)),
+final usuariosAdministrativosRepositoryProvider = Provider<UsuariosAdministrativosRepository>(
+  (ref) => UsuariosAdministrativosRepository(ref.watch(dioV1Provider)),
 );
 
 final profesionalesRepositoryProvider = Provider<ProfesionalesRepository>(

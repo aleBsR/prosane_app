@@ -84,7 +84,7 @@ class DetailPostCard extends StatelessWidget {
                   radius: 24,
                   backgroundColor: AppColors.primario,
                   child: Text(inicial,
-                      style: const TextStyle(
+                      style:  TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: AppColors.blanco)),
@@ -114,7 +114,7 @@ class DetailPostCard extends StatelessWidget {
               ],
               if (menuEntries.isNotEmpty)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppColors.texto),
+                  icon:  Icon(Icons.more_vert, color: AppColors.texto),
                   onSelected: onMenuSelected,
                   itemBuilder: (_) => [
                     for (final e in menuEntries)
@@ -122,10 +122,10 @@ class DetailPostCard extends StatelessWidget {
                         value: e.value,
                         child: Row(
                           children: [
-                            Icon(e.icon, size: 18, color: e.color),
+                            Icon(e.icon, size: 18, color: e.colorEfectivo()),
                             const SizedBox(width: 8),
                             Text(e.label,
-                                style: TextStyle(color: e.color)),
+                                style: TextStyle(color: e.colorEfectivo())),
                           ],
                         ),
                       ),
@@ -197,13 +197,15 @@ class PostMenuEntry {
     required this.value,
     required this.label,
     required this.icon,
-    this.color = AppColors.texto,
+    this.color,
   });
 
   final String value;
   final String label;
   final IconData icon;
-  final Color color;
+  final Color? color;
+
+  Color colorEfectivo() => color ?? AppColors.texto;
 }
 
 /// Etiqueta pequeña sobre la franja destacada.
@@ -221,7 +223,7 @@ class PostChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(texto,
-          style: const TextStyle(
+          style:  TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: AppColors.primario)),
@@ -231,42 +233,57 @@ class PostChip extends StatelessWidget {
 
 /// Botón de acción compacto de las tarjetas de detalle. Todos comparten alto
 /// y bordes (mismo formato que [AppButton]).
+/// Sin [icono] muestra solo el texto. Deshabilitado usa el color del botón
+/// suavizado (como la web con opacidad) en vez del gris del tema.
 class PostActionButton extends StatelessWidget {
   const PostActionButton({
     super.key,
-    required this.icono,
+    this.icono,
     required this.texto,
     required this.colorFondo,
     required this.colorTexto,
     required this.onPressed,
   });
 
-  final IconData icono;
+  final IconData? icono;
   final String texto;
   final Color colorFondo;
   final Color colorTexto;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final estilo = ElevatedButton.styleFrom(
+      backgroundColor: colorFondo,
+      foregroundColor: colorTexto,
+      disabledBackgroundColor: colorFondo.withValues(alpha: 0.5),
+      disabledForegroundColor: colorTexto.withValues(alpha: 0.8),
+      elevation: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.accion),
+      ),
+    );
+    final label = Text(texto,
+        style:
+            const TextStyle(fontSize: 13, fontWeight: FontWeight.w600));
+    final iconoWidget = icono == null
+        ? null
+        : Icon(icono, size: 16, color: colorTexto);
     return SizedBox(
       height: 44,
-      child: ElevatedButton.icon(
-        icon: Icon(icono, size: 16, color: colorTexto),
-        label: Text(texto,
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w600)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colorFondo,
-          foregroundColor: colorTexto,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.boton),
-          ),
-        ),
-        onPressed: onPressed,
-      ),
+      child: iconoWidget == null
+          ? ElevatedButton(
+              onPressed: onPressed,
+              style: estilo,
+              child: label,
+            )
+          : ElevatedButton.icon(
+              icon: iconoWidget,
+              label: label,
+              style: estilo,
+              onPressed: onPressed,
+            ),
     );
   }
 }

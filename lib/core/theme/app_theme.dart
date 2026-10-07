@@ -13,10 +13,28 @@ class AppTheme {
         bodyLarge: AppTypography.campo,
         bodyMedium: AppTypography.texto,
       ),
-      scaffoldBackgroundColor: AppColors.blanco,
+      scaffoldBackgroundColor: AppColors.fondo,
       // Diálogos del mismo blanco que las tarjetas: sin el gris-lavanda
       // ni el tinte primario que Material 3 aplica por defecto.
-      dialogTheme: const DialogThemeData(
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.blanco,
+        surfaceTintColor: Colors.transparent,
+      ),
+    );
+  }
+
+  static ThemeData dark() {
+    final base = ThemeData.dark(useMaterial3: true);
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(primary: AppColors.primario),
+      textTheme: base.textTheme.apply(fontFamily: 'Rubik', bodyColor: AppColors.texto).copyWith(
+        titleLarge: AppTypography.titulo,
+        titleMedium: AppTypography.subtitulo,
+        bodyLarge: AppTypography.campo,
+        bodyMedium: AppTypography.texto,
+      ),
+      scaffoldBackgroundColor: AppColors.fondo,
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.blanco,
         surfaceTintColor: Colors.transparent,
       ),

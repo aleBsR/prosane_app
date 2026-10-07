@@ -61,7 +61,7 @@ class AppDateField extends StatelessWidget {
               children: [
                 Text(value != null ? _fmt(value!) : hint,
                     style: AppTypography.campo),
-                const Icon(Icons.calendar_today_outlined,
+                 Icon(Icons.calendar_today_outlined,
                     size: 18, color: AppColors.link),
               ],
             ),

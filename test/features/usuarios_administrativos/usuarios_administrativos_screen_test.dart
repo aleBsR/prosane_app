@@ -4,21 +4,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:prosane_app/core/providers.dart';
 import 'package:prosane_app/core/theme/app_theme.dart';
-import 'package:prosane_app/features/usuarios_ayudantes/data/usuarios_ayudantes_repository.dart';
-import 'package:prosane_app/features/usuarios_ayudantes/presentation/controllers/usuarios_ayudantes_controller.dart';
-import 'package:prosane_app/features/usuarios_ayudantes/presentation/screens/usuarios_ayudantes_screen.dart';
+import 'package:prosane_app/features/usuarios_administrativos/data/usuarios_administrativos_repository.dart';
+import 'package:prosane_app/features/usuarios_administrativos/presentation/controllers/usuarios_administrativos_controller.dart';
+import 'package:prosane_app/features/usuarios_administrativos/presentation/screens/usuarios_administrativos_screen.dart';
 
-class _MockRepo extends Mock implements UsuariosAyudantesRepository {}
+class _MockRepo extends Mock implements UsuariosAdministrativosRepository {}
 
-Widget _buildScreen(_MockRepo repo, List<UsuarioAyudante> usuarios) {
+Widget _buildScreen(_MockRepo repo, List<UsuarioAdministrativo> usuarios) {
   return ProviderScope(
     overrides: [
-      usuariosAyudantesRepositoryProvider.overrideWithValue(repo),
-      usuariosAyudantesListProvider.overrideWith((ref) async => usuarios),
+      usuariosAdministrativosRepositoryProvider.overrideWithValue(repo),
+      usuariosAdministrativosListProvider.overrideWith((ref) async => usuarios),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
-      home: const Scaffold(body: UsuariosAyudantesScreen()),
+      home: const Scaffold(body: UsuariosAdministrativosScreen()),
     ),
   );
 }
@@ -29,14 +29,14 @@ void main() {
     await tester.pumpWidget(_buildScreen(repo, []));
     await tester.pumpAndSettle();
 
-    expect(find.text('No hay usuarios ayudantes'), findsOneWidget);
+    expect(find.text('No hay usuarios administrativos'), findsOneWidget);
   });
 
   testWidgets('lista los usuarios existentes', (tester) async {
     final repo = _MockRepo();
     final usuarios = [
-      UsuarioAyudante(id: '1', email: 'ana@mail.com', isActive: true),
-      UsuarioAyudante(id: '2', email: 'pedro@mail.com', isActive: false),
+      UsuarioAdministrativo(id: '1', email: 'ana@mail.com', isActive: true),
+      UsuarioAdministrativo(id: '2', email: 'pedro@mail.com', isActive: false),
     ];
     await tester.pumpWidget(_buildScreen(repo, usuarios));
     await tester.pumpAndSettle();
@@ -50,7 +50,7 @@ void main() {
     final repo = _MockRepo();
     when(() => repo.crear(email: any(named: 'email')))
         .thenAnswer((_) async =>
-            UsuarioAyudante(id: '9', email: 'nuevo@mail.com', isActive: true));
+            UsuarioAdministrativo(id: '9', email: 'nuevo@mail.com', isActive: true));
 
     await tester.pumpWidget(_buildScreen(repo, []));
     await tester.pumpAndSettle();
@@ -58,7 +58,7 @@ void main() {
     await tester.tap(find.text('Nuevo usuario'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nuevo usuario ayudante'), findsOneWidget);
+    expect(find.text('Nuevo usuario administrativo'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(0), 'nuevo@mail.com');
     await tester.enterText(find.byType(TextField).at(1), 'nuevo@mail.com');
@@ -68,14 +68,14 @@ void main() {
 
     verify(() => repo.crear(email: 'nuevo@mail.com'))
         .called(1);
-    expect(find.text('Nuevo usuario ayudante'), findsNothing);
+    expect(find.text('Nuevo usuario administrativo'), findsNothing);
   });
 
   testWidgets('crear: bloquea el guardado si los correos no coinciden', (tester) async {
     final repo = _MockRepo();
     when(() => repo.crear(email: any(named: 'email')))
         .thenAnswer((_) async =>
-            UsuarioAyudante(id: '9', email: 'nuevo@mail.com', isActive: true));
+            UsuarioAdministrativo(id: '9', email: 'nuevo@mail.com', isActive: true));
 
     await tester.pumpWidget(_buildScreen(repo, []));
     await tester.pumpAndSettle();

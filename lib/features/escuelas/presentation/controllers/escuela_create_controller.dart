@@ -140,9 +140,10 @@ class EscuelaCreateController extends StateNotifier<EscuelaCreateState> {
       state = EscuelaCreateState();
       return true;
     } catch (e) {
+      final esCue = e.toString().contains('cue') || e.toString().contains('CUE');
       state = state.copyWith(
         guardando: false,
-        error: e.toString().contains('409')
+        error: esCue
             ? 'CUE duplicado'
             : 'Error: ${e.toString()}',
       );

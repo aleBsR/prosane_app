@@ -25,6 +25,7 @@ import '../../../pendientes/pendientes_count_provider.dart';
 import '../../../escuelas/presentation/controllers/alumnos_escuela_controller.dart';
 import '../controllers/operativo_detail_controller.dart';
 import '../controllers/operativos_list_controller.dart';
+import 'widgets/operativo_dialogs.dart';
 
 class OperativoDetailScreen extends ConsumerStatefulWidget {
   const OperativoDetailScreen({super.key, required this.operativoId});
@@ -55,6 +56,17 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     final sesion = ref.watch(sessionControllerProvider);
     final puedeImportarCsv = sesion is SesionAutenticada &&
         sesion.sesion.permisos.contains('importarNominaOperativo');
+    // Permisos para los botones de estado (solo administrativo/superadmin los tienen).
+    final permisos = sesion is SesionAutenticada
+        ? sesion.sesion.permisos
+        : const <String>{};
+    final rolName =
+        sesion is SesionAutenticada ? sesion.sesion.usuario.rolName : '';
+    // Gating de Finalizar para el banner: mientras carga o falla, deshabilitado.
+    final puedeFinalizar = ref.watch(completitudProvider(widget.operativoId)).maybeWhen(
+          data: (c) => (c['puede_finalizar'] as bool?) ?? false,
+          orElse: () => false,
+        );
 
     ref.listen(operativoDetailControllerProvider(widget.operativoId), (prev, next) {
       if (next.operativoActualizado && !(prev?.operativoActualizado ?? false)) {
@@ -79,7 +91,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -101,7 +113,22 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    DetailPostCard(
+                    // Editar/Eliminar (igual que en escuelas): solo con permiso
+                    // y si el operativo sigue editable (el backend responde 409
+                    // en finalizado o cancelado). Eliminar cancela el operativo.
+                    Builder(builder: (context) {
+                      final estado = '${op['estado'] ?? ''}';
+                      final editable =
+                          estado != 'finalizado' && estado != 'cancelado';
+                      final puedeEditar =
+                          (permisos.contains('editarOperativo') ||
+                                  rolName == 'superadmin') &&
+                              editable;
+                      final puedeEliminar =
+                          (permisos.contains('cancelarOperativo') ||
+                                  rolName == 'superadmin') &&
+                              editable;
+                      return DetailPostCard(
                       avatarLetter:
                           '${op['nombre'] ?? op['escuela']['nombre'] ?? 'Operativo'}',
                       title:
@@ -119,11 +146,73 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                             'profesional',
                             'profesionales'),
                       ],
+                      menuEntries: [
+                        if (puedeEditar)
+                           PostMenuEntry(
+                            value: 'editar',
+                            label: 'Editar',
+                            icon: Icons.edit_outlined,
+                            color: AppColors.primario,
+                          ),
+                        if (puedeEliminar)
+                           PostMenuEntry(
+                            value: 'eliminar',
+                            label: 'Eliminar',
+                            icon: Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
+                      ],
+                      onMenuSelected: (valor) async {
+                        if (valor == 'editar') {
+                          await mostrarEditarOperativoDialog(
+                              context, ref, op);
+                          ref.invalidate(
+                              operativoDetailProvider(widget.operativoId));
+                        } else if (valor == 'eliminar') {
+                          final titulo =
+                              '${op['nombre'] ?? op['escuela']['nombre'] ?? 'el operativo'}';
+                          final ok = await confirmarEliminarOperativo(
+                              context, ref, widget.operativoId, titulo);
+                          // Si se canceló, el backend pudo rechazarlo
+                          // con 409 (el motivo ya se notificó): solo
+                          // se vuelve si realmente se eliminó.
+                          if (ok && context.mounted) {
+                            if (context.canPop()) {
+                              context.pop();
+                            } else {
+                              context.go('/operativos');
+                            }
+                          }
+                        }
+                      },
+                      bannerBottom: _botonesEstadoBanner(
+                          (op['estado'] as String?) ?? '',
+                          ctrl,
+                          puedeFinalizar,
+                          permisos,
+                          rolName),
+                    );
+                    }),
+                    const SizedBox(height: AppSpacing.md),
+                    if (op['estado'] == 'en_curso') ...[
+                      _tarjetaCompletitud(),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    AppCard(
+                      child: PostActionButton(
+                        icono: Icons.medical_services_outlined,
+                        texto: 'Ver derivaciones',
+                        colorFondo: AppColors.campo,
+                        colorTexto: AppColors.primario,
+                        onPressed: () => context.push(
+                            '/operativos/${widget.operativoId}/derivaciones'),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    // Botones de acción según estado
-                    ..._botonesPorEstado(op['estado'], ctrl),
-                    const SizedBox(height: AppSpacing.md),
+                    if (op['estado'] == 'finalizado') ...[
+                      _tarjetaDescargas(),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                     // Profesionales
                     AppCard(
                       child: Column(
@@ -147,19 +236,14 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                                     style: AppTypography.texto),
                               );
                             }),
+                          // Asignar sigue en esta tarjeta (es contextual a
+                          // profesionales); Confirmar vive en el banner superior.
                           if (op['estado'] == 'borrador') ...[
                             const SizedBox(height: AppSpacing.md),
                             Wrap(
                               spacing: AppSpacing.sm,
                               runSpacing: AppSpacing.sm,
                               children: [
-                                PostActionButton(
-                                  icono: Icons.check_circle_outline,
-                                  texto: 'Confirmar operativo',
-                                  colorFondo: AppColors.primario,
-                                  colorTexto: AppColors.blanco,
-                                  onPressed: () => _accionEstado(ctrl.confirmar),
-                                ),
                                 PostActionButton(
                                   icono: Icons.person_add_outlined,
                                   texto: 'Asignar profesional',
@@ -199,7 +283,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                                         color: AppColors.gris.withValues(alpha: 0.5),
                                         borderRadius: BorderRadius.circular(AppRadii.campo),
                                       ),
-                                      child: const Center(
+                                      child:  Center(
                                         child: SizedBox(
                                           width: 20,
                                           height: 20,
@@ -243,67 +327,127 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     ref.invalidate(operativosPendientesProvider);
   }
 
-  List<Widget> _botonesPorEstado(String estado, OperativoDetailController ctrl) {
+  /// Botones de cambio de estado dentro de la tarjeta de detalle
+  /// (compactos estilo PostActionButton, como en el detalle de alumno,
+  /// solo texto). Piden confirmación antes de ejecutar.
+  /// Solo visibles con el permiso de la acción (administrativo/superadmin).
+  /// En borrador solo Confirmar: Asignar sigue en la tarjeta de profesionales.
+  Widget? _botonesEstadoBanner(
+      String estado,
+      OperativoDetailController ctrl,
+      bool puedeFinalizar,
+      Set<String> permisos,
+      String rolName) {
+    bool puede(String accion) =>
+        permisos.contains(accion) || rolName == 'superadmin';
+
+    PostActionButton primario(String texto, _AccionEstado accion,
+            {VoidCallback? onPressed}) =>
+        PostActionButton(
+          texto: texto,
+          colorFondo: AppColors.primario,
+          colorTexto: AppColors.blanco,
+          onPressed: onPressed ?? () => _pedirConfirmacionEstado(accion, ctrl),
+        );
+
+    final botones = <Widget>[];
     switch (estado) {
-      // En borrador, Confirmar va junto a Asignar dentro de la tarjeta
-      // de profesionales (compactos, uno al lado del otro).
       case 'borrador':
-        return [];
+        if (puede('confirmarOperativo')) {
+          botones.add(primario('Confirmar operativo', _AccionEstado.confirmar));
+        }
       case 'confirmado':
-        return [
-          Row(
-            children: [
-              Expanded(child: AppCard(child: AppButton(label: 'Iniciar', onPressed: () => _accionEstado(ctrl.iniciar)))),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: AppCard(child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
-            ],
-          ),
-        ];
+        if (puede('iniciarOperativo')) {
+          botones.add(primario('Iniciar', _AccionEstado.iniciar));
+        }
+        if (puede('cancelarOperativo')) {
+          botones.add(primario('Cancelar', _AccionEstado.cancelar));
+        }
       case 'en_curso':
-        return [
-          _gatingFinalizacion(ctrl),
-        ];
-      case 'finalizado':
-        return [
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Operativo finalizado — Descargas', style: AppTypography.subtitulo),
-                const SizedBox(height: 4),
-                Text('Constancias y resúmenes disponibles', style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
-                const SizedBox(height: AppSpacing.md),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _botonDescarga('Exportar PDF', Icons.picture_as_pdf_outlined, () => _exportar('pdf')),
-                    _botonDescarga('Exportar Excel', Icons.table_chart_outlined, () => _exportar('excel')),
-                    _botonDescarga('Exportar CSV', Icons.description_outlined, () => _exportar('csv')),
-                  ],
-                ),
-                if (_exportando) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  const LinearProgressIndicator(),
-                ],
-              ],
-            ),
-          ),
-        ];
-      default:
-        return [];
+        if (puede('finalizarOperativo')) {
+          botones.add(primario('Finalizar', _AccionEstado.finalizar,
+              onPressed: puedeFinalizar
+                  ? () => _pedirConfirmacionEstado(
+                      _AccionEstado.finalizar, ctrl)
+                  : null));
+        }
+        if (puede('cancelarOperativo')) {
+          botones.add(primario('Cancelar', _AccionEstado.cancelar));
+        }
     }
+    if (botones.isEmpty) return null;
+    return Wrap(spacing: 8, runSpacing: 8, children: botones);
   }
 
-  Widget _botonDescarga(String label, IconData icon, VoidCallback onTap) {
-    return ElevatedButton.icon(
-      onPressed: _exportando ? null : onTap,
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.boton)),
+  /// Modal de confirmación para las acciones de estado del operativo
+  /// (mismo formato que confirmarEliminarEscuela).
+  Future<void> _pedirConfirmacionEstado(
+      _AccionEstado accion, OperativoDetailController ctrl) async {    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(accion.titulo),
+        content: Text(accion.mensaje),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: const Text('No')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: Text('Sí',
+                style: TextStyle(
+                    color: accion == _AccionEstado.cancelar
+                        ? AppColors.error
+                        : AppColors.primario)),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+    _accionEstado(() => accion.ejecutar(ctrl));
+  }
+
+  /// Tarjeta de descargas (finalizado), con botones estilo detalle de alumno.
+  Widget _tarjetaDescargas() {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Operativo finalizado — Descargas', style: AppTypography.subtitulo),
+          const SizedBox(height: 4),
+          Text('Constancias y resúmenes disponibles', style: AppTypography.texto.copyWith(fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              PostActionButton(
+                icono: Icons.picture_as_pdf_outlined,
+                texto: 'Exportar PDF',
+                colorFondo: AppColors.primario,
+                colorTexto: AppColors.blanco,
+                onPressed: _exportando ? null : () => _exportar('pdf'),
+              ),
+              PostActionButton(
+                icono: Icons.table_chart_outlined,
+                texto: 'Exportar Excel',
+                colorFondo: AppColors.primario,
+                colorTexto: AppColors.blanco,
+                onPressed: _exportando ? null : () => _exportar('excel'),
+              ),
+              PostActionButton(
+                icono: Icons.description_outlined,
+                texto: 'Exportar CSV',
+                colorFondo: AppColors.primario,
+                colorTexto: AppColors.blanco,
+                onPressed: _exportando ? null : () => _exportar('csv'),
+              ),
+            ],
+          ),
+          if (_exportando) ...[
+            const SizedBox(height: AppSpacing.sm),
+            const LinearProgressIndicator(),
+          ],
+        ],
       ),
     );
   }
@@ -329,7 +473,9 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
     }
   }
 
-  Widget _gatingFinalizacion(OperativoDetailController ctrl) {
+  /// Tarjeta informativa de completitud (en_curso). Los botones
+  /// Finalizar/Cancelar viven en el banner de la tarjeta de detalle.
+  Widget _tarjetaCompletitud() {
     final completitudAsync = ref.watch(completitudProvider(widget.operativoId));
     return completitudAsync.when(
       loading: () => const AppCard(
@@ -340,51 +486,24 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           ),
         ),
       ),
-      error: (e, _) => Row(
-        children: [
-          Expanded(
-              child: AppCard(
-                  child: AppButton(label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
-        ],
-      ),
+      error: (e, _) => const SizedBox.shrink(),
       data: (c) {
         final total = (c['total_alumnos'] as num?)?.toInt() ?? 0;
         final completos = (c['completos'] as num?)?.toInt() ?? 0;
         final puedeFinalizar = c['puede_finalizar'] as bool? ?? false;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('$completos/$total alumnos completos', style: AppTypography.subtitulo),
-                  if (!puedeFinalizar) ...[
-                    const SizedBox(height: 4),
-                    Text('Faltan evaluaciones para finalizar',
-                        style: AppTypography.texto.copyWith(
-                            fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                    child: AppCard(
-                        child: AppButton(
-                  label: 'Finalizar',
-                  onPressed: puedeFinalizar ? () => _accionEstado(ctrl.finalizar) : null,
-                ))),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                    child: AppCard(
-                        child: AppButton(
-                            label: 'Cancelar', onPressed: () => _accionEstado(ctrl.cancelar)))),
+        return AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$completos/$total alumnos completos', style: AppTypography.subtitulo),
+              if (!puedeFinalizar) ...[
+                const SizedBox(height: 4),
+                Text('Faltan evaluaciones para finalizar',
+                    style: AppTypography.texto.copyWith(
+                        fontSize: 12, color: AppColors.texto.withValues(alpha: 0.6))),
               ],
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -430,23 +549,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppTextField(
-                label: 'Buscar alumno',
-                hint: 'Nombre, apellido o DNI',
-                controller: _busquedaCtrl,
-                onChanged: (v) => setState(() => _busqueda = v),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              DropdownButton<String>(
-                value: _filtroCurso,
-                isExpanded: true,
-                items: [
-                  DropdownMenuItem(value: 'Todos', child: Text('Todos los cursos')),
-                  for (final c in listaCursos)
-                    DropdownMenuItem(value: c, child: Text(c)),
-                ],
-                onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
-              ),
+              _filtrosAlumnos(listaCursos),
               const SizedBox(height: AppSpacing.md),
               Text(
                 query.isNotEmpty ? 'Sin resultados para "$_busqueda"' : 'Sin alumnos en este filtro',
@@ -485,23 +588,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppTextField(
-              label: 'Buscar alumno',
-              hint: 'Nombre, apellido o DNI',
-              controller: _busquedaCtrl,
-              onChanged: (v) => setState(() => _busqueda = v),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            DropdownButton<String>(
-              value: _filtroCurso,
-              isExpanded: true,
-              items: [
-                DropdownMenuItem(value: 'Todos', child: Text('Todos los cursos')),
-                for (final c in listaCursos)
-                  DropdownMenuItem(value: c, child: Text(c)),
-              ],
-              onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
-            ),
+            _filtrosAlumnos(listaCursos),
             if (query.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text('${filtrados.length} resultado(s) para "$_busqueda"', style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.texto.withValues(alpha: 0.6))),
@@ -514,6 +601,43 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
           ],
         );
       },
+    );
+  }
+
+  /// Búsqueda + filtro por curso uno al lado del otro (como en la web).
+  Widget _filtrosAlumnos(List<String> listaCursos) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: AppTextField(
+            label: 'Buscar alumno',
+            hint: 'Nombre, apellido o DNI',
+            controller: _busquedaCtrl,
+            onChanged: (v) => setState(() => _busqueda = v),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Curso', style: AppTypography.subtitulo),
+              const SizedBox(height: 6),
+              DropdownButton<String>(
+                value: _filtroCurso,
+                isExpanded: true,
+                items: [
+                  DropdownMenuItem(value: 'Todos', child: Text('Todos los cursos')),
+                  for (final c in listaCursos)
+                    DropdownMenuItem(value: c, child: Text(c)),
+                ],
+                onChanged: (v) => setState(() => _filtroCurso = v ?? 'Todos'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -546,7 +670,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.menu_book_outlined, size: 16, color: AppColors.texto),
+           Icon(Icons.menu_book_outlined, size: 16, color: AppColors.texto),
           const SizedBox(width: 6),
           Text('$curso ($cantidad)',
               style: AppTypography.subtitulo.copyWith(fontSize: 14)),
@@ -597,7 +721,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                 ),
                 _badgeEstado(completo),
                 const SizedBox(width: AppSpacing.sm),
-                const Icon(Icons.chevron_right, color: AppColors.texto),
+                 Icon(Icons.chevron_right, color: AppColors.texto),
               ],
             ),
           ),
@@ -614,7 +738,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         borderRadius: BorderRadius.circular(AppRadii.campo),
       ),
       child: Text(completo ? 'Completo' : 'Pendiente',
-          style: const TextStyle(
+          style:  TextStyle(
               color: AppColors.blanco, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
@@ -715,7 +839,7 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
                                 value: 'odontologo',
                                 child: Text('Odontólogo')),
                             DropdownMenuItem(
-                                value: 'ayudante', child: Text('Ayudante')),
+                                value: 'administrativo', child: Text('Administrativo')),
                           ],
                           onChanged: (v) =>
                               setLocal(() => rol = v ?? 'medico'),
@@ -746,6 +870,49 @@ class _OperativoDetailScreenState extends ConsumerState<OperativoDetailScreen> {
         return 'Cancelado';
       default:
         return estado;
+    }
+  }
+}
+
+/// Acciones de estado del operativo con sus textos de confirmación.
+enum _AccionEstado {
+  confirmar(
+    titulo: '¿Confirmar operativo?',
+    mensaje: 'El operativo pasará a Confirmado y quedará listo para iniciar.',
+  ),
+  iniciar(
+    titulo: '¿Iniciar operativo?',
+    mensaje:
+        'El operativo pasará a En curso y se habilitará la carga de evaluaciones.',
+  ),
+  finalizar(
+    titulo: '¿Finalizar operativo?',
+    mensaje:
+        'El operativo se cerrará y ya no se podrán cargar evaluaciones.',
+  ),
+  cancelar(
+    titulo: '¿Cancelar operativo?',
+    mensaje: 'El operativo se cancelará. Esta acción no se puede deshacer.',
+  );
+
+  const _AccionEstado({
+    required this.titulo,
+    required this.mensaje,
+  });
+
+  final String titulo;
+  final String mensaje;
+
+  Future<void> Function(OperativoDetailController) get ejecutar {
+    switch (this) {
+      case _AccionEstado.confirmar:
+        return (ctrl) => ctrl.confirmar();
+      case _AccionEstado.iniciar:
+        return (ctrl) => ctrl.iniciar();
+      case _AccionEstado.finalizar:
+        return (ctrl) => ctrl.finalizar();
+      case _AccionEstado.cancelar:
+        return (ctrl) => ctrl.cancelar();
     }
   }
 }

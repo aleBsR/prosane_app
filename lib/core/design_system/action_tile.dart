@@ -25,7 +25,7 @@ class ActionTile extends StatelessWidget {
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-            decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF1EEFB)))),
+            decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.campo))),
             child: Row(children: [
               Container(
                 width: 40,
@@ -37,7 +37,7 @@ class ActionTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(fontFamily: 'Rubik', fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.texto),
+                  style:  TextStyle(fontFamily: 'Rubik', fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.texto),
                 ),
               ),
             ]),

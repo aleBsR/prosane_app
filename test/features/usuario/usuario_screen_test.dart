@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:prosane_app/core/providers.dart';
 import 'package:prosane_app/core/session/entities.dart';
 import 'package:prosane_app/core/session/session_controller.dart';
+import 'package:prosane_app/core/theme/theme_controller.dart';
 import 'package:prosane_app/features/usuario/presentation/usuario_screen.dart';
 
 void main() {
@@ -61,24 +62,50 @@ void main() {
     expect(find.text('Pantalla de configuración'), findsOneWidget);
   });
 
-  testWidgets('logout pide confirmación; al Confirmar cierra la sesión', (t) async {
+  testWidgets('logout pide confirmación; al confirmar cierra la sesión', (t) async {
     final c = await pump(t, nombre: 'Ana');
     await t.tap(find.text('Cerrar sesión'));
     await t.pumpAndSettle();
     expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsOneWidget); // diálogo visible
     expect(c.state, isA<SesionAutenticada>()); // todavía no se cerró
-    await t.tap(find.text('Confirmar'));
+    await t.tap(find.text('Sí'));
     await t.pumpAndSettle();
     expect(c.state, isA<SesionNoAutenticada>()); // recién acá se cierra
   });
 
-  testWidgets('logout: al Cancelar NO cierra la sesión', (t) async {
+  testWidgets('logout: al decir No NO cierra la sesión', (t) async {
     final c = await pump(t, nombre: 'Ana');
     await t.tap(find.text('Cerrar sesión'));
     await t.pumpAndSettle();
-    await t.tap(find.text('Cancelar'));
+    await t.tap(find.text('No'));
     await t.pumpAndSettle();
     expect(find.text('¿Estás seguro que querés cerrar sesión?'), findsNothing); // diálogo cerrado
     expect(c.state, isA<SesionAutenticada>()); // sigue logueada
+  });
+
+  testWidgets('Protección de datos abre el diálogo con la leyenda y cierra', (t) async {    await pump(t, nombre: 'Ana');
+    await t.tap(find.text('Protección de datos'));
+    await t.pumpAndSettle();
+
+    expect(find.textContaining('dato personal sensible de salud'), findsOneWidget);
+    expect(find.textContaining('25.326'), findsOneWidget);
+
+    await t.tap(find.text('Cerrar'));
+    await t.pumpAndSettle();
+    expect(find.textContaining('dato personal sensible de salud'), findsNothing);
+  });
+
+  testWidgets('Modo oscuro: el switch alterna el themeMode', (t) async {
+    ThemeMode? modo;
+    await pump(t, nombre: 'Ana');
+    final ctx = t.element(find.byType(UsuarioScreen));
+    modo = ProviderScope.containerOf(ctx).read(themeModeProvider);
+    expect(find.text('Modo oscuro'), findsOneWidget);
+    await t.tap(find.text('Modo oscuro'));
+    await t.pumpAndSettle();
+    final nuevo =
+        ProviderScope.containerOf(t.element(find.byType(UsuarioScreen)))
+            .read(themeModeProvider);
+    expect(nuevo, isNot(modo));
   });
 }

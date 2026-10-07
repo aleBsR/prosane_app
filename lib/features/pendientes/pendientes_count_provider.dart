@@ -76,7 +76,7 @@ String _tituloOperativo(Map<String, dynamic> o) =>
         : (o['escuela_nombre'] as String? ?? 'Operativo');
 
 /// Operativos pendientes según el rol del usuario.
-/// - Ayudante/superadmin (verOperativo): operativos en borrador sin confirmar.
+/// - Administrativo/superadmin (verOperativo): operativos en borrador sin confirmar.
 /// - Médico/odontólogo (cargarEvaluacionMedica/Odontologica): operativos
 ///   asignados en estado 'confirmado' o 'en_curso' con alumnos por evaluar.
 /// Solo se consulta si el usuario puede ver operativos (evita 403 en tutores).
@@ -98,7 +98,7 @@ final operativosPendientesProvider =
 
   final items = <ItemPendiente>[];
 
-  // Borradores del ayudante/superadmin (comportamiento existente).
+  // Borradores del administrativo/superadmin (comportamiento existente).
   if (puedeVer) {
     items.addAll(operativos
         .where((o) => o['estado'] == 'borrador')

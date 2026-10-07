@@ -34,7 +34,7 @@ class CursosScreen extends ConsumerWidget {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -76,12 +76,12 @@ class CursosScreen extends ConsumerWidget {
                   );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding:  EdgeInsets.all(AppSpacing.md),
                   itemCount: cursos.length,
                   itemBuilder: (context, i) {
                     final curso = cursos[i];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding:  EdgeInsets.only(bottom: AppSpacing.md),
                       child: AppCard(
                         child: Row(
                           children: [
@@ -92,7 +92,7 @@ class CursosScreen extends ConsumerWidget {
                                   Text(curso.etiqueta,
                                       style: AppTypography.subtitulo),
                                   if (curso.cicloLectivo != null) ...[
-                                    const SizedBox(height: 4),
+                                     SizedBox(height: 4),
                                     Text('Ciclo ${curso.cicloLectivo}',
                                         style: AppTypography.texto.copyWith(
                                             fontSize: 12,
@@ -103,7 +103,7 @@ class CursosScreen extends ConsumerWidget {
                               ),
                             ),
                             PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert,
+                              icon:  Icon(Icons.more_vert,
                                   color: AppColors.texto),
                               onSelected: (valor) {
                                 if (valor == 'editar') {
@@ -113,7 +113,7 @@ class CursosScreen extends ConsumerWidget {
                                       context, ref, ctrl, curso);
                                 }
                               },
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) =>  [
                                 PopupMenuItem(
                                   value: 'editar',
                                   child: Row(
@@ -402,10 +402,10 @@ class CursosScreen extends ConsumerWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dialogCtx, false),
-              child: const Text('Cancelar')),
+              child: const Text('No')),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Eliminar',
+            child:  Text('Sí',
                 style: TextStyle(color: AppColors.error)),
           ),
         ],

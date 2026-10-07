@@ -12,29 +12,29 @@ import '../../../../core/providers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../data/usuarios_ayudantes_repository.dart';
-import '../controllers/usuarios_ayudantes_controller.dart';
+import '../../data/usuarios_administrativos_repository.dart';
+import '../controllers/usuarios_administrativos_controller.dart';
 
-class UsuariosAyudantesScreen extends ConsumerWidget {
-  const UsuariosAyudantesScreen({super.key});
+class UsuariosAdministrativosScreen extends ConsumerWidget {
+  const UsuariosAdministrativosScreen({super.key});
 
   Future<void> _abrirFormulario(
     BuildContext context,
     WidgetRef ref, {
-    UsuarioAyudante? usuario,
+    UsuarioAdministrativo? usuario,
   }) async {
     final guardado = await showDialog<bool>(
       context: context,
-      builder: (_) => UsuarioAyudanteFormDialog(usuario: usuario),
+      builder: (_) => UsuarioAdministrativoFormDialog(usuario: usuario),
     );
     if (guardado == true) {
-      ref.invalidate(usuariosAyudantesListProvider);
+      ref.invalidate(usuariosAdministrativosListProvider);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final usuariosAsync = ref.watch(usuariosAyudantesListProvider);
+    final usuariosAsync = ref.watch(usuariosAdministrativosListProvider);
 
     return AppGradientScaffold(
       child: Column(
@@ -45,7 +45,7 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                   onPressed: () {
                     if (context.canPop()) {
                       context.pop();
@@ -55,7 +55,7 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
                   },
                 ),
                 Expanded(
-                  child: Text('Usuarios ayudantes',
+                  child: Text('Usuarios administrativos',
                       style: AppTypography.titulo
                           .copyWith(color: AppColors.blanco, fontSize: 24)),
                 ),
@@ -74,7 +74,7 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
                             size: 64,
                             color: AppColors.blanco.withValues(alpha: 0.3)),
                         const SizedBox(height: AppSpacing.md),
-                        Text('No hay usuarios ayudantes',
+                        Text('No hay usuarios administrativos',
                             style: AppTypography.subtitulo
                                 .copyWith(color: AppColors.blanco)),
                         const SizedBox(height: AppSpacing.sm),
@@ -92,7 +92,7 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
                   itemBuilder: (context, i) {
                     final u = usuarios[i];
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding:  EdgeInsets.only(bottom: AppSpacing.md),
                       child: AppCard(
                         child: Row(
                           children: [
@@ -106,7 +106,7 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
                                       overflow: TextOverflow.ellipsis),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Ayudante',
+                                    'Administrativo',
                                     style: AppTypography.texto.copyWith(
                                         fontSize: 12,
                                         color: AppColors.texto
@@ -123,14 +123,14 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
                               ),
                             ),
                             PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert,
+                              icon:  Icon(Icons.more_vert,
                                   color: AppColors.texto),
                               onSelected: (valor) {
                                 if (valor == 'editar') {
                                   _abrirFormulario(context, ref, usuario: u);
                                 }
                               },
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) =>  [
                                 PopupMenuItem(
                                   value: 'editar',
                                   child: Row(
@@ -174,19 +174,19 @@ class UsuariosAyudantesScreen extends ConsumerWidget {
   }
 }
 
-class UsuarioAyudanteFormDialog extends ConsumerStatefulWidget {
-  const UsuarioAyudanteFormDialog({super.key, this.usuario});
+class UsuarioAdministrativoFormDialog extends ConsumerStatefulWidget {
+  const UsuarioAdministrativoFormDialog({super.key, this.usuario});
 
   /// Si viene, el diálogo edita; si es null, crea una cuenta nueva.
-  final UsuarioAyudante? usuario;
+  final UsuarioAdministrativo? usuario;
 
   @override
-  ConsumerState<UsuarioAyudanteFormDialog> createState() =>
-      _UsuarioAyudanteFormDialogState();
+  ConsumerState<UsuarioAdministrativoFormDialog> createState() =>
+      _UsuarioAdministrativoFormDialogState();
 }
 
-class _UsuarioAyudanteFormDialogState
-    extends ConsumerState<UsuarioAyudanteFormDialog> {
+class _UsuarioAdministrativoFormDialogState
+    extends ConsumerState<UsuarioAdministrativoFormDialog> {
   late final TextEditingController _emailCtrl;
   late final TextEditingController _emailConfirmCtrl;
   late bool _isActive;
@@ -232,7 +232,7 @@ class _UsuarioAyudanteFormDialogState
       _error = null;
       _guardando = true;
     });
-    final repo = ref.read(usuariosAyudantesRepositoryProvider);
+    final repo = ref.read(usuariosAdministrativosRepositoryProvider);
     try {
       if (_esEdicion) {
         final cambios = <String, dynamic>{
@@ -262,7 +262,7 @@ class _UsuarioAyudanteFormDialogState
     if (!_esEdicion) return;
     setState(() => _reenvizando = true);
     try {
-      await ref.read(usuariosAyudantesRepositoryProvider).reenviarTemporal(widget.usuario!.id);
+      await ref.read(usuariosAdministrativosRepositoryProvider).reenviarTemporal(widget.usuario!.id);
       if (!mounted) return;
       ref.read(notificacionProvider.notifier).exito('Temporal reenviada (72h).');
     } catch (e) {
@@ -286,7 +286,7 @@ class _UsuarioAyudanteFormDialogState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(_esEdicion ? 'Editar usuario' : 'Nuevo usuario ayudante',
+              Text(_esEdicion ? 'Editar usuario' : 'Nuevo usuario administrativo',
                   style: AppTypography.titulo.copyWith(fontSize: 20)),
               const SizedBox(height: AppSpacing.md),
               AppTextField(
@@ -313,17 +313,17 @@ class _UsuarioAyudanteFormDialogState
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: AppColors.okFondo,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF66BB6A)),
+                    border: Border.all(color: AppColors.ok),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.mail_outline, size: 16, color: Color(0xFF2E7D32)),
+                       Icon(Icons.mail_outline, size: 16, color: AppColors.ok),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text('Se enviará contraseña temporal por mail (72h).',
-                            style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                            style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.ok)),
                       ),
                     ],
                   ),
@@ -335,12 +335,12 @@ class _UsuarioAyudanteFormDialogState
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
+                        color: AppColors.okFondo,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF66BB6A)),
+                        border: Border.all(color: AppColors.ok),
                       ),
                       child: Text('La contraseña solo la cambia el usuario. No es visible.',
-                          style: AppTypography.texto.copyWith(fontSize: 11, color: Color(0xFF2E7D32))),
+                          style: AppTypography.texto.copyWith(fontSize: 11, color: AppColors.ok)),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     OutlinedButton.icon(

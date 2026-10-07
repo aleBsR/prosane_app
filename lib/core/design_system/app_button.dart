@@ -22,9 +22,10 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disabled = isLoading || onPressed == null;
-    final gradient = state == AppButtonState.error
-        ? AppColors.gradienteError
-        : AppColors.gradienteFondo;
+    // Tono fijo (sin degradado): primario, o rojo de error.
+    final color = state == AppButtonState.error
+        ? AppColors.errorBoton
+        : AppColors.primario;
 
     return Semantics(
       button: true,
@@ -40,11 +41,11 @@ class AppButton extends StatelessWidget {
             height: 52,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: gradient,
+              color: color,
               borderRadius: BorderRadius.circular(AppRadii.boton),
             ),
             child: isLoading
-                ? const SizedBox(
+                ?  SizedBox(
                     height: 22,
                     width: 22,
                     child: CircularProgressIndicator(
@@ -53,9 +54,9 @@ class AppButton extends StatelessWidget {
                     ),
                   )
                 : state == AppButtonState.validado
-                ? const Icon(Icons.check, color: AppColors.blanco)
+                ?  Icon(Icons.check, color: AppColors.blanco)
                 : state == AppButtonState.error
-                ? const Icon(Icons.close, color: AppColors.blanco)
+                ?  Icon(Icons.close, color: AppColors.blanco)
                 : Text(label, style: AppTypography.boton),
           ),
         ),

@@ -162,7 +162,7 @@ class _ForceChangePasswordScreenState extends ConsumerState<ForceChangePasswordS
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.info_outline, size: 18, color: AppColors.primario),
+                             Icon(Icons.info_outline, size: 18, color: AppColors.primario),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text('Requisitos de la nueva contraseña',

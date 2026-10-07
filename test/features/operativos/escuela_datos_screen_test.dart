@@ -69,6 +69,7 @@ void main() {
     final repo = _MockRepo();
     when(() => repo.getDatosAlumno('op1', 'a1'))
         .thenAnswer((_) async => _datosAlumno());
+    when(() => repo.listarAlumnos(any())).thenAnswer((_) async => []);
     await tester.pumpWidget(_buildScreen(repo,
         acciones: [
           Accion.fromJson(const {
@@ -79,8 +80,14 @@ void main() {
         rolName: 'escuela'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Guardar'), findsOneWidget);
+    // Wizard: en el paso 1 no hay Guardar; está en Revisión (paso 5).
+    expect(find.textContaining('Paso 1 de 5'), findsOneWidget);
+    expect(find.text('Guardar'), findsNothing);
     expect(find.textContaining('solo lectura'), findsNothing);
+    await tester.tap(find.text('5'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Paso 5 de 5'), findsOneWidget);
+    expect(find.text('Guardar'), findsOneWidget);
   });
 
   testWidgets('medico sin cargarAntecedentesNino ve solo lectura',
@@ -209,6 +216,7 @@ void main() {
         },
       };
     when(() => repo.getDatosAlumno('op1', 'a1')).thenAnswer((_) async => data);
+    when(() => repo.listarAlumnos(any())).thenAnswer((_) async => []);
     await tester.pumpWidget(_buildScreen(repo,
         acciones: [
           Accion.fromJson(const {
@@ -217,6 +225,10 @@ void main() {
           }),
         ],
         rolName: 'escuela'));
+    await tester.pumpAndSettle();
+
+    // Los resúmenes de evaluaciones viven en el paso Revisión.
+    await tester.tap(find.text('5'));
     await tester.pumpAndSettle();
 
     expect(find.text('Evaluación médica'), findsOneWidget);
@@ -236,5 +248,105 @@ void main() {
     expect(find.text('Vestibular'), findsOneWidget);
     expect(find.text('Sellador'), findsOneWidget);
     expect(find.text('Revisar'), findsOneWidget);
+  });
+
+  Widget buildEditable(_MockRepo repo) {
+    when(() => repo.listarAlumnos(any())).thenAnswer((_) async => []);
+    return _buildScreen(repo,
+        acciones: [
+          Accion.fromJson(const {
+            'name': 'cargarAntecedentesNino',
+            'label': 'Datos',
+          }),
+        ],
+        rolName: 'escuela');
+  }
+
+  testWidgets('wizard: Siguiente bloquea sin datos del niño', (tester) async {
+    final repo = _MockRepo();
+    when(() => repo.getDatosAlumno('op1', 'a1'))
+        .thenAnswer((_) async => _datosAlumno());
+    await tester.pumpWidget(buildEditable(repo));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Paso 1 de 5'), findsOneWidget);
+    expect(find.text('Seleccioná la fecha de nacimiento'), findsOneWidget);
+  });
+
+  Map<String, dynamic> datosCompletos() {
+    final data = Map<String, dynamic>.from(_datosAlumno());
+    data['operativo_alumno'] = <String, dynamic>{
+      'nombre': 'Lautaro',
+      'apellido': 'Mamani',
+      'dni': '47000001',
+      'fecha_nacimiento': '2018-05-01',
+      'sexo': 'masculino',
+    };
+    return data;
+  }
+
+  testWidgets('wizard: Siguiente autogarda sin tocar sección si no se visitó',
+      (tester) async {
+    final repo = _MockRepo();
+    when(() => repo.getDatosAlumno('op1', 'a1'))
+        .thenAnswer((_) async => datosCompletos());
+    registerFallbackValue(<String, dynamic>{});
+    Map<String, dynamic>? enviadoDatos;
+    when(() => repo.patchDatosAlumno(any(), any(), any()))
+        .thenAnswer((inv) async {
+      enviadoDatos =
+          Map<String, dynamic>.from(inv.positionalArguments[2] as Map);
+      return <String, dynamic>{};
+    });
+    await tester.pumpWidget(buildEditable(repo));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.patchDatosAlumno('op1', 'a1', any())).called(1);
+    expect(enviadoDatos?['completar'], false);
+    verifyNever(() => repo.patchSeccionEscuela(any(), any(), any()));
+    expect(find.textContaining('Paso 2 de 5'), findsOneWidget);
+  });
+
+  testWidgets('wizard: desde E, Siguiente guarda todo con completar:false',
+      (tester) async {
+    final repo = _MockRepo();
+    when(() => repo.getDatosAlumno('op1', 'a1'))
+        .thenAnswer((_) async => datosCompletos());
+    when(() => repo.listarAlumnos(any())).thenAnswer((_) async => []);
+    registerFallbackValue(<String, dynamic>{});
+    Map<String, dynamic>? enviadoSeccion;
+    when(() => repo.patchDatosAlumno(any(), any(), any()))
+        .thenAnswer((_) async => <String, dynamic>{});
+    when(() => repo.patchSeccionEscuela(any(), any(), any()))
+        .thenAnswer((inv) async {
+      enviadoSeccion =
+          Map<String, dynamic>.from(inv.positionalArguments[2] as Map);
+      return <String, dynamic>{};
+    });
+    await tester.pumpWidget(buildEditable(repo));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('4'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Paso 4 de 5'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Siguiente'));
+    await tester.pumpAndSettle();
+
+    verify(() => repo.patchSeccionEscuela('op1', 'a1', any())).called(1);
+    expect(enviadoSeccion?['completar'], false);
+    expect(find.textContaining('Paso 5 de 5'), findsOneWidget);
   });
 }

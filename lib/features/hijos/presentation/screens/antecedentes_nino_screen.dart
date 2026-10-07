@@ -73,7 +73,7 @@ class AntecedentesNinoScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+              icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
               onPressed: () => context.canPop() ? context.pop() : context.go('/inicio'),
             ),
             Expanded(

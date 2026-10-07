@@ -20,6 +20,7 @@ void main() {
     await ctrl.listo; // espera la precarga inicial
     ctrl.setCampo('diabetes', 'si');
     ctrl.setPesoNacimiento('3.4');
+    ctrl.setCampo('primera_menstruacion', 'si');
     ctrl.setEdadMenstruacion('12');
     await ctrl.guardar();
 
@@ -30,6 +31,20 @@ void main() {
     expect(body['edad_primera_menstruacion'], 12);
     expect(body.containsKey('nacio_prematuro'), isTrue);
     expect(ctrl.state.exito, isTrue);
+    await db.close();
+  });
+
+  test('edad de menstruación se descarta si no fue Sí', () async {
+    final db = await dbConHijo();
+    final ctrl = AntecedentesNinoController(db: db, hijoLocalId: 'h1', generarId: () => 'a1');
+    await ctrl.listo;
+    ctrl.setEdadMenstruacion('12');
+    ctrl.setCampo('primera_menstruacion', 'no');
+    await ctrl.guardar();
+
+    final row = await db.antecedenteNinoPorHijo('h1');
+    final body = jsonDecode(row!.payloadJson) as Map<String, dynamic>;
+    expect(body['edad_primera_menstruacion'], 0);
     await db.close();
   });
 

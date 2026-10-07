@@ -9,7 +9,7 @@ import '../../domain/usecases/register.dart';
 part 'signup_controller.freezed.dart';
 
 @freezed
-class SignupFormData with _$SignupFormData {
+abstract class SignupFormData with _$SignupFormData {
   const factory SignupFormData({
     @Default('') String tipoDocumento,
     @Default('') String numeroDocumento,
@@ -28,7 +28,7 @@ class SignupFormData with _$SignupFormData {
 }
 
 @freezed
-class SignupState with _$SignupState {
+abstract class SignupState with _$SignupState {
   const factory SignupState({
     @Default(SignupFormData()) SignupFormData formData,
     @Default(0) int currentStep,

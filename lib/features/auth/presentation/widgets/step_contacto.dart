@@ -64,7 +64,7 @@ class _StepContactoState extends State<StepContacto> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadii.campo),
               borderSide:
-                  const BorderSide(color: AppColors.primario, width: 1.5),
+                   BorderSide(color: AppColors.primario, width: 1.5),
             ),
           ),
           items: const [

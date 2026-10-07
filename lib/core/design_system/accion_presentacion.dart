@@ -6,7 +6,7 @@ import '../theme/app_colors.dart';
 const IconData kIconFallback = Icons.bolt_outlined;
 
 /// Color genérico cuando el `color` del backend no es un hex válido.
-const Color kColorFallback = AppColors.primario;
+final Color kColorFallback = AppColors.primario;
 
 /// Nombre lógico de Material (lo manda el backend) → IconData outline.
 /// Mantener en sync con authentication/actions_map.py del backend.
@@ -24,7 +24,19 @@ IconData accionIcon(String name) => switch (name) {
       'groups' => Icons.groups_outlined,
       'person_add' => Icons.person_add_outlined,
       'manage_accounts' => Icons.manage_accounts_outlined,
+      'support_agent' => Icons.support_agent_outlined,
       _ => kIconFallback,
+    };
+
+/// Ícono del tile de inicio según la acción. Las tres gestiones de usuarios
+/// vienen con icono genérico del backend: se pisan con los que tenía el
+/// submenú (school/support_agent/medical_services).
+IconData accionIconParaAccion(String actionName, String backendIcon) =>
+    switch (actionName) {
+      'gestionarUsuariosEscuela' => Icons.school_outlined,
+      'gestionarAdministrativos' => Icons.support_agent_outlined,
+      'gestionarProfesionales' => Icons.medical_services_outlined,
+      _ => accionIcon(backendIcon),
     };
 
 /// Hex del backend (`#RRGGBB` o `#AARRGGBB`) → Color. Inválido → fallback.

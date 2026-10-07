@@ -233,7 +233,7 @@ void main() {
         ]));
     await tester.pumpAndSettle();
 
-    expect(find.text('Constancia PDF'), findsNothing);
+    expect(find.text('Planilla PDF'), findsNothing);
     expect(find.text('Ver datos'), findsNothing);
 
     final moreMenus = find.byIcon(Icons.more_vert);
@@ -243,11 +243,11 @@ void main() {
     await tester.tap(moreMenus.last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Constancia PDF'), findsOneWidget);
+    expect(find.text('Planilla PDF'), findsOneWidget);
     expect(find.text('Ver datos'), findsOneWidget);
   });
 
-  testWidgets('medico ve constancia y ver datos', (tester) async {
+  testWidgets('medico ve planilla y ver datos', (tester) async {
     await tester.pumpWidget(_buildScreen(_MockRepo(),
         alumnoCompleto: true,
         estado: 'finalizado',
@@ -265,11 +265,11 @@ void main() {
     await tester.tap(moreMenus.last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Constancia PDF'), findsOneWidget);
+    expect(find.text('Planilla PDF'), findsOneWidget);
     expect(find.text('Ver datos'), findsOneWidget);
   });
 
-  testWidgets('tutor ve ver datos pero no constancia', (tester) async {
+  testWidgets('tutor ve ver datos pero no planilla', (tester) async {
     await tester.pumpWidget(_buildScreen(_MockRepo(),
         alumnoCompleto: true,
         estado: 'finalizado',
@@ -288,7 +288,7 @@ void main() {
     await tester.tap(moreMenus.last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Constancia PDF'), findsNothing);
+    expect(find.text('Planilla PDF'), findsNothing);
     expect(find.text('Ver datos'), findsOneWidget);
   });
 }

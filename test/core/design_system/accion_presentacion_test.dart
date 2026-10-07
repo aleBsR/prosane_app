@@ -19,6 +19,20 @@ void main() {
     expect(accionIcon(''), kIconFallback);
   });
 
+  test('accionIconParaAccion pisa las gestiones con los iconos del submenú', () {
+    expect(accionIconParaAccion('gestionarUsuariosEscuela', 'manage_accounts'),
+        Icons.school_outlined);
+    expect(accionIconParaAccion('gestionarAdministrativos', 'manage_accounts'),
+        Icons.support_agent_outlined);
+    expect(accionIconParaAccion('gestionarProfesionales', 'manage_accounts'),
+        Icons.medical_services_outlined);
+  });
+
+  test('accionIconParaAccion delega el resto al icono del backend', () {
+    expect(accionIconParaAccion('verOperativo', 'event_note'), kIconFallback);
+    expect(accionIconParaAccion('verEscuelas', 'school'), Icons.school_outlined);
+  });
+
   test('colorDesdeHex parsea #RRGGBB', () {
     expect(colorDesdeHex('#1565C0'), const Color(0xFF1565C0));
   });

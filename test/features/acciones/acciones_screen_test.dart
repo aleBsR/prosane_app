@@ -196,19 +196,21 @@ void main() {
     expect(router.state.uri.path, '/antecedentes-familiares');
   });
 
-  testWidgets('verGestionUsuarios navega a /gestion-usuarios', (t) async {
+  testWidgets('verGestionUsuarios se oculta (gestiones directas en inicio)', (t) async {
     final router = GoRouter(
       initialLocation: '/inicio',
       routes: [
         GoRoute(path: '/inicio', builder: (c, s) => const AccionesScreen()),
-        GoRoute(path: '/gestion-usuarios', builder: (c, s) => const Scaffold(body: Text('Gestión de usuarios'))),
       ],
     );
 
     final c = SessionController()
       ..setSesion(Sesion(
           usuario: const Usuario(id: '1', nombre: 'Admin', rolName: 'superadmin', rolLabel: 'Superadmin'),
-          acciones: [_a('verGestionUsuarios', 'Gestión de usuarios', 'usuarios')]));
+          acciones: [
+            _a('verGestionUsuarios', 'Gestión de usuarios', 'usuarios'),
+            _a('gestionarUsuariosEscuela', 'Usuarios de escuelas', 'usuarios'),
+          ]));
 
     await t.pumpWidget(ProviderScope(
       overrides: [sessionControllerProvider.overrideWith((ref) => c)],
@@ -219,10 +221,9 @@ void main() {
     await t.tap(find.text('USUARIOS'));
     await t.pumpAndSettle();
 
-    await t.tap(find.text('Gestión de usuarios'));
-    await t.pumpAndSettle();
-
-    expect(router.state.uri.path, '/gestion-usuarios');
+    // El submenú no existe: solo los accesos directos por tipo de usuario.
+    expect(find.text('Gestión de usuarios'), findsNothing);
+    expect(find.text('Usuarios de escuelas'), findsOneWidget);
   });
 
   testWidgets('verEscuelas navega a /escuelas y no a /operativos', (t) async {

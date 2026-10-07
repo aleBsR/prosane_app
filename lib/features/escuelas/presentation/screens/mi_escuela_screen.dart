@@ -28,7 +28,7 @@ class MiEscuelaScreen extends ConsumerWidget {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () => context.go('/inicio'),
               ),
               Text('Mi escuela',
@@ -69,7 +69,7 @@ class MiEscuelaScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.warning_amber_outlined,
+                                 Icon(Icons.warning_amber_outlined,
                                     color: AppColors.error),
                                 const SizedBox(width: 8),
                                 Expanded(
@@ -158,11 +158,8 @@ class MiEscuelaScreen extends ConsumerWidget {
                           onPressed: () => context.push('/operativos'),
                         ),
                       ],
-                      body: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (esPlurigrado)
-                            Text(
+                      body: esPlurigrado
+                          ? Text(
                               'Escuela plurigrado rural: no necesita cursos. Los alumnos se registran sin curso.',
                               style: AppTypography.texto.copyWith(
                                   fontSize: 12,
@@ -170,19 +167,7 @@ class MiEscuelaScreen extends ConsumerWidget {
                                   color: AppColors.texto
                                       .withValues(alpha: 0.7)),
                             )
-                          else if (cursos.isEmpty)
-                            Text('Todavía no hay cursos cargados.',
-                                style: AppTypography.texto)
-                          else
-                            for (final curso in cursos)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                    '${curso['sala_grado_anio'] ?? ''} ${curso['division'] ?? ''}',
-                                    style: AppTypography.texto),
-                              ),
-                        ],
-                      ),
+                          : null,
                     ),
                   ],
                 );

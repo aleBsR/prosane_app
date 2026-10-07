@@ -20,7 +20,15 @@ class AccionesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final estado = ref.watch(sessionControllerProvider);
     final acciones = estado is SesionAutenticada
-        ? estado.sesion.acciones.where((a) => a.showInMenu).toList()
+    // Sin submenú: inicio lleva directo a cada gestión (escuela,
+    // administrativos, profesionales). Se oculta verGestionUsuarios aunque
+    // el backend la envíe. La auditoría es solo web: también se oculta acá.
+        ? estado.sesion.acciones
+            .where((a) =>
+                a.showInMenu &&
+                a.name != 'verGestionUsuarios' &&
+                a.name != 'verAuditoria')
+            .toList()
         : const <Accion>[];
 
     return AppGradientScaffold(
@@ -47,7 +55,7 @@ class AccionesScreen extends ConsumerWidget {
                       for (final a in g.acciones)
                         ActionTile(
                           color: colorDesdeHex(a.color),
-                          icon: accionIcon(a.icon),
+                          icon: accionIconParaAccion(a.name, a.icon),
                           label: a.label,
                           onTap: () {
                             switch (a.name) {
@@ -99,14 +107,12 @@ class AccionesScreen extends ConsumerWidget {
                               case 'registrarAlumnoEscuela':
                                 // Va directo al formulario de alta.
                                 context.push('/escuelas/alumnos?registrar=1');
-                              case 'verGestionUsuarios':
-                                context.push('/gestion-usuarios');
                               case 'gestionarUsuariosEscuela':
                                 context.push('/usuarios-escuela');
                               case 'gestionarProfesionales':
                                 context.push('/profesionales');
-                              case 'gestionarAyudantes':
-                                context.push('/usuarios-ayudantes');
+                              case 'gestionarAdministrativos':
+                                context.push('/usuarios-administrativos');
                               default:
                                 _placeholder(context, a.label);
                             }

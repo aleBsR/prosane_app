@@ -13,7 +13,7 @@ class AppGradientScaffold extends StatelessWidget {
           behavior: HitTestBehavior.translucent,
           onTap: () => FocusScope.of(context).unfocus(),
           child: Container(
-            decoration: const BoxDecoration(gradient: AppColors.gradienteFondo),
+            decoration:  BoxDecoration(color: AppColors.fondoApp),
             child: SafeArea(child: child),
           ),
         ),

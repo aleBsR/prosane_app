@@ -71,10 +71,13 @@ class SeccionEscuelaController extends StateNotifier<SeccionEscuelaState> {
         orElse: () => const {},
       );
       if (!mounted) return;
+      final preocupa = _asBool(alumno['escuela_preocupa_salud']);
       state = state.copyWith(
         cargando: false,
-        preocupaSalud: _asBool(alumno['escuela_preocupa_salud']),
-        preocupaDetalle: _asStr(alumno['escuela_preocupa_detalle']),
+        preocupaSalud: preocupa,
+        // Sanea detalle huérfano legacy.
+        preocupaDetalle:
+            preocupa ? _asStr(alumno['escuela_preocupa_detalle']) : '',
         dificultadLenguaje: _asBool(alumno['escuela_dificultad_lenguaje']),
         bajoTratamiento: _asBool(alumno['escuela_bajo_tratamiento']),
       );
@@ -86,8 +89,13 @@ class SeccionEscuelaController extends StateNotifier<SeccionEscuelaState> {
   }
 
   // --- Setters ---
-  void setPreocupaSalud(bool v) =>
-      state = state.copyWith(preocupaSalud: v, error: null);
+  // Al desmarcar la preocupación se borra el detalle para no guardarlo
+  // huérfano.
+  void setPreocupaSalud(bool v) => state = state.copyWith(
+        preocupaSalud: v,
+        preocupaDetalle: v ? state.preocupaDetalle : '',
+        error: null,
+      );
   void setPreocupaDetalle(String v) =>
       state = state.copyWith(preocupaDetalle: v, error: null);
   void setDificultadLenguaje(bool v) =>
@@ -96,6 +104,20 @@ class SeccionEscuelaController extends StateNotifier<SeccionEscuelaState> {
       state = state.copyWith(bajoTratamiento: v, error: null);
 
   Future<bool> guardar() async {
+    final ok = await guardarParcial(completar: true);
+    if (!mounted) return ok;
+    if (ok) {
+      notificacionController.exito('Sección escuela guardada');
+    } else {
+      notificacionController.error(
+          state.error ?? 'No se pudo guardar la sección escuela.');
+    }
+    return ok;
+  }
+
+  /// Guarda con o sin marcar completado (wizard: avance vs final).
+  /// No notifica: el llamador (wizard) notifica una sola vez.
+  Future<bool> guardarParcial({required bool completar}) async {
     state = state.copyWith(guardando: true, error: null);
     try {
       final payload = <String, dynamic>{
@@ -103,26 +125,23 @@ class SeccionEscuelaController extends StateNotifier<SeccionEscuelaState> {
         'escuela_preocupa_detalle': state.preocupaDetalle,
         'escuela_dificultad_lenguaje': state.dificultadLenguaje,
         'escuela_bajo_tratamiento': state.bajoTratamiento,
-        'escuela_completado': true,
+        'completar': completar,
       };
 
       await repo.patchSeccionEscuela(args.opId, args.alumnoId, payload);
-      if (!mounted) return true;
+      if (!mounted) return false;
       state = state.copyWith(guardando: false);
-      notificacionController.exito('Sección escuela guardada');
       return true;
     } on DioException catch (e) {
       if (!mounted) return false;
       final msg = _extractErrorMessage(e.response?.data) ??
           'No se pudo guardar la sección escuela.';
       state = state.copyWith(guardando: false, error: msg);
-      notificacionController.error(msg);
       return false;
     } catch (_) {
       if (!mounted) return false;
-      const msg = 'No se pudo guardar la sección escuela.';
-      state = state.copyWith(guardando: false, error: msg);
-      notificacionController.error(msg);
+      state = state.copyWith(
+          guardando: false, error: 'No se pudo guardar la sección escuela.');
       return false;
     }
   }

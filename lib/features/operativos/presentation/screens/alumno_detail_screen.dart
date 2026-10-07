@@ -55,7 +55,7 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -236,14 +236,14 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
             if (conMenuFinal &&
                 (permisos.contains('verOperativo') ||
                     rolName == 'superadmin'))
-              const PostMenuEntry(
-                value: 'constancia',
-                label: 'Constancia PDF',
-                icon: Icons.picture_as_pdf_outlined,
+               PostMenuEntry(
+                value: 'planilla',
+                label: 'Planilla PDF',
+                icon: Icons.description_outlined,
                 color: AppColors.primario,
               ),
             if (puedeVerFicha)
-              const PostMenuEntry(
+               PostMenuEntry(
                 value: 'datos',
                 label: 'Ver datos',
                 icon: Icons.visibility_outlined,
@@ -251,8 +251,8 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
               ),
           ],
           onMenuSelected: (valor) {
-            if (valor == 'constancia') {
-              context.push('/operativos/$opId/alumnos/$id/constancia');
+            if (valor == 'planilla') {
+              context.push('/operativos/$opId/alumnos/$id/planilla');
             } else if (valor == 'datos') {
               context.push('/operativos/$opId/alumnos/$id/datos');
             }
@@ -263,7 +263,7 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
               if (puedeEditarEstado && !esEvaluado)
                 Row(
                   children: [
-                    const Icon(Icons.how_to_reg_outlined,
+                     Icon(Icons.how_to_reg_outlined,
                         size: 14, color: AppColors.texto),
                     const SizedBox(width: 4),
                     Text('Asistencia:',
@@ -288,19 +288,19 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
                               horizontal: 8, vertical: 6),
                           border: OutlineInputBorder(
                               borderRadius:
-                                  BorderRadius.circular(AppRadii.boton),
+                                  BorderRadius.circular(AppRadii.accion),
                               borderSide: BorderSide(
                                   color: _colorTextoEstado(estadoActual)
                                       .withValues(alpha: 0.3))),
                           enabledBorder: OutlineInputBorder(
                               borderRadius:
-                                  BorderRadius.circular(AppRadii.boton),
+                                  BorderRadius.circular(AppRadii.accion),
                               borderSide: BorderSide(
                                   color: _colorTextoEstado(estadoActual)
                                       .withValues(alpha: 0.3))),
                           focusedBorder: OutlineInputBorder(
                               borderRadius:
-                                  BorderRadius.circular(AppRadii.boton),
+                                  BorderRadius.circular(AppRadii.accion),
                               borderSide: BorderSide(
                                   color: _colorTextoEstado(estadoActual),
                                   width: 1.2)),
@@ -348,7 +348,7 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                           color: _colorFondoEstado(estadoActual),
-                          borderRadius: BorderRadius.circular(AppRadii.boton),
+                          borderRadius: BorderRadius.circular(AppRadii.accion),
                           border: Border.all(
                               color: _colorTextoEstado(estadoActual)
                                   .withValues(alpha: 0.3))),
@@ -432,11 +432,11 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
   Color _colorTextoEstado(String estado) {
     switch (estado) {
       case 'presente':
-        return Colors.green.shade700;
+        return AppColors.ok;
       case 'ausente':
-        return Colors.red.shade700;
+        return AppColors.errorTexto;
       case 'evaluado':
-        return Colors.blue.shade700;
+        return AppColors.info;
       default:
         return AppColors.texto;
     }
@@ -463,7 +463,7 @@ class _AlumnoDetailScreenState extends ConsumerState<AlumnoDetailScreen> {
         borderRadius: BorderRadius.circular(AppRadii.campo),
       ),
       child: Text(completo ? 'Completo' : 'Pendiente',
-          style: const TextStyle(
+          style:  TextStyle(
               color: AppColors.blanco, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }

@@ -24,7 +24,7 @@ class EscuelasListScreen extends ConsumerWidget {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                  icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                   onPressed: () {
                     if (context.canPop()) {
                       context.pop();
@@ -96,6 +96,57 @@ class EscuelasListScreen extends ConsumerWidget {
                                     color: AppColors.texto
                                         .withValues(alpha: 0.6)),
                               ),
+                              Builder(builder: (context) {
+                                // Solo cuentan los usuarios activos: con todos
+                                // inactivos la escuela queda sin acceso.
+                                final asociados = e.usuariosAsociados
+                                    .where((u) => u['is_active'] != false)
+                                    .toList();
+                                if (asociados.isEmpty) {
+                                  return Container(
+                                    margin: const EdgeInsets.only(top: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.aviso.withValues(
+                                          alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                          color: AppColors.aviso.withValues(
+                                              alpha: 0.4)),
+                                    ),
+                                    child: Text(
+                                      'Sin usuario asociado',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.aviso,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                final texto = asociados.map((u) {
+                                  final nombre =
+                                      (u['nombre'] ?? '').toString();
+                                  final email =
+                                      (u['email'] ?? '').toString();
+                                  return nombre.trim().isNotEmpty
+                                      ? nombre.trim()
+                                      : email;
+                                }).join(' • ');
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Usuario: $texto',
+                                    style: AppTypography.texto.copyWith(
+                                        fontSize: 12,
+                                        color: AppColors.texto
+                                            .withValues(alpha: 0.6)),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
                             ],
                           ),
                         ),

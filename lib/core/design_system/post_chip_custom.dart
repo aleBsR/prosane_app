@@ -14,7 +14,7 @@ class PostChipCustom extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = completado ? Colors.green : AppColors.gris;
+    final color = completado ? AppColors.ok : AppColors.gris;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -27,7 +27,7 @@ class PostChipCustom extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: completado ? Colors.green.shade700 : AppColors.texto.withValues(alpha: 0.7),
+          color: completado ? AppColors.ok : AppColors.texto.withValues(alpha: 0.7),
         ),
       ),
     );

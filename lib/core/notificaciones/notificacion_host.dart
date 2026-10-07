@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_radii.dart';
 import '../theme/app_typography.dart';
 import 'notificacion.dart';
@@ -118,9 +119,9 @@ class _TarjetaNotificacion extends StatelessWidget {
         color: Colors.transparent,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.97),
+            color: AppColors.blanco.withValues(alpha: 0.97),
             borderRadius: BorderRadius.circular(AppRadii.card),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+            border: Border.all(color: AppColors.blanco.withValues(alpha: 0.85)),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF3C288C).withValues(alpha: 0.30),

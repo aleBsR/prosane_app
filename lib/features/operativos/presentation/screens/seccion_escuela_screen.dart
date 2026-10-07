@@ -40,7 +40,7 @@ class SeccionEscuelaScreen extends ConsumerWidget {
                 horizontal: AppSpacing.md, vertical: AppSpacing.sm),
             child: Row(children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.blanco),
+                icon:  Icon(Icons.arrow_back, color: AppColors.blanco),
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
@@ -56,7 +56,7 @@ class SeccionEscuelaScreen extends ConsumerWidget {
           ),
           Expanded(
             child: state.cargando
-                ? const Center(
+                ?  Center(
                     child: CircularProgressIndicator(color: AppColors.blanco))
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -76,11 +76,11 @@ class SeccionEscuelaScreen extends ConsumerWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.lock_outline, size: 14, color: Color(0xFF2E7D32)),
+                                   Icon(Icons.lock_outline, size: 14, color: AppColors.ok),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text('Operativo finalizado — solo lectura',
-                                        style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF2E7D32))),
+                                        style: AppTypography.texto.copyWith(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.ok)),
                                   ),
                                 ],
                               ),

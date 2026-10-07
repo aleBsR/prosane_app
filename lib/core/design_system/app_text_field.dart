@@ -54,9 +54,9 @@ class _AppTextFieldState extends State<AppTextField> {
         onPressed: () => setState(() => _obscure = !_obscure),
       );
     } else if (hasError) {
-      suffix = const Icon(Icons.cancel, color: AppColors.error);
+      suffix =  Icon(Icons.cancel, color: AppColors.error);
     } else if (widget.isValid) {
-      suffix = const Icon(Icons.check_circle, color: AppColors.primario);
+      suffix =  Icon(Icons.check_circle, color: AppColors.primario);
     }
 
     return Column(
@@ -85,7 +85,7 @@ class _AppTextFieldState extends State<AppTextField> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadii.campo),
               borderSide:
-                  const BorderSide(color: AppColors.primario, width: 1.5),
+                   BorderSide(color: AppColors.primario, width: 1.5),
             ),
           ),
         ),

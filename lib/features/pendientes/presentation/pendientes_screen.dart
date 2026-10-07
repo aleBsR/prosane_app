@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/design_system/app_card.dart';
 import '../../../core/design_system/app_gradient_scaffold.dart';
 import '../../../core/design_system/empty_state.dart';
+import '../../../core/theme/app_colors.dart';
 
 import '../../../core/theme/app_typography.dart';
 import '../pendientes_count_provider.dart';
@@ -38,7 +39,7 @@ class PendientesScreen extends ConsumerWidget {
                 onTap: () => context.push(it.ruta),
                 child: AppCard(
                   child: Row(children: [
-                    Icon(it.icono, size: 34, color: Colors.deepPurple),
+                    Icon(it.icono, size: 34, color: AppColors.primario),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(

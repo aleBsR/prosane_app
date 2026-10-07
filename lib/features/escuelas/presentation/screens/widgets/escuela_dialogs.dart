@@ -159,10 +159,10 @@ Future<bool> confirmarEliminarEscuela(
       actions: [
         TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Cancelar')),
+            child: const Text('No')),
         TextButton(
           onPressed: () => Navigator.pop(dialogCtx, true),
-          child: const Text('Eliminar',
+          child:  Text('Sí',
               style: TextStyle(color: AppColors.error)),
         ),
       ],
